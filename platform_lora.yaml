@@ -1,0 +1,23 @@
+##### Nodes Setup #####
+nodes:
+    count: 13
+    implementations:
+        - all node.py
+    arguments:
+        0: { "type": "sender", "uptime": 180, "datasize": 1000000, "wireless": "lora"}
+        1-@: {"type": "receiver", "uptime": 180, "wireless": "lora"}
+
+##### Nodes Interfaces #####
+interfaces:
+    lora:
+        type: "wireless"
+        links:
+            - all 50kbps 0s all
+        txperfs:
+            - all 50kbps 0s
+    nbiot:
+        type: "wireless"
+        links:
+            - all 200kbps 0s all
+        txperfs:
+            - all 200kbps 0s

@@ -1,0 +1,10 @@
+nodes:
+  count: 1
+  implementations:
+    - 0 dep.py
+
+interfaces:
+  eth0:
+    type: "wired"
+    links:
+      - all 1Bps 0s all

@@ -1,0 +1,12 @@
+nodes:
+  count: 2
+  implementations:
+    - 0 server.py
+    - 1 client.py
+#    - 2 client.py
+
+interfaces:
+  eth0:
+    type: "wired"
+    links:
+      - all 1Bps 0s all
