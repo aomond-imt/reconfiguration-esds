@@ -1,7 +1,12 @@
 nodes:
-  count: 1
+  count: 6
   implementations:
-    - 0 dep.py
+    - 0 node.py
+    - 1 node.py
+    - 2 node.py
+    - 3 node.py
+    - 4 node.py
+    - 5 node.py
 
 interfaces:
   eth0:
