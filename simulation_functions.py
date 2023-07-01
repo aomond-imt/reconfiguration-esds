@@ -39,9 +39,8 @@ def execution_reconf(api, node_uptimes, reconf_periods_per_node, max_execution_d
             api.turn_on()
             uptime_end = uptime + duration
             node_cons.set_power(ON_POWER)
-            print(reconf_periods_per_node)
             for start, end, nb_processes in reconf_periods_per_node:
-                if uptime <= start < uptime_end:
+                if nb_processes > 0 and uptime <= start < uptime_end:
                     ## No reconf period
                     wait_before_reconf_start = max(start, c()) - c()
                     api.log(f"Waiting for action start: {round(wait_before_reconf_start, 2)}s")
@@ -53,7 +52,7 @@ def execution_reconf(api, node_uptimes, reconf_periods_per_node, max_execution_d
                     action_duration = end - start
                     api.log(f"Action duration: {round(action_duration, 2)}")
                     api.wait(action_duration)
-                    tot_reconf_time += end - start
+                    tot_reconf_time += (end - start) * nb_processes
 
                     ## No reconf period
                     node_cons.set_power(ON_POWER)

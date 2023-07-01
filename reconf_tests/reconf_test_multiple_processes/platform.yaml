@@ -1,0 +1,13 @@
+nodes:
+  count: 1
+  implementations:
+    - 0 reconf.py
+  groups:
+    - 0 0
+
+interfaces:
+  eth0:
+    type: "wired"
+    links:
+      - all 1Bps 0s all
+    nodes: 0
