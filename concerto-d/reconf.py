@@ -1,0 +1,36 @@
+#!/usr/bin/env python
+import json
+
+import yaml
+from esds.node import Node
+import os
+current_dir_name = os.path.dirname(os.path.abspath(__file__))
+import sys
+sys.path.insert(1, f"{current_dir_name}/..")
+from simulation_functions import execution_reconf
+
+
+def execute(api: Node):
+    # Init
+    with open(api.args["expe_config_file"]) as f:
+        expe_config = yaml.safe_load(f)
+        uptimes = expe_config["uptimes_nodes"]
+        esds_data = expe_config
+
+    expected_t0_ud0_15_25 = {
+        0: {
+            "tot_reconf_time": 61.06,
+            "tot_sending_time": 392.78,
+            "tot_sleeping_time": 1394.66,
+        },
+        1: {
+            "tot_reconf_time": 3.91,
+            "tot_sending_time": 346.09,
+            "tot_sleeping_time": 1497.5,
+        }
+    }
+
+    tot_reconf_time, tot_no_reconf_time, tot_sleeping_time = execution_reconf(api, uptimes[api.node_id], esds_data["reconf_periods_per_node"][api.node_id], esds_data["max_execution_duration"])
+    print(tot_reconf_time)
+    print(tot_no_reconf_time)
+    print(tot_sleeping_time)

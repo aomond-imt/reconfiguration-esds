@@ -1,0 +1,25 @@
+nodes:
+  count: 6
+  implementations:
+    - 0 reconf.py
+    - 1 reconf.py
+    - 2 reconf.py
+    - 3 reconf.py
+    - 4 reconf.py
+    - 5 reconf.py
+  groups:
+    - 0 0
+    - 1 1
+    - 2 2
+    - 3 3
+    - 4 4
+    - 5 5
+  arguments:
+    all: {expe_config_file: "/tmp/current_esds_config_file.yaml"}
+
+interfaces:
+  eth0:
+    type: "wired"
+    links:
+      - all 1Bps 0s all
+    nodes: 0, 1, 2, 3, 4, 5
