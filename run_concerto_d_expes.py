@@ -11,6 +11,7 @@ esds_data_dir = "/tmp/esds_generated_files"
 esds_current_data_file = "/tmp/current_esds_config_file.yaml"
 results_dir = "/tmp/results"
 
+# i = 0
 ##### Run all experiments
 for file in os.listdir(esds_data_dir):
     current_test_path=os.path.join(esds_data_dir,file)
@@ -30,7 +31,8 @@ for file in os.listdir(esds_data_dir):
                     print(line)
         end_at=time.time()
         print("passed (%0.1fs)"%(end_at-start_at))
-        # break
+        # if i > 2:
+        #     break
     except subprocess.TimeoutExpired as err:
         print("failed :(")
         print("------------- Test duration expired (timeout="+str(tests_timeout)+"s) -------------")
@@ -45,7 +47,10 @@ for file in os.listdir(esds_data_dir):
         print("failed :(")
         print("Reason: "+str(err))
         exit(3)
+    # finally:
+    #     i += 1
 
+extracted_exec_time_per_expe = {}
 
 # List results
 for expe_dir in os.listdir(results_dir):
@@ -55,7 +60,13 @@ for expe_dir in os.listdir(results_dir):
         abs_file_name = os.path.join(abs_expe_dir, file_name)
         with open(abs_file_name) as f:
             res = yaml.safe_load(f)
-        print(f"-- Node {file_name.split('.')[0]}:")
+        node_id = file_name.split('.')[0]
+        print(f"-- Node {node_id}:")
         for key, val in res.items():
             print(f"{key}: {val}")
+            if node_id == "0" and key == "max_execution_time":
+                extracted_exec_time_per_expe[expe_dir] = val
     print()
+
+for key, val in extracted_exec_time_per_expe.items():
+    print(f"{key}: {val}")
