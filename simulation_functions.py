@@ -15,6 +15,7 @@ def execution_reconf(api, node_uptimes, reconf_periods_per_node, max_execution_d
     node_cons = PowerStates(api, 0)
     comms_cons = PowerStatesComms(api)
     comms_cons.set_power(interface_name, 0, LORA_POWER, LORA_POWER)
+
     ### Run expe
     api.turn_off()
     node_cons.set_power(OFF_POWER)
@@ -72,8 +73,4 @@ def execution_reconf(api, node_uptimes, reconf_periods_per_node, max_execution_d
                 api.log(f"Threshold reached: {max_execution_duration}s. End of choreography")
                 break
 
-    ### Gather results
-    node_cons.report_energy()
-    comms_cons.report_energy()
-
-    return tot_reconf_time, tot_no_reconf_time, tot_sleeping_time
+    return tot_reconf_time, tot_no_reconf_time, tot_sleeping_time, node_cons.energy, comms_cons.get_energy()

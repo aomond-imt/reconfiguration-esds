@@ -43,7 +43,7 @@ def execute(api: Node):
             "expected_tot_sleeping_time": 150.5,  # 200.5 - 50
         }
     }
-    tot_reconf_time, tot_no_reconf_time, tot_sleeping_time = execution_reconf(api, uptimes[api.node_id], reconf_periods_per_node[api.node_id], max_execution_duration)
+    tot_reconf_time, tot_no_reconf_time, tot_sleeping_time, node_conso, comms_cons = execution_reconf(api, uptimes[api.node_id], reconf_periods_per_node[api.node_id], max_execution_duration)
 
     expected_resuts_node = expected_results_per_node[api.node_id]
     test_functions.print_assertions("Reconf time", expected_resuts_node["expected_tot_reconf_time"], tot_reconf_time)

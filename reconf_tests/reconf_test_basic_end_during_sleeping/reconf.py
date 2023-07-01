@@ -25,7 +25,7 @@ def execute(api: Node):
     expected_tot_reconf_time = 5
     expected_tot_no_reconf_time = 45
     expected_tot_sleeping_time = 20
-    tot_reconf_time, tot_no_reconf_time, tot_sleeping_time = execution_reconf(api, node_uptimes, reconf_periods_per_node, max_execution_duration)
+    tot_reconf_time, tot_no_reconf_time, tot_sleeping_time, node_conso, comms_cons = execution_reconf(api, node_uptimes, reconf_periods_per_node, max_execution_duration)
 
     test_functions.print_assertions("Reconf time", expected_tot_reconf_time, tot_reconf_time)
     test_functions.print_assertions("No reconf time", expected_tot_no_reconf_time, tot_no_reconf_time)

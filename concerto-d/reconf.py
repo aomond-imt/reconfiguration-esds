@@ -14,6 +14,7 @@ def execute(api: Node):
     # Init
     with open(api.args["expe_config_file"]) as f:
         expe_config = yaml.safe_load(f)
+        title = expe_config["title"]
         uptimes = expe_config["uptimes_nodes"]
         esds_data = expe_config
 
@@ -30,7 +31,18 @@ def execute(api: Node):
         }
     }
 
-    tot_reconf_time, tot_no_reconf_time, tot_sleeping_time = execution_reconf(api, uptimes[api.node_id], esds_data["reconf_periods_per_node"][api.node_id], esds_data["max_execution_duration"])
+    tot_reconf_time, tot_no_reconf_time, tot_sleeping_time, node_conso, comms_cons = execution_reconf(api, uptimes[api.node_id], esds_data["reconf_periods_per_node"][api.node_id], esds_data["max_execution_duration"])
+
+    results = {
+        "tot_reconf_time": round(tot_reconf_time, 2),
+        "tot_no_reconf_time": round(tot_no_reconf_time, 2),
+        "tot_sleeping_time": round(tot_sleeping_time, 2),
+        "max_execution_time": round(tot_reconf_time + tot_no_reconf_time + tot_sleeping_time, 2),
+        "node_conso": f"{round(node_conso, 2)}J",
+        "comms_cons": f"{round(comms_cons, 2)}J",
+    }
+    with open(f"/tmp/results/{title}/{api.node_id}.yaml", "w") as f:
+        yaml.safe_dump(results, f)
     print(tot_reconf_time)
     print(tot_no_reconf_time)
     print(tot_sleeping_time)
