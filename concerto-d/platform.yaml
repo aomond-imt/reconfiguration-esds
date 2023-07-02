@@ -15,7 +15,8 @@ nodes:
     - 4 4
     - 5 5
   arguments:
-    all: {expe_config_file: "/tmp/current_esds_config_file.yaml"}
+    all: {expe_config_file: "/tmp/current_esds_parameter_file.yaml"}
+#    all: {expe_config_file: "/tmp/expe_esds_parameter_files/esds_generated_data-ud0_od0_30_25-async-deploy-T1.yaml"}
 
 interfaces:
   eth0:

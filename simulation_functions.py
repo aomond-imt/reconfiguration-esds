@@ -20,6 +20,7 @@ def execution_reconf(api, node_uptimes, reconf_periods_per_node, max_execution_d
     api.turn_off()
     node_cons.set_power(OFF_POWER)
     tot_reconf_time = 0
+    tot_reconf_flat_time = 0
     tot_no_reconf_time = 0
     tot_sleeping_time = 0
     sleep_start = 0
@@ -27,7 +28,8 @@ def execution_reconf(api, node_uptimes, reconf_periods_per_node, max_execution_d
     def c():
         return api.read("clock")
 
-    for uptime, _ in node_uptimes:
+    for i in range(len(node_uptimes)):
+        uptime, _ = node_uptimes[i]
         if uptime != -1:
             # Off period
             sleeping_time = min(uptime, max_execution_duration) - c()
@@ -39,9 +41,17 @@ def execution_reconf(api, node_uptimes, reconf_periods_per_node, max_execution_d
             ## No reconf period
             api.turn_on()
             uptime_end = uptime + duration
+
+            ## Compute next uptime start. Execute all actions duration with nb_processes > 0 until this
+            j = i+1
+            next_uptime_start = node_uptimes[j][0] if j < len(node_uptimes) else uptime_end
+            while j < len(node_uptimes) and next_uptime_start == -1:
+                next_uptime_start = node_uptimes[j][0]
+                j += 1
+
             node_cons.set_power(ON_POWER)
             for start, end, nb_processes in reconf_periods_per_node:
-                if nb_processes > 0 and uptime <= start < uptime_end:
+                if nb_processes > 0 and uptime <= start < next_uptime_start:
                     ## No reconf period
                     wait_before_reconf_start = max(start, c()) - c()
                     api.log(f"Waiting for action start: {round(wait_before_reconf_start, 2)}s")
@@ -54,9 +64,12 @@ def execution_reconf(api, node_uptimes, reconf_periods_per_node, max_execution_d
                     api.log(f"Action duration: {round(action_duration, 2)}")
                     api.wait(action_duration)
                     tot_reconf_time += (end - start) * nb_processes
+                    tot_reconf_flat_time += end - start
 
                     ## No reconf period
                     node_cons.set_power(ON_POWER)
+                else:
+                    api.log(f"Skipping reconf_periods: [{start}, {end}, {nb_processes}], current uptime: {uptime}, next uptime: {next_uptime_start}")
 
             ## No reconf period, wait until sleeping
             remaining_waiting_duration = min(uptime_end, max_execution_duration) - c()
@@ -64,6 +77,8 @@ def execution_reconf(api, node_uptimes, reconf_periods_per_node, max_execution_d
                 api.log(f"End of uptime period in: {round(remaining_waiting_duration, 2)}s")
                 tot_no_reconf_time += remaining_waiting_duration
                 api.wait(remaining_waiting_duration)
+            else:
+                api.log(f"End of uptime period already reached since {abs(remaining_waiting_duration)}s, sleeping immediately")
 
             # Off period
             api.turn_off()
@@ -73,4 +88,4 @@ def execution_reconf(api, node_uptimes, reconf_periods_per_node, max_execution_d
                 api.log(f"Threshold reached: {max_execution_duration}s. End of choreography")
                 break
 
-    return tot_reconf_time, tot_no_reconf_time, tot_sleeping_time, node_cons.energy, comms_cons.get_energy()
+    return tot_reconf_time, tot_reconf_flat_time, tot_no_reconf_time, tot_sleeping_time, node_cons.energy, comms_cons.get_energy()
