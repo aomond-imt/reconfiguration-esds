@@ -1,19 +1,28 @@
 nodes:
   count: 6
+#  count: 7
   implementations:
+    # Reconf
     - 0 reconf.py
     - 1 reconf.py
     - 2 reconf.py
     - 3 reconf.py
     - 4 reconf.py
     - 5 reconf.py
-  groups:
+
+    # Sending
+#    - 6 sending.py
+  groups: # id group_id
+    # Reconf
     - 0 0
     - 1 1
     - 2 2
     - 3 3
     - 4 4
     - 5 5
+
+    # Sending
+#    - 6 0
   arguments:
     all: {expe_config_file: "/tmp/current_esds_parameter_file.yaml"}
 #    all: {expe_config_file: "/tmp/expe_esds_parameter_files/esds_generated_data-ud0_od0_30_25-async-deploy-T1.yaml"}
@@ -24,3 +33,4 @@ interfaces:
     links:
       - all 1Bps 0s all
     nodes: 0, 1, 2, 3, 4, 5
+#    nodes: 0, 1, 2, 3, 4, 5, 6

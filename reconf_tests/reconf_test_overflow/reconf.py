@@ -7,7 +7,7 @@ current_dir_name = os.path.dirname(os.path.abspath(__file__))
 import sys
 sys.path.insert(1, f"{current_dir_name}/../..")
 
-from simulation_functions import execution_reconf
+from simulation_functions import execution_work
 import test_functions
 
 
@@ -22,7 +22,7 @@ def execute(api: Node):
     expected_tot_reconf_time = 48.97     # 54.2 - 5.23
     expected_tot_no_reconf_time = 10.73  # 5.23 + 5.5
     expected_tot_sleeping_time = 100.8   # 155 - 50 - 5.2
-    tot_reconf_time, tot_no_reconf_time, tot_sleeping_time, node_conso, comms_cons = execution_reconf(api, node_uptimes, reconf_periods_per_node, max_execution_duration)
+    tot_reconf_time, tot_no_reconf_time, tot_sleeping_time, node_conso, comms_cons = execution_work(api, node_uptimes, reconf_periods_per_node, max_execution_duration, "reconf")
 
     test_functions.print_assertions("Reconf time", expected_tot_reconf_time, tot_reconf_time)
     test_functions.print_assertions("No reconf time", expected_tot_no_reconf_time, tot_no_reconf_time)

@@ -1,3 +1,4 @@
+from esds.node import Node
 from esds.plugins.power_states import PowerStates, PowerStatesComms
 
 OFF_POWER = 0
@@ -5,8 +6,10 @@ ON_POWER = 0.4
 PROCESS_POWER = 1  # TODO model energetic
 LORA_POWER = 0.16
 
+NB_NODES = 6
 
-def execution_reconf(api, node_uptimes, reconf_periods_per_node, max_execution_duration):
+
+def execution_work(api, node_uptimes, work_periods_per_node, max_execution_duration, type_process):
     duration = 50
     interface_name = "eth0"
 
@@ -19,9 +22,9 @@ def execution_reconf(api, node_uptimes, reconf_periods_per_node, max_execution_d
     ### Run expe
     api.turn_off()
     node_cons.set_power(OFF_POWER)
-    tot_reconf_time = 0
-    tot_reconf_flat_time = 0
-    tot_no_reconf_time = 0
+    tot_working_time = 0
+    tot_working_flat_time = 0
+    tot_no_working_time = 0
     tot_sleeping_time = 0
     sleep_start = 0
 
@@ -38,47 +41,34 @@ def execution_reconf(api, node_uptimes, reconf_periods_per_node, max_execution_d
             tot_sleeping_time += c() - sleep_start
 
             # On period
-            ## No reconf period
+            ## No working period
             api.turn_on()
             uptime_end = uptime + duration
 
-            ## Compute next uptime start. Execute all actions duration with nb_processes > 0 until this
-            j = i+1
-            next_uptime_start = node_uptimes[j][0] if j < len(node_uptimes) else uptime_end
-            while j < len(node_uptimes) and next_uptime_start == -1:
-                next_uptime_start = node_uptimes[j][0]
-                j += 1
-
-            node_cons.set_power(ON_POWER)
-            for start, end, nb_processes in reconf_periods_per_node:
-                if nb_processes > 0 and uptime <= start < next_uptime_start:
-                    ## No reconf period
-                    wait_before_reconf_start = max(start, c()) - c()
-                    api.log(f"Waiting for action start: {round(wait_before_reconf_start, 2)}s")
-                    tot_no_reconf_time += wait_before_reconf_start
-                    api.wait(wait_before_reconf_start)
-
-                    ## Reconf period
-                    node_cons.set_power(ON_POWER + nb_processes * PROCESS_POWER)  # TODO model energetic
-                    action_duration = end - start
-                    api.log(f"Action duration: {round(action_duration, 2)}")
-                    api.wait(action_duration)
-                    tot_reconf_time += (end - start) * nb_processes
-                    tot_reconf_flat_time += end - start
-
-                    ## No reconf period
-                    node_cons.set_power(ON_POWER)
-                else:
-                    api.log(f"Skipping reconf_periods: [{start}, {end}, {nb_processes}], current uptime: {uptime}, next uptime: {next_uptime_start}")
+            if type_process == "reconf":
+                tot_no_working_time, tot_working_flat_time, tot_working_time = _handle_reconf(
+                    api, c, i, node_cons,
+                    node_uptimes,
+                    work_periods_per_node,
+                    tot_no_working_time,
+                    tot_working_flat_time,
+                    tot_working_time, uptime,
+                    uptime_end
+                )
+            else:
+                tot_no_working_time, tot_working_time = _handle_sending(
+                    api, c, work_periods_per_node, uptime, uptime_end, tot_working_time, tot_no_working_time
+                )
 
             ## No reconf period, wait until sleeping
             remaining_waiting_duration = min(uptime_end, max_execution_duration) - c()
             if remaining_waiting_duration > 0:
                 api.log(f"End of uptime period in: {round(remaining_waiting_duration, 2)}s")
-                tot_no_reconf_time += remaining_waiting_duration
+                tot_no_working_time += remaining_waiting_duration
                 api.wait(remaining_waiting_duration)
             else:
-                api.log(f"End of uptime period already reached since {abs(remaining_waiting_duration)}s, sleeping immediately")
+                api.log(
+                    f"End of uptime period already reached since {abs(remaining_waiting_duration)}s, sleeping immediately")
 
             # Off period
             api.turn_off()
@@ -88,4 +78,65 @@ def execution_reconf(api, node_uptimes, reconf_periods_per_node, max_execution_d
                 api.log(f"Threshold reached: {max_execution_duration}s. End of choreography")
                 break
 
-    return tot_reconf_time, tot_reconf_flat_time, tot_no_reconf_time, tot_sleeping_time, node_cons.energy, comms_cons.get_energy()
+    return tot_working_time, tot_working_flat_time, tot_no_working_time, tot_sleeping_time, node_cons.energy, comms_cons.get_energy()
+
+
+def _handle_reconf(
+        api, c, i, node_cons, node_uptimes, work_periods_per_node,
+        tot_no_working_time, tot_working_flat_time, tot_working_time, uptime, uptime_end
+):
+    ## Compute next uptime start. Execute all actions duration with nb_processes > 0 until this
+    j = i + 1
+    next_uptime_start = node_uptimes[j][0] if j < len(node_uptimes) else uptime_end
+    while j < len(node_uptimes) and next_uptime_start == -1:
+        next_uptime_start = node_uptimes[j][0]
+        j += 1
+    node_cons.set_power(ON_POWER)
+    for start, end, nb_processes in work_periods_per_node:
+        if nb_processes > 0 and uptime <= start < next_uptime_start:
+            ## No reconf period
+            wait_before_reconf_start = max(start, c()) - c()
+            api.log(f"Waiting for action start: {round(wait_before_reconf_start, 2)}s")
+            tot_no_working_time += wait_before_reconf_start
+            api.wait(wait_before_reconf_start)
+
+            ## Reconf period
+            node_cons.set_power(ON_POWER + nb_processes * PROCESS_POWER)  # TODO model energetic
+            action_duration = end - start
+            api.log(f"Action duration: {round(action_duration, 2)}")
+            api.wait(action_duration)
+            tot_working_time += (end - start) * nb_processes
+            tot_working_flat_time += end - start
+
+            ## No reconf period
+            node_cons.set_power(ON_POWER)
+        else:
+            api.log(
+                f"Skipping reconf_periods: [{start}, {end}, {nb_processes}], current uptime: {uptime}, next uptime: {next_uptime_start}")
+    return tot_no_working_time, tot_working_flat_time, tot_working_time
+
+
+def _handle_sending(api: Node, c, work_periods_per_node, uptime, uptime_end, tot_working_time, tot_no_working_time):
+    for start_send, end_send, count_sends in work_periods_per_node:
+        if count_sends != {} and start_send < uptime_end and end_send >= uptime:
+            ### No sending period
+            wait_before_sending_start = max(start_send, c()) - c()
+            api.log(f"Waiting for sending to start: {round(wait_before_sending_start, 2)}s")
+            tot_no_working_time += wait_before_sending_start
+            api.wait(wait_before_sending_start)
+
+            ## Sending period
+            bandwidth = 1  # 1Bps (set on platform.yaml) TODO: take it into account in the calcul
+            nb_sends = sum(count_sends.values())
+            sending_end = min(end_send, uptime_end)
+            sending_duration = sending_end - c()
+            datasize = round(sending_duration / nb_sends, 3)
+            send_start = c()
+            api.log(f"Sending duration: {sending_duration}. Datasize: {datasize}. Nb_sends: {nb_sends}. Bandwidth: {bandwidth}. Sending start: {c()}. Sending end: {sending_end}")
+            for conn_id, nb_send in count_sends.items():
+                api.send("eth0", "Msg", datasize * nb_send, conn_id + NB_NODES)
+            tot_working_time += c() - send_start
+        else:
+            api.log(f"Skipping sending_period: [{start_send}, {end_send}, {count_sends}], current uptime {uptime}")
+
+    return tot_no_working_time, tot_working_time
