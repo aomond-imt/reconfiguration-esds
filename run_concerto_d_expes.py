@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-import math
-import os,subprocess,time,sys
+import os,subprocess,time
 import shutil
 from pathlib import Path
 
@@ -8,11 +7,7 @@ import yaml
 
 
 def _esds_results_verification(expe_esds_verification_files, reconf_results_dir, sends_results_dir, receive_results_dir, title):
-    reconfs_results = os.path.join(reconf_results_dir, title)
-    sends_results = os.path.join(sends_results_dir, title)
-    receive_results = os.path.join(receive_results_dir, title)
-    # abs_expe_dir = os.path.join(results_dir, expe_dir)
-
+    # Retrieve verification file for the given configuration file
     verification = None
     for verif_file in os.listdir(expe_esds_verification_files):
         if Path(verif_file).stem == title:
@@ -20,11 +15,15 @@ def _esds_results_verification(expe_esds_verification_files, reconf_results_dir,
             with open(abs_verif_file) as f:
                 verification = yaml.safe_load(f)
 
+    # Retrieve results files for reconfs, sends and receives
+    reconfs_results = os.path.join(reconf_results_dir, title)
+    sends_results = os.path.join(sends_results_dir, title)
+    # receive_results = os.path.join(receive_results_dir, title)
+
     list_files_reconfs = sorted(os.listdir(reconfs_results), key=lambda f_name: int(Path(f_name).stem))
     list_files_sends = sorted(os.listdir(sends_results), key=lambda f_name: int(Path(f_name).stem))
     # list_files_receives = sorted(os.listdir(receive_results), key=lambda f_name: int(Path(f_name).stem))
     for node_reconf_file, node_send_file in zip(list_files_reconfs, list_files_sends):
-    # for node_reconf_file in list_files_reconfs:
         with open(os.path.join(reconfs_results, node_reconf_file)) as f:
             results_reconf = yaml.safe_load(f)
         with open(os.path.join(sends_results, node_send_file)) as f:
@@ -32,6 +31,7 @@ def _esds_results_verification(expe_esds_verification_files, reconf_results_dir,
         # with open(os.path.join(reconfs_results, send_receives)) as f:
         #     results_receive = yaml.safe_load(f)
 
+        # Verification reconfs durations
         node_id = int(Path(node_reconf_file).stem)
         for key, val in results_reconf.items():
             if key in ["tot_reconf_time", "max_execution_time"]:
@@ -45,6 +45,7 @@ def _esds_results_verification(expe_esds_verification_files, reconf_results_dir,
                     print(f"key: {key} - val: {val} - expected: {expected_val}")
                     raise e
 
+        # Verification sending durations
         for key, val in results_send.items():
             if key in ["tot_sending_flat_time"]:
                 verif_sending_periods = verification["sending_periods"][node_id]
@@ -56,6 +57,31 @@ def _esds_results_verification(expe_esds_verification_files, reconf_results_dir,
                     except AssertionError as e:
                         print(f"key: {key} - val: {val} - expected: {verif_sending_periods}")
                         raise e
+
+
+def _load_energetic_expe_results_from_title(title, reconf_results_dir, sends_results_dir):
+    # Retrieve results files for reconfs, sends and receives
+    reconfs_results = os.path.join(reconf_results_dir, title)
+    sends_results = os.path.join(sends_results_dir, title)
+    # receive_results = os.path.join(receive_results_dir, title)
+
+    list_files_reconfs = sorted(os.listdir(reconfs_results), key=lambda f_name: int(Path(f_name).stem))
+    list_files_sends = sorted(os.listdir(sends_results), key=lambda f_name: int(Path(f_name).stem))
+    # list_files_receives = sorted(os.listdir(receive_results), key=lambda f_name: int(Path(f_name).stem))
+
+    energetic_results_expe = {"reconfs": {}, "sendings": {}}
+    for node_reconf_file, node_send_file in zip(list_files_reconfs, list_files_sends):
+        with open(os.path.join(reconfs_results, node_reconf_file)) as f:
+            results_reconf = yaml.safe_load(f)
+        with open(os.path.join(sends_results, node_send_file)) as f:
+            results_send = yaml.safe_load(f)
+        # with open(os.path.join(reconfs_results, send_receives)) as f:
+        #     results_receive = yaml.safe_load(f)
+        node_id = int(Path(node_reconf_file).stem)
+        energetic_results_expe["reconfs"][node_id] = {"node_conso": results_reconf["node_conso"], "comms_cons": results_reconf["comms_cons"]}
+        energetic_results_expe["sendings"][node_id] = {"node_conso": results_send["node_conso"], "comms_cons": results_send["comms_cons"]}
+
+    return energetic_results_expe
 
 
 def main():
@@ -79,12 +105,14 @@ def main():
     shutil.rmtree(results_dir, ignore_errors=True)
 
     ## Run all experiments
-    limit_expes = math.inf
+    # limit_expes = math.inf
+    limit_expes = 5
     parameter_files_list = os.listdir(expe_esds_parameter_files)
     sum_expes_duration = 0
     nb_expes_tot = min(len(parameter_files_list), limit_expes)
     nb_expes_done = 0
     print(f"Total nb experiments: {nb_expes_tot}")
+    global_results = {}
     for parameter_file in parameter_files_list:
         ## Limit number of experiments
         if nb_expes_done >= limit_expes:
@@ -99,7 +127,7 @@ def main():
         os.makedirs(os.path.join(sends_results_dir, title), exist_ok=True)
         os.makedirs(os.path.join(receive_results_dir, title), exist_ok=True)
 
-        platform_path=os.path.abspath("concerto-d/platform.yaml")
+        platform_path = os.path.abspath("concerto-d/platform.yaml")
         print(f"{nb_expes_done+1}/{nb_expes_tot} - {parameter_file} => ", end="")
         try:
             ## Launch experiment
@@ -118,6 +146,9 @@ def main():
             expe_duration = end_at - start_at
             print("passed (%0.1fs)" % (expe_duration))
             sum_expes_duration += expe_duration
+
+            ## Aggregate to global results
+            global_results[title] = _load_energetic_expe_results_from_title(title, reconf_results_dir, sends_results_dir)
         except subprocess.TimeoutExpired as err:
             print("failed :(")
             print("------------- Test duration expired (timeout="+str(tests_timeout)+"s) -------------")
@@ -136,6 +167,13 @@ def main():
             nb_expes_done += 1
 
     print(f"All passed in {sum_expes_duration:.2f}s")
+
+    print(" ------------ Results --------------")
+    for key, nodes_results in global_results.items():
+        print(f"{key}:")
+        print(f"reconfs: {nodes_results['reconfs']}")
+        print(f"sendings: {nodes_results['sendings']}")
+    print("------------------------------------")
 
 
 if __name__ == '__main__':

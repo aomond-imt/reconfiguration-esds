@@ -16,8 +16,10 @@ def execution_work(api, node_uptimes, work_periods_per_node, max_execution_durat
     # Start expe
     ### Setup node power consumption
     node_cons = PowerStates(api, 0)
-    comms_cons = PowerStatesComms(api)
-    comms_cons.set_power(interface_name, 0, LORA_POWER, LORA_POWER)
+    comms_cons = None
+    if type_process != "reconf":
+        comms_cons = PowerStatesComms(api)
+        comms_cons.set_power(interface_name, 0, LORA_POWER, LORA_POWER)
 
     ### Run expe
     api.turn_off()
@@ -69,8 +71,7 @@ def execution_work(api, node_uptimes, work_periods_per_node, max_execution_durat
                 tot_no_working_time += remaining_waiting_duration
                 api.wait(remaining_waiting_duration)
             else:
-                api.log(
-                    f"End of uptime period already reached since {abs(remaining_waiting_duration)}s, sleeping immediately")
+                api.log(f"End of uptime period already reached since {abs(remaining_waiting_duration)}s, sleeping immediately")
 
             # Off period
             api.turn_off()
@@ -80,7 +81,9 @@ def execution_work(api, node_uptimes, work_periods_per_node, max_execution_durat
                 api.log(f"Threshold reached: {max_execution_duration}s. End of choreography")
                 break
 
-    return tot_working_time, tot_working_flat_time, tot_no_working_time, tot_sleeping_time, tot_working_time_dict, tot_working_time_flat_dict, node_cons.energy, comms_cons.get_energy()
+    # Whether not to print energy
+    tot_comms_cons = 0 if type_process == "reconf" else comms_cons.get_energy()
+    return tot_working_time, tot_working_flat_time, tot_no_working_time, tot_sleeping_time, tot_working_time_dict, tot_working_time_flat_dict, node_cons.energy, tot_comms_cons
 
 
 def _handle_reconf(
@@ -137,7 +140,7 @@ def _handle_sending(api: Node, c, work_periods_per_node, uptime, uptime_end, tot
                 ## Each node send a msg in a fraction of the total sending_duration
                 api.log(f"Start sending {weight_send} sized packets to {conn_id}")
                 datasize_to_send = datasize*weight_send
-                api.sendt("eth0", "Msg", datasize_to_send, conn_id, timeout=datasize_to_send)
+                api.sendt("eth0", "Msg", datasize_to_send, conn_id + NB_NODES, timeout=datasize_to_send)
                 api.log("End sending")
 
                 ## Register the total time spend sending data per receiver id
