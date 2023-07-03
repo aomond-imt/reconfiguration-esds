@@ -1,26 +1,19 @@
 nodes:
-  count: 5
+  count: 3
   implementations:
     - 0 sending.py
     - 1 sending.py
     - 2 sending.py
-    - 3 sending.py
-    - 4 sending.py
   groups:
     - 0 0
     - 1 1
     - 2 2
-    - 3 3
-    - 4 4
 
 interfaces:
   eth0:
-    type: "wired"
+    type: "wireless"
     links:
       - all 1Bps 0s all
-    nodes: 0, 1, 2, 3, 4
-  eth1:
-    type: "wired"
-    links:
+    txperfs:
       - all 1Bps 0s all
-    nodes: 0, 1, 2, 3, 4
+    nodes: 0, 1, 2

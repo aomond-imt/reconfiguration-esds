@@ -22,6 +22,8 @@ def execution_work(api, node_uptimes, work_periods_per_node, max_execution_durat
     ### Run expe
     api.turn_off()
     node_cons.set_power(OFF_POWER)
+    tot_working_time_dict = {}  # For sending
+    tot_working_time_flat_dict = {}  # For sending
     tot_working_time = 0
     tot_working_flat_time = 0
     tot_no_working_time = 0
@@ -56,8 +58,8 @@ def execution_work(api, node_uptimes, work_periods_per_node, max_execution_durat
                     uptime_end
                 )
             else:
-                tot_no_working_time, tot_working_time = _handle_sending(
-                    api, c, work_periods_per_node, uptime, uptime_end, tot_working_time, tot_no_working_time
+                tot_no_working_time, tot_working_time_dict, tot_working_time_flat_dict = _handle_sending(
+                    api, c, work_periods_per_node, uptime, uptime_end, tot_working_time_dict, tot_working_time_flat_dict, tot_no_working_time
                 )
 
             ## No reconf period, wait until sleeping
@@ -78,7 +80,7 @@ def execution_work(api, node_uptimes, work_periods_per_node, max_execution_durat
                 api.log(f"Threshold reached: {max_execution_duration}s. End of choreography")
                 break
 
-    return tot_working_time, tot_working_flat_time, tot_no_working_time, tot_sleeping_time, node_cons.energy, comms_cons.get_energy()
+    return tot_working_time, tot_working_flat_time, tot_no_working_time, tot_sleeping_time, tot_working_time_dict, tot_working_time_flat_dict, node_cons.energy, comms_cons.get_energy()
 
 
 def _handle_reconf(
@@ -111,15 +113,14 @@ def _handle_reconf(
             ## No reconf period
             node_cons.set_power(ON_POWER)
         else:
-            api.log(
-                f"Skipping reconf_periods: [{start}, {end}, {nb_processes}], current uptime: {uptime}, next uptime: {next_uptime_start}")
+            api.log(f"Skipping reconf_periods: [{start}, {end}, {nb_processes}], current uptime: {uptime}, next uptime: {next_uptime_start}")
     return tot_no_working_time, tot_working_flat_time, tot_working_time
 
 
-def _handle_sending(api: Node, c, work_periods_per_node, uptime, uptime_end, tot_working_time, tot_no_working_time):
+def _handle_sending(api: Node, c, work_periods_per_node, uptime, uptime_end, tot_working_time_dict, tot_working_time_flat_dict, tot_no_working_time):
     for start_send, end_send, count_sends in work_periods_per_node:
         if count_sends != {} and start_send < uptime_end and end_send >= uptime:
-            ### No sending period
+            ## No sending period
             wait_before_sending_start = max(start_send, c()) - c()
             api.log(f"Waiting for sending to start: {round(wait_before_sending_start, 2)}s")
             tot_no_working_time += wait_before_sending_start
@@ -127,16 +128,31 @@ def _handle_sending(api: Node, c, work_periods_per_node, uptime, uptime_end, tot
 
             ## Sending period
             bandwidth = 1  # 1Bps (set on platform.yaml) TODO: take it into account in the calcul
-            nb_sends = sum(count_sends.values())
+            tot_weight_send = sum(count_sends.values())
             sending_end = min(end_send, uptime_end)
-            sending_duration = sending_end - c()
-            datasize = round(sending_duration / nb_sends, 3)
-            send_start = c()
-            api.log(f"Sending duration: {sending_duration}. Datasize: {datasize}. Nb_sends: {nb_sends}. Bandwidth: {bandwidth}. Sending start: {c()}. Sending end: {sending_end}")
-            for conn_id, nb_send in count_sends.items():
-                api.send("eth0", "Msg", datasize * nb_send, conn_id + NB_NODES)
-            tot_working_time += c() - send_start
+            sending_duration = sending_end - c()  # Nodes need to send continuously during this period
+            datasize = round(sending_duration / tot_weight_send, 3)  # Fraction the send window by the weight of the send
+            api.log(f"Sending duration: {sending_duration}. Datasize: {datasize}. tot_weight_send: {tot_weight_send}. Bandwidth: {bandwidth}. Sending start: {c()}. Sending end: {sending_end}")
+            for conn_id, weight_send in count_sends.items():
+                ## Each node send a msg in a fraction of the total sending_duration
+                api.log(f"Start sending {weight_send} sized packets to {conn_id}")
+                datasize_to_send = datasize*weight_send
+                api.sendt("eth0", "Msg", datasize_to_send, conn_id, timeout=datasize_to_send)
+                api.log("End sending")
+
+                ## Register the total time spend sending data per receiver id
+                if conn_id not in tot_working_time_dict.keys():
+                    tot_working_time_dict[conn_id] = datasize_to_send
+                else:
+                    tot_working_time_dict[conn_id] += datasize_to_send
+
+                ## Register theoretical weighted duration during which packets are continuously sent to a receiver
+                ## Do not represent the real working duration. It serves for verification purposes.
+                if conn_id not in tot_working_time_flat_dict.keys():
+                    tot_working_time_flat_dict[conn_id] = sending_duration*weight_send
+                else:
+                    tot_working_time_flat_dict[conn_id] += sending_duration*weight_send
         else:
             api.log(f"Skipping sending_period: [{start_send}, {end_send}, {count_sends}], current uptime {uptime}")
 
-    return tot_no_working_time, tot_working_time
+    return tot_no_working_time, tot_working_time_dict, tot_working_time_flat_dict

@@ -1,6 +1,8 @@
+general:
+  interferences: off
+
 nodes:
-  count: 6
-#  count: 7
+  count: 12
   implementations:
     # Reconf
     - 0 reconf.py
@@ -11,7 +13,12 @@ nodes:
     - 5 reconf.py
 
     # Sending
-#    - 6 sending.py
+    - 6 sending.py
+    - 7 sending.py
+    - 8 sending.py
+    - 9 sending.py
+    - 10 sending.py
+    - 11 sending.py
   groups: # id group_id
     # Reconf
     - 0 0
@@ -22,15 +29,21 @@ nodes:
     - 5 5
 
     # Sending
-#    - 6 0
+    - 6 0
+    - 7 1
+    - 8 2
+    - 9 3
+    - 10 4
+    - 11 5
   arguments:
     all: {expe_config_file: "/tmp/current_esds_parameter_file.yaml"}
-#    all: {expe_config_file: "/tmp/expe_esds_parameter_files/esds_generated_data-ud0_od0_30_25-async-deploy-T1.yaml"}
+#    all: {expe_config_file: "/tmp/expe_esds_parameter_files/esds_generated_data-ud0_od0_7_25-sync-update-T0.yaml"}
 
 interfaces:
   eth0:
-    type: "wired"
+    type: "wireless"
     links:
       - all 1Bps 0s all
-    nodes: 0, 1, 2, 3, 4, 5
-#    nodes: 0, 1, 2, 3, 4, 5, 6
+    txperfs:
+      - all 1Bps 0s all
+    nodes: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
