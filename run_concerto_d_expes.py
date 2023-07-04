@@ -1,9 +1,17 @@
 #!/usr/bin/env python
 import os,subprocess,time
 import shutil
+import traceback
 from pathlib import Path
 
 import yaml
+
+OFF_POWER = 0
+ON_POWER = 0.4
+PROCESS_POWER = 1  # TODO model energetic
+LORA_POWER = 0.16
+
+NB_NODES = 6
 
 
 def _esds_results_verification(expe_esds_verification_files, reconf_results_dir, sends_results_dir, receive_results_dir, title):
@@ -31,7 +39,8 @@ def _esds_results_verification(expe_esds_verification_files, reconf_results_dir,
         with open(os.path.join(receive_results, node_receive_file)) as f:
             results_receive = yaml.safe_load(f)
 
-        # Verification reconfs durations
+        # Verification reconfs
+        ## Reconf duration
         node_id = int(Path(node_reconf_file).stem)
         for key, val in results_reconf.items():
             if key in ["tot_reconf_time", "max_execution_time"]:
@@ -44,6 +53,18 @@ def _esds_results_verification(expe_esds_verification_files, reconf_results_dir,
                 except AssertionError as e:
                     print(f"key: {key} - val: {val} - expected: {expected_val}")
                     raise e
+
+        ## Reconf energy cost
+        key = "node_conso"
+        val = (results_reconf["tot_reconf_time"] * PROCESS_POWER
+               + results_reconf["tot_reconf_flat_time"] * ON_POWER
+               + results_reconf["tot_no_reconf_time"] * ON_POWER)
+        expected_val = float(results_reconf["node_conso"][:-1])
+        try:
+            assert round(val, 2) == round(expected_val, 2)
+        except AssertionError as e:
+            print(f"key: {key} - val: {val} - expected: {expected_val}")
+            raise e
 
         # Verification sending durations
         for key, val in results_send.items():
