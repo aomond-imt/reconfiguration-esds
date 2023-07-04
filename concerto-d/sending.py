@@ -19,10 +19,11 @@ def execute(api: Node):
         expe_config = yaml.safe_load(f)
         title = expe_config["title"]
         uptimes = expe_config["uptimes_nodes"]
-        esds_data = expe_config
+        sending_periods_per_node = expe_config["sending_periods_per_node"]
+        max_execution_duration = expe_config["max_execution_duration"]
 
     tot_sending_time, tot_sending_flat_time, tot_no_sending_time, tot_sleeping_time, tot_working_time_dict, tot_working_time_flat_dict, node_conso, comms_cons = execution_work(
-        api, uptimes[api.node_id % 6], esds_data["sending_periods_per_node"][api.node_id % 6], esds_data["max_execution_duration"], "sending"
+        api, uptimes[api.node_id % 6], sending_periods_per_node[api.node_id % 6], max_execution_duration, "sending"
     )
 
     results = {

@@ -16,10 +16,11 @@ def execute(api: Node):
         expe_config = yaml.safe_load(f)
         title = expe_config["title"]
         uptimes = expe_config["uptimes_nodes"]
-        esds_data = expe_config
+        reconf_periods_per_node = expe_config["reconf_periods_per_node"]
+        max_execution_duration = expe_config["max_execution_duration"]
 
     tot_reconf_time, tot_reconf_flat_time, tot_no_reconf_time, tot_sleeping_time, _, _, node_conso, comms_cons = execution_work(
-        api, uptimes[api.node_id], esds_data["reconf_periods_per_node"][api.node_id], esds_data["max_execution_duration"], "reconf"
+        api, uptimes[api.node_id], reconf_periods_per_node[api.node_id], max_execution_duration, "reconf"
     )
 
     results = {
