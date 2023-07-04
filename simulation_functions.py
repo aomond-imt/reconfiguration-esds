@@ -59,9 +59,9 @@ def execution_work(api, node_uptimes, work_periods_per_node, max_execution_durat
                     tot_working_time, uptime,
                     uptime_end
                 )
-            else:
+            elif type_process in ["sending", "receive"]:
                 tot_no_working_time, tot_working_time_dict, tot_working_time_flat_dict = _handle_sending(
-                    api, c, work_periods_per_node, uptime, uptime_end, tot_working_time_dict, tot_working_time_flat_dict, tot_no_working_time
+                    api, c, work_periods_per_node, uptime, uptime_end, tot_working_time_dict, tot_working_time_flat_dict, tot_no_working_time, type_process
                 )
 
             ## No reconf period, wait until sleeping
@@ -120,7 +120,7 @@ def _handle_reconf(
     return tot_no_working_time, tot_working_flat_time, tot_working_time
 
 
-def _handle_sending(api: Node, c, work_periods_per_node, uptime, uptime_end, tot_working_time_dict, tot_working_time_flat_dict, tot_no_working_time):
+def _handle_sending(api: Node, c, work_periods_per_node, uptime, uptime_end, tot_working_time_dict, tot_working_time_flat_dict, tot_no_working_time, type_process):
     for start_send, end_send, count_sends in work_periods_per_node:
         if count_sends != {} and start_send < uptime_end and end_send >= uptime:
             ## No sending period
@@ -140,7 +140,8 @@ def _handle_sending(api: Node, c, work_periods_per_node, uptime, uptime_end, tot
                 ## Each node send a msg in a fraction of the total sending_duration
                 api.log(f"Start sending {weight_send} sized packets to {conn_id}")
                 datasize_to_send = datasize*weight_send
-                api.sendt("eth0", "Msg", datasize_to_send, conn_id + NB_NODES, timeout=datasize_to_send)
+                nb_nodes = NB_NODES if type_process == "send" else NB_NODES * 2   # If receive, add an additionnal NB_NODES
+                api.sendt("eth0", "Msg", datasize_to_send, conn_id + nb_nodes, timeout=datasize_to_send)
                 api.log("End sending")
 
                 ## Register the total time spend sending data per receiver id

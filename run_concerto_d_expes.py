@@ -18,18 +18,18 @@ def _esds_results_verification(expe_esds_verification_files, reconf_results_dir,
     # Retrieve results files for reconfs, sends and receives
     reconfs_results = os.path.join(reconf_results_dir, title)
     sends_results = os.path.join(sends_results_dir, title)
-    # receive_results = os.path.join(receive_results_dir, title)
+    receive_results = os.path.join(receive_results_dir, title)
 
     list_files_reconfs = sorted(os.listdir(reconfs_results), key=lambda f_name: int(Path(f_name).stem))
     list_files_sends = sorted(os.listdir(sends_results), key=lambda f_name: int(Path(f_name).stem))
-    # list_files_receives = sorted(os.listdir(receive_results), key=lambda f_name: int(Path(f_name).stem))
-    for node_reconf_file, node_send_file in zip(list_files_reconfs, list_files_sends):
+    list_files_receives = sorted(os.listdir(receive_results), key=lambda f_name: int(Path(f_name).stem))
+    for node_reconf_file, node_send_file, node_receive_file in zip(list_files_reconfs, list_files_sends, list_files_receives):
         with open(os.path.join(reconfs_results, node_reconf_file)) as f:
             results_reconf = yaml.safe_load(f)
         with open(os.path.join(sends_results, node_send_file)) as f:
             results_send = yaml.safe_load(f)
-        # with open(os.path.join(reconfs_results, send_receives)) as f:
-        #     results_receive = yaml.safe_load(f)
+        with open(os.path.join(receive_results, node_receive_file)) as f:
+            results_receive = yaml.safe_load(f)
 
         # Verification reconfs durations
         node_id = int(Path(node_reconf_file).stem)
@@ -56,6 +56,19 @@ def _esds_results_verification(expe_esds_verification_files, reconf_results_dir,
                         assert val_conn_id == expected_val_conn_id
                     except AssertionError as e:
                         print(f"key: {key} - val: {val} - expected: {verif_sending_periods}")
+                        raise e
+
+        # Verification receive durations
+        for key, val in results_receive.items():
+            if key in ["tot_receiving_flat_time"]:
+                verif_receive_periods = verification["receive_periods"][node_id]
+                for conn_id, expected_val in verif_receive_periods.items():
+                    val_conn_id = round(val[conn_id], 2)
+                    expected_val_conn_id = round(expected_val, 2)
+                    try:
+                        assert val_conn_id == expected_val_conn_id
+                    except AssertionError as e:
+                        print(f"key: {key} - val: {val} - expected: {verif_receive_periods}")
                         raise e
 
 
@@ -161,7 +174,7 @@ def main():
             exit(2)
         except Exception as err:
             print("failed :(")
-            print("Reason: "+str(err))
+            traceback.print_exc()
             exit(3)
         finally:
             nb_expes_done += 1

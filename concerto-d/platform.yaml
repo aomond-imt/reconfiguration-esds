@@ -2,7 +2,7 @@ general:
   interferences: off
 
 nodes:
-  count: 12
+  count: 18
   implementations:
     # Reconf
     - 0 reconf.py
@@ -19,6 +19,14 @@ nodes:
     - 9 sending.py
     - 10 sending.py
     - 11 sending.py
+
+    # Receive
+    - 12 receive.py
+    - 13 receive.py
+    - 14 receive.py
+    - 15 receive.py
+    - 16 receive.py
+    - 17 receive.py
   groups: # id group_id
     # Reconf
     - 0 0
@@ -35,6 +43,14 @@ nodes:
     - 9 3
     - 10 4
     - 11 5
+
+    # Sending
+    - 12 0
+    - 13 1
+    - 14 2
+    - 15 3
+    - 16 4
+    - 17 5
   arguments:
     all: {expe_config_file: "/tmp/current_esds_parameter_file.yaml"}
 #    all: {expe_config_file: "/tmp/expe_esds_parameter_files/esds_generated_data-ud1_od0_15_25-async-deploy-T1.yaml"}
@@ -46,4 +62,4 @@ interfaces:
       - all 1Bps 0s all
     txperfs:
       - all 1Bps 0s all
-    nodes: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+    nodes: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17
