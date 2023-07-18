@@ -93,27 +93,28 @@ def _esds_results_verification(expe_esds_verification_files, reconf_results_dir,
                         raise e
 
 
-def _load_energetic_expe_results_from_title(title, reconf_results_dir, sends_results_dir):
+def _load_energetic_expe_results_from_title(title, reconf_results_dir, sends_results_dir, receive_results_dir):
     # Retrieve results files for reconfs, sends and receives
     reconfs_results = os.path.join(reconf_results_dir, title)
     sends_results = os.path.join(sends_results_dir, title)
-    # receive_results = os.path.join(receive_results_dir, title)
+    receive_results = os.path.join(receive_results_dir, title)
 
     list_files_reconfs = sorted(os.listdir(reconfs_results), key=lambda f_name: int(Path(f_name).stem))
     list_files_sends = sorted(os.listdir(sends_results), key=lambda f_name: int(Path(f_name).stem))
-    # list_files_receives = sorted(os.listdir(receive_results), key=lambda f_name: int(Path(f_name).stem))
+    list_files_receives = sorted(os.listdir(receive_results), key=lambda f_name: int(Path(f_name).stem))
 
-    energetic_results_expe = {"reconfs": {}, "sendings": {}}
-    for node_reconf_file, node_send_file in zip(list_files_reconfs, list_files_sends):
+    energetic_results_expe = {"reconfs": {}, "sendings": {}, "receives": {}}
+    for node_reconf_file, node_send_file, node_receive_file in zip(list_files_reconfs, list_files_sends, list_files_receives):
         with open(os.path.join(reconfs_results, node_reconf_file)) as f:
             results_reconf = yaml.safe_load(f)
         with open(os.path.join(sends_results, node_send_file)) as f:
             results_send = yaml.safe_load(f)
-        # with open(os.path.join(reconfs_results, send_receives)) as f:
-        #     results_receive = yaml.safe_load(f)
+        with open(os.path.join(receive_results, node_receive_file)) as f:
+            results_receive = yaml.safe_load(f)
         node_id = int(Path(node_reconf_file).stem)
         energetic_results_expe["reconfs"][node_id] = {"node_conso": results_reconf["node_conso"], "comms_cons": results_reconf["comms_cons"]}
         energetic_results_expe["sendings"][node_id] = {"node_conso": results_send["node_conso"], "comms_cons": results_send["comms_cons"]}
+        energetic_results_expe["receives"][node_id] = {"node_conso": results_receive["node_conso"], "comms_cons": results_receive["comms_cons"]}
 
     return energetic_results_expe
 
@@ -182,7 +183,7 @@ def main():
             sum_expes_duration += expe_duration
 
             ## Aggregate to global results
-            global_results[title] = _load_energetic_expe_results_from_title(title, reconf_results_dir, sends_results_dir)
+            global_results[title] = _load_energetic_expe_results_from_title(title, reconf_results_dir, sends_results_dir, receive_results_dir)
         except subprocess.TimeoutExpired as err:
             print("failed :(")
             print("------------- Test duration expired (timeout="+str(tests_timeout)+"s) -------------")
@@ -207,6 +208,7 @@ def main():
         print(f"{key}:")
         print(f"reconfs: {nodes_results['reconfs']}")
         print(f"sendings: {nodes_results['sendings']}")
+        print(f"receives: {nodes_results['receives']}")
     print("------------------------------------")
 
 
