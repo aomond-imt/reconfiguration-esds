@@ -1,8 +1,28 @@
 import json
 
+from concerto_d_model import model_time_concerto_d
 from concerto_d_model.model_time_concerto_d import _compute_receive_periods_from_sending_periods, \
     count_active_intervals, count_active_intervals_sending, _compute_reconf_periods_per_node, \
     _compute_sending_periods_per_node, _get_deploy_parallel_use_case_model
+
+
+def test_compute_uptimes_periods_per_node():
+    uptime_schedule_0 = [
+        [[0, 1], [90, 1]],
+        [[5, 1], [60, 1]]
+    ]
+    uptime_schedule_1 = [
+        [[0, 1], [100, 1]],
+        [[10, 1], [80, 1]]
+    ]
+    uptime_schedule_2 = [
+        [[0, 1], [-1, 1], [200, 1]],
+        [[10.2, 1], [-1, 1]],
+        [[0, 1], [-1, 1], [90, 1]],
+    ]
+    assert model_time_concerto_d._compute_uptimes_periods_per_node(uptime_schedule_0, 100) == {0: [[0, 50], [90, 100]], 1: [[5, 55], [60, 100]]}
+    assert model_time_concerto_d._compute_uptimes_periods_per_node(uptime_schedule_1, 150) == {0: [[0, 50], [100, 150]], 1: [[10, 60], [80, 130]]}
+    assert model_time_concerto_d._compute_uptimes_periods_per_node(uptime_schedule_2, 90.5) == {0: [[0, 50]], 1: [[10.2, 60.2]], 2: [[0, 50], [90, 90.5]]}
 
 
 def test_compute_receive_periods_from_sending_periods():

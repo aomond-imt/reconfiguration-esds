@@ -288,6 +288,7 @@ def generate_mascots_schedules():
                     results_dict[name_uptime][version_concerto_d][reconf_name][trans_times] = result_str
 
                     esds_data = _compute_esds_data_from_results(all_results_esds)
+                    uptimes_periods_per_node = _compute_uptimes_periods_per_node(uptime_schedule, m_time)
                     reconf_periods_per_node = _compute_reconf_periods_per_node(esds_data)
                     merged_reconf_periods_per_node = {node_id: count_active_intervals(interval_list) for node_id, interval_list in reconf_periods_per_node.items()}
                     sending_periods_per_node = _compute_sending_periods_per_node(esds_data)
@@ -300,6 +301,7 @@ def generate_mascots_schedules():
                     expe_parameters = {
                         "title": title,
                         "uptimes_nodes": uptime_schedule,
+                        "uptimes_periods_per_node": uptimes_periods_per_node,
                         "reconf_periods_per_node": merged_reconf_periods_per_node,
                         "sending_periods_per_node": merged_sending_periods_per_node,
                         "receive_periods_per_node": merged_receive_periods_per_node,
@@ -331,6 +333,19 @@ def generate_mascots_schedules():
         i += 1
 
     print(json.dumps(results_dict, indent=4))
+
+
+def _compute_uptimes_periods_per_node(uptime_schedule, m_time: float):
+    uptimes_periods_per_node = {node_id: [] for node_id in range(len(uptime_schedule))}
+    for node_id, node_schedule in enumerate(uptime_schedule):
+        for uptime, _ in node_schedule:
+            if uptime != -1 and uptime < m_time:
+                uptime_end = min(uptime + 50, m_time)  # TODO magic value
+                uptimes_periods_per_node[node_id].append([uptime, uptime_end])
+                if uptime + 50 >= m_time:
+                    break
+
+    return uptimes_periods_per_node
 
 
 def _compute_sending_periods_per_connected_node(node_id, sending_periods, uptime_schedule):
