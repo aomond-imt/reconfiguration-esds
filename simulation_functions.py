@@ -140,7 +140,7 @@ def _handle_sending(api: Node, c, work_periods_per_node, uptime, uptime_end, tot
                 ## Each node send a msg in a fraction of the total sending_duration
                 api.log(f"Start sending {weight_send} sized packets to {conn_id}")
                 datasize_to_send = datasize*weight_send
-                nb_nodes = NB_NODES if type_process == "send" else NB_NODES * 2   # If receive, add an additionnal NB_NODES
+                nb_nodes = NB_NODES * 2 if type_process == "send" else NB_NODES * 3   # If receive, add an additionnal NB_NODES
                 api.sendt("eth0", "Msg", datasize_to_send, conn_id + nb_nodes, timeout=datasize_to_send)
                 api.log("End sending")
 

@@ -14,7 +14,15 @@ LORA_POWER = 0.16
 NB_NODES = 6
 
 
-def _esds_results_verification(expe_esds_verification_files, reconf_results_dir, sends_results_dir, receive_results_dir, title):
+def _assert_value(node_id, key, val, expected_val):
+    try:
+        assert val == expected_val
+    except AssertionError as e:
+        print(f"node_id: {node_id} - key: {key} - val: {val} - expected: {expected_val}")
+        raise e
+
+
+def _esds_results_verification(esds_parameters, expe_esds_verification_files, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir, title):
     # Retrieve verification file for the given configuration file
     verification = None
     for verif_file in os.listdir(expe_esds_verification_files):
@@ -24,14 +32,18 @@ def _esds_results_verification(expe_esds_verification_files, reconf_results_dir,
                 verification = yaml.safe_load(f)
 
     # Retrieve results files for reconfs, sends and receives
+    idle_results = os.path.join(idle_results_dir, title)
     reconfs_results = os.path.join(reconf_results_dir, title)
     sends_results = os.path.join(sends_results_dir, title)
     receive_results = os.path.join(receive_results_dir, title)
 
+    list_files_idles = sorted(os.listdir(idle_results), key=lambda f_name: int(Path(f_name).stem))
     list_files_reconfs = sorted(os.listdir(reconfs_results), key=lambda f_name: int(Path(f_name).stem))
     list_files_sends = sorted(os.listdir(sends_results), key=lambda f_name: int(Path(f_name).stem))
     list_files_receives = sorted(os.listdir(receive_results), key=lambda f_name: int(Path(f_name).stem))
-    for node_reconf_file, node_send_file, node_receive_file in zip(list_files_reconfs, list_files_sends, list_files_receives):
+    for node_idle_file, node_reconf_file, node_send_file, node_receive_file in zip(list_files_idles, list_files_reconfs, list_files_sends, list_files_receives):
+        with open(os.path.join(idle_results, node_idle_file)) as f:
+            results_idle = yaml.safe_load(f)
         with open(os.path.join(reconfs_results, node_reconf_file)) as f:
             results_reconf = yaml.safe_load(f)
         with open(os.path.join(sends_results, node_send_file)) as f:
@@ -39,9 +51,17 @@ def _esds_results_verification(expe_esds_verification_files, reconf_results_dir,
         with open(os.path.join(receive_results, node_receive_file)) as f:
             results_receive = yaml.safe_load(f)
 
+        # Verification idles
+        node_id = int(Path(node_idle_file).stem)
+        node_uptimes = esds_parameters["uptimes_periods_per_node"][node_id]
+        expected_uptime = sum(end-start for start, end in node_uptimes)
+        _assert_value(node_id, "tot_uptime", results_idle["tot_uptime"], expected_uptime)
+        max_exec_duration = esds_parameters["max_execution_duration"]
+        _assert_value(node_id, "tot_sleeping_time", results_idle["tot_sleeping_time"], max_exec_duration - expected_uptime)
+        _assert_value(node_id, "node_conso", results_idle["node_conso"], f"{round(results_idle['tot_uptime']*0.4, 2)}J")  # TODO magic value
+
         # Verification reconfs
         ## Reconf duration
-        node_id = int(Path(node_reconf_file).stem)
         for key, val in results_reconf.items():
             if key in ["tot_reconf_time", "max_execution_time"]:
                 if key == "max_execution_time":
@@ -93,18 +113,22 @@ def _esds_results_verification(expe_esds_verification_files, reconf_results_dir,
                         raise e
 
 
-def _load_energetic_expe_results_from_title(title, reconf_results_dir, sends_results_dir, receive_results_dir):
+def _load_energetic_expe_results_from_title(title, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir):
     # Retrieve results files for reconfs, sends and receives
+    idle_results = os.path.join(idle_results_dir, title)
     reconfs_results = os.path.join(reconf_results_dir, title)
     sends_results = os.path.join(sends_results_dir, title)
     receive_results = os.path.join(receive_results_dir, title)
 
+    list_files_idles = sorted(os.listdir(idle_results), key=lambda f_name: int(Path(f_name).stem))
     list_files_reconfs = sorted(os.listdir(reconfs_results), key=lambda f_name: int(Path(f_name).stem))
     list_files_sends = sorted(os.listdir(sends_results), key=lambda f_name: int(Path(f_name).stem))
     list_files_receives = sorted(os.listdir(receive_results), key=lambda f_name: int(Path(f_name).stem))
 
-    energetic_results_expe = {"reconfs": {}, "sendings": {}, "receives": {}}
-    for node_reconf_file, node_send_file, node_receive_file in zip(list_files_reconfs, list_files_sends, list_files_receives):
+    energetic_results_expe = {"idles": {}, "reconfs": {}, "sendings": {}, "receives": {}}
+    for node_idle_file, node_reconf_file, node_send_file, node_receive_file in zip(list_files_idles, list_files_reconfs, list_files_sends, list_files_receives):
+        with open(os.path.join(idle_results, node_idle_file)) as f:
+            results_idle = yaml.safe_load(f)
         with open(os.path.join(reconfs_results, node_reconf_file)) as f:
             results_reconf = yaml.safe_load(f)
         with open(os.path.join(sends_results, node_send_file)) as f:
@@ -112,6 +136,7 @@ def _load_energetic_expe_results_from_title(title, reconf_results_dir, sends_res
         with open(os.path.join(receive_results, node_receive_file)) as f:
             results_receive = yaml.safe_load(f)
         node_id = int(Path(node_reconf_file).stem)
+        energetic_results_expe["idles"][node_id] = {"node_conso": results_idle["node_conso"], "comms_cons": results_idle["comms_cons"]}
         energetic_results_expe["reconfs"][node_id] = {"node_conso": results_reconf["node_conso"], "comms_cons": results_reconf["comms_cons"]}
         energetic_results_expe["sendings"][node_id] = {"node_conso": results_send["node_conso"], "comms_cons": results_send["comms_cons"]}
         energetic_results_expe["receives"][node_id] = {"node_conso": results_receive["node_conso"], "comms_cons": results_receive["comms_cons"]}
@@ -131,6 +156,7 @@ def main():
 
     ## Results dirs
     results_dir = os.path.join(root, "results")
+    idle_results_dir = os.path.join(results_dir, "idles")
     reconf_results_dir = os.path.join(results_dir, "reconfs")
     sends_results_dir = os.path.join(results_dir, "sends")
     receive_results_dir = os.path.join(results_dir, "receives")
@@ -158,6 +184,7 @@ def main():
         shutil.rmtree(esds_current_parameter_file, ignore_errors=True)
         shutil.copy(current_test_path, esds_current_parameter_file)
         title = Path(parameter_file).stem
+        os.makedirs(os.path.join(idle_results_dir, title), exist_ok=True)
         os.makedirs(os.path.join(reconf_results_dir, title), exist_ok=True)
         os.makedirs(os.path.join(sends_results_dir, title), exist_ok=True)
         os.makedirs(os.path.join(receive_results_dir, title), exist_ok=True)
@@ -177,13 +204,15 @@ def main():
             end_at=time.time()
 
             ## Run verification scripts
-            _esds_results_verification(expe_esds_verification_files, reconf_results_dir, sends_results_dir, receive_results_dir, title)
+            with open(current_test_path) as f:
+                esds_parameters = yaml.safe_load(f)
+            _esds_results_verification(esds_parameters, expe_esds_verification_files, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir, title)
             expe_duration = end_at - start_at
             print("passed (%0.1fs)" % (expe_duration))
             sum_expes_duration += expe_duration
 
             ## Aggregate to global results
-            global_results[title] = _load_energetic_expe_results_from_title(title, reconf_results_dir, sends_results_dir, receive_results_dir)
+            global_results[title] = _load_energetic_expe_results_from_title(title, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir)
         except subprocess.TimeoutExpired as err:
             print("failed :(")
             print("------------- Test duration expired (timeout="+str(tests_timeout)+"s) -------------")
@@ -206,6 +235,7 @@ def main():
     print(" ------------ Results --------------")
     for key, nodes_results in global_results.items():
         print(f"{key}:")
+        print(f"idles: {nodes_results['idles']}")
         print(f"reconfs: {nodes_results['reconfs']}")
         print(f"sendings: {nodes_results['sendings']}")
         print(f"receives: {nodes_results['receives']}")

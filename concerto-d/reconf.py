@@ -20,7 +20,7 @@ def execute(api: Node):
         max_execution_duration = expe_config["max_execution_duration"]
 
     tot_reconf_time, tot_reconf_flat_time, tot_no_reconf_time, tot_sleeping_time, _, _, node_conso, comms_cons = execution_work(
-        api, uptimes[api.node_id], reconf_periods_per_node[api.node_id], max_execution_duration, "reconf"
+        api, uptimes[api.node_id % 6], reconf_periods_per_node[api.node_id % 6], max_execution_duration, "reconf"
     )
 
     results = {
