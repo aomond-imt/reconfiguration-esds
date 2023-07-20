@@ -45,8 +45,8 @@ def execute(api: Node):
     results = {
         "tot_uptime": tot_uptime,
         "tot_sleeping_time": tot_sleeping_time,
-        "node_conso": f"{round(idle_cons.energy, 2)}J",
-        "comms_cons": f"0J",
+        "node_conso": round(idle_cons.energy, 2),
+        "comms_cons": 0,
     }
     for key, val in results.items():
         print(f"{key}: {val}")
