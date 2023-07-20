@@ -61,7 +61,7 @@ nodes:
     - 16 4
     - 17 5
 
-    # Sending
+    # Receive
     - 18 0
     - 19 1
     - 20 2
@@ -73,11 +73,17 @@ nodes:
 #    all: {expe_config_file: "/tmp/expe_esds_parameter_files/esds_generated_data-ud1_od0_15_25-async-deploy-T1.yaml"}
 
 interfaces:
+  ethSending:
+    type: "wireless"
+    links:
+      - all 1Bps 0s all
+    txperfs:
+      - all 1Bps 0s all
+    nodes: 12, 13, 14, 15, 16, 17
   eth0:
     type: "wireless"
     links:
       - all 1Bps 0s all
     txperfs:
       - all 1Bps 0s all
-    nodes: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23
-#    nodes: 0, 1, 2, 3, 4, 5
+    nodes: 18, 19, 20, 21, 22, 23

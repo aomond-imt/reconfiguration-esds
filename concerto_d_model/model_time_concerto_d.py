@@ -293,7 +293,7 @@ def generate_mascots_schedules():
                     merged_reconf_periods_per_node = {node_id: count_active_intervals(interval_list) for node_id, interval_list in reconf_periods_per_node.items()}
                     sending_periods_per_node = _compute_sending_periods_per_node(esds_data)
                     merged_sending_periods_per_node = {node_id: count_active_intervals_sending(interval_list) for node_id, interval_list in sending_periods_per_node.items()}
-                    sending_periods_during_uptime_per_node = _compute_sending_periods_during_uptime_per_node(merged_sending_periods_per_node, uptimes_periods_per_node)
+                    sending_periods_during_uptime_per_node = _compute_sending_periods_during_uptime_per_node(uptimes_periods_per_node, merged_sending_periods_per_node)
                     receive_periods_per_node = _compute_receive_periods_from_sending_periods(sending_periods_per_node)
                     merged_receive_periods_per_node = {node_id: count_active_intervals_sending(interval_list) for node_id, interval_list in receive_periods_per_node.items()}
                     title = f"esds_generated_data-{name_uptime}-{version_concerto_d}-{reconf_name}-{trans_times}"

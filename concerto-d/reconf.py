@@ -26,7 +26,7 @@ def execute(api: Node):
     reconf_cons = PowerStates(api, 0)
     reconf_cons.set_power(0)
 
-    api.turn_off()
+    api.turn_on()
     for start, end, nb_processes in reconf_periods_per_node:
         if nb_processes > 0:
             # No reconf period

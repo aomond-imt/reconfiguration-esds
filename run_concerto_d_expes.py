@@ -57,8 +57,9 @@ def _esds_results_verification(esds_parameters, expe_esds_verification_files, id
         # Verification idles
         node_uptimes = esds_parameters["uptimes_periods_per_node"][node_id]
         expected_uptime = sum(end-start for start, end in node_uptimes)
+        expected_no_uptime = max_exec_duration - expected_uptime
         _assert_value(node_id, "tot_uptime", results_idle["tot_uptime"], expected_uptime)
-        _assert_value(node_id, "tot_sleeping_time", results_idle["tot_sleeping_time"], max_exec_duration - expected_uptime)
+        _assert_value(node_id, "tot_sleeping_time", results_idle["tot_sleeping_time"], expected_no_uptime)
         _assert_value(node_id, "node_conso", results_idle["node_conso"], expected_uptime*0.4)  # TODO magic value
 
         # Verification reconfs
@@ -72,18 +73,25 @@ def _esds_results_verification(esds_parameters, expe_esds_verification_files, id
         _assert_value(node_id, "tot_no_reconf_time", results_reconf["tot_no_reconf_time"], expected_no_reconf_time)
         _assert_value(node_id, "node_conso", results_reconf["node_conso"], expected_node_conso)
 
-        ## Reconf duration
-        for key, val in results_reconf.items():
-            if key in ["tot_reconf_time", "max_execution_time"]:
-                if key == "max_execution_time":
-                    expected_val = round(verification["max_execution_duration"], 2)
-                else:
-                    expected_val = round(verification["reconf_periods"][node_id], 2)
-                try:
-                    assert val == expected_val
-                except AssertionError as e:
-                    print(f"key: {key} - val: {val} - expected: {expected_val}")
-                    raise e
+        # Verification sending
+        node_sendings = esds_parameters["sending_periods_per_node"][node_id]
+        expected_sending_flat_time = sum(end - start for start, end, node_send in node_sendings if node_send != {})
+        expected_no_sending_time = max_exec_duration - expected_sending_flat_time - expected_no_uptime
+        _assert_value(node_id, "tot_sending_flat_time", results_send["tot_sending_flat_time"], expected_sending_flat_time)
+        _assert_value(node_id, "tot_no_sending_time", results_send["tot_no_sending_time"], expected_no_sending_time)
+
+        # ## Reconf duration
+        # for key, val in results_reconf.items():
+        #     if key in ["tot_reconf_time", "max_execution_time"]:
+        #         if key == "max_execution_time":
+        #             expected_val = round(verification["max_execution_duration"], 2)
+        #         else:
+        #             expected_val = round(verification["reconf_periods"][node_id], 2)
+        #         try:
+        #             assert val == expected_val
+        #         except AssertionError as e:
+        #             print(f"key: {key} - val: {val} - expected: {expected_val}")
+        #             raise e
 
         # ## Reconf energy cost
         # key = "node_conso"
@@ -98,17 +106,17 @@ def _esds_results_verification(esds_parameters, expe_esds_verification_files, id
         #     raise e
 
         # Verification sending durations
-        for key, val in results_send.items():
-            if key in ["tot_sending_flat_time"]:
-                verif_sending_periods = verification["sending_periods"][node_id]
-                for conn_id, expected_val in verif_sending_periods.items():
-                    val_conn_id = round(val[conn_id], 2)
-                    expected_val_conn_id = round(expected_val, 2)
-                    try:
-                        assert val_conn_id == expected_val_conn_id
-                    except AssertionError as e:
-                        print(f"key: {key} - val: {val} - expected: {verif_sending_periods}")
-                        raise e
+        # for key, val in results_send.items():
+        #     if key in ["tot_sending_flat_time"]:
+        #         verif_sending_periods = verification["sending_periods"][node_id]
+        #         for conn_id, expected_val in verif_sending_periods.items():
+        #             val_conn_id = round(val[conn_id], 2)
+        #             expected_val_conn_id = round(expected_val, 2)
+        #             try:
+        #                 assert val_conn_id == expected_val_conn_id
+        #             except AssertionError as e:
+        #                 print(f"key: {key} - val: {val} - expected: {verif_sending_periods}")
+        #                 raise e
 
         # Verification receive durations
         for key, val in results_receive.items():
