@@ -80,56 +80,12 @@ def _esds_results_verification(esds_parameters, expe_esds_verification_files, id
         _assert_value(node_id, "tot_sending_flat_time", results_send["tot_sending_flat_time"], expected_sending_flat_time)
         _assert_value(node_id, "tot_no_sending_time", results_send["tot_no_sending_time"], expected_no_sending_time)
 
-        # ## Reconf duration
-        # for key, val in results_reconf.items():
-        #     if key in ["tot_reconf_time", "max_execution_time"]:
-        #         if key == "max_execution_time":
-        #             expected_val = round(verification["max_execution_duration"], 2)
-        #         else:
-        #             expected_val = round(verification["reconf_periods"][node_id], 2)
-        #         try:
-        #             assert val == expected_val
-        #         except AssertionError as e:
-        #             print(f"key: {key} - val: {val} - expected: {expected_val}")
-        #             raise e
-
-        # ## Reconf energy cost
-        # key = "node_conso"
-        # val = (results_reconf["tot_reconf_time"] * PROCESS_POWER
-        #        + results_reconf["tot_reconf_flat_time"] * ON_POWER
-        #        + results_reconf["tot_no_reconf_time"] * ON_POWER)
-        # expected_val = float(results_reconf["node_conso"][:-1])
-        # try:
-        #     assert round(val, 2) == round(expected_val, 2)
-        # except AssertionError as e:
-        #     print(f"key: {key} - val: {val} - expected: {expected_val}")
-        #     raise e
-
-        # Verification sending durations
-        # for key, val in results_send.items():
-        #     if key in ["tot_sending_flat_time"]:
-        #         verif_sending_periods = verification["sending_periods"][node_id]
-        #         for conn_id, expected_val in verif_sending_periods.items():
-        #             val_conn_id = round(val[conn_id], 2)
-        #             expected_val_conn_id = round(expected_val, 2)
-        #             try:
-        #                 assert val_conn_id == expected_val_conn_id
-        #             except AssertionError as e:
-        #                 print(f"key: {key} - val: {val} - expected: {verif_sending_periods}")
-        #                 raise e
-
-        # Verification receive durations
-        for key, val in results_receive.items():
-            if key in ["tot_receiving_flat_time"]:
-                verif_receive_periods = verification["receive_periods"][node_id]
-                for conn_id, expected_val in verif_receive_periods.items():
-                    val_conn_id = round(val[conn_id], 2)
-                    expected_val_conn_id = round(expected_val, 2)
-                    try:
-                        assert val_conn_id == expected_val_conn_id
-                    except AssertionError as e:
-                        print(f"key: {key} - val: {val} - expected: {verif_receive_periods}")
-                        raise e
+        # Verification receive
+        node_receives = esds_parameters["receive_periods_per_node"][node_id]
+        expected_receive_flat_time = sum(end - start for start, end, node_send in node_receives if node_send != {})
+        expected_no_receive_time = max_exec_duration - expected_receive_flat_time - expected_no_uptime
+        _assert_value(node_id, "tot_receive_flat_time", results_receive["tot_receive_flat_time"], expected_receive_flat_time)
+        _assert_value(node_id, "tot_no_receive_time", results_receive["tot_no_receive_time"], expected_no_receive_time)
 
 
 def _load_energetic_expe_results_from_title(title, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir):
@@ -154,7 +110,7 @@ def _load_energetic_expe_results_from_title(title, idle_results_dir, reconf_resu
             results_send = yaml.safe_load(f)
         with open(os.path.join(receive_results, node_receive_file)) as f:
             results_receive = yaml.safe_load(f)
-        node_id = int(Path(node_reconf_file).stem)
+        node_id = int(Path(node_idle_file).stem)
         energetic_results_expe["idles"][node_id] = {"node_conso": results_idle["node_conso"], "comms_cons": results_idle["comms_cons"]}
         energetic_results_expe["reconfs"][node_id] = {"node_conso": results_reconf["node_conso"], "comms_cons": results_reconf["comms_cons"]}
         energetic_results_expe["sendings"][node_id] = {"node_conso": results_send["node_conso"], "comms_cons": results_send["comms_cons"]}

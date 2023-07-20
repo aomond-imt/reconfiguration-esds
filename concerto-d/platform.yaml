@@ -80,7 +80,7 @@ interfaces:
     txperfs:
       - all 1Bps 0s all
     nodes: 12, 13, 14, 15, 16, 17
-  eth0:
+  ethReceive:
     type: "wireless"
     links:
       - all 1Bps 0s all
