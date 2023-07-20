@@ -293,6 +293,7 @@ def generate_mascots_schedules():
                     merged_reconf_periods_per_node = {node_id: count_active_intervals(interval_list) for node_id, interval_list in reconf_periods_per_node.items()}
                     sending_periods_per_node = _compute_sending_periods_per_node(esds_data)
                     merged_sending_periods_per_node = {node_id: count_active_intervals_sending(interval_list) for node_id, interval_list in sending_periods_per_node.items()}
+                    sending_periods_during_uptime_per_node = _compute_sending_periods_during_uptime_per_node(merged_sending_periods_per_node, uptimes_periods_per_node)
                     receive_periods_per_node = _compute_receive_periods_from_sending_periods(sending_periods_per_node)
                     merged_receive_periods_per_node = {node_id: count_active_intervals_sending(interval_list) for node_id, interval_list in receive_periods_per_node.items()}
                     title = f"esds_generated_data-{name_uptime}-{version_concerto_d}-{reconf_name}-{trans_times}"
@@ -303,7 +304,7 @@ def generate_mascots_schedules():
                         "uptimes_nodes": uptime_schedule,
                         "uptimes_periods_per_node": uptimes_periods_per_node,
                         "reconf_periods_per_node": merged_reconf_periods_per_node,
-                        "sending_periods_per_node": merged_sending_periods_per_node,
+                        "sending_periods_per_node": sending_periods_during_uptime_per_node,
                         "receive_periods_per_node": merged_receive_periods_per_node,
                         "max_execution_duration": m
                     }
@@ -333,6 +334,43 @@ def generate_mascots_schedules():
         i += 1
 
     print(json.dumps(results_dict, indent=4))
+
+
+def _compute_sending_periods_during_uptime_per_node(uptimes_nodes, sending_periods):
+    result = {node_id: [] for node_id in sending_periods.keys()}
+    for node_id, periods in sending_periods.items():
+        for start_period, end_period, send_nodes in periods:
+            for start_uptime, end_uptime in uptimes_nodes[node_id]:
+                if start_period < end_uptime and end_period > start_uptime:
+                    result[node_id].append([max(start_uptime, start_period), min(end_period, end_uptime), send_nodes])
+    return result
+
+
+def test_compute_sending_periods_during_uptime_per_node():
+    uptimes = [
+        [[0, 50], [100, 150], [300, 350]],
+        [[0, 50], [100, 150], [300, 350]],
+        [[0, 50], [100, 150], [300, 350]],
+    ]
+    s_p_0 = {0: [[60, 70, {1: 1}]]}
+    s_p_1 = {0: [[10, 20.5, {2: 2}]]}
+    s_p_2 = {0: [[30.5, 115.5, {3: 1}]]}
+    s_p_3 = {0: [[25.3, 340.2, {5: 1, 6: 2}]]}
+    s_p_4 = {0: [[70.1, 410.3, {7: 4}]], 1: [[150, 300, {}]], 2: [[300, 350, {}]]}
+
+    assert _compute_sending_periods_during_uptime_per_node(uptimes, s_p_0) == {0: []}
+    assert _compute_sending_periods_during_uptime_per_node(uptimes, s_p_1) == {0: [[10, 20.5, {2: 2}]]}
+    assert _compute_sending_periods_during_uptime_per_node(uptimes, s_p_2) == {0: [[30.5, 50, {3: 1}], [100, 115.5, {3: 1}]]}
+    assert _compute_sending_periods_during_uptime_per_node(uptimes, s_p_3) == {
+        0: [[25.3, 50, {5: 1, 6: 2}], [100, 150, {5: 1, 6: 2}], [300, 340.2, {5: 1, 6: 2}]]
+    }
+    assert _compute_sending_periods_during_uptime_per_node(uptimes, s_p_4) == {
+        0: [[100, 150, {7: 4}], [300, 350, {7: 4}]],
+        1: [],
+        2: [[300, 350, {}]]
+    }
+
+
 
 
 def _compute_uptimes_periods_per_node(uptime_schedule, m_time: float):
@@ -463,4 +501,5 @@ def _compute_sending_periods_per_node(esds_data):
     return result
 
 
-generate_mascots_schedules()
+if __name__ == "__main__":
+    generate_mascots_schedules()
