@@ -292,6 +292,7 @@ def generate_mascots_schedules():
 
                     ## Uptime periods
                     uptimes_periods_per_node = _compute_uptimes_periods_per_node(uptime_schedule, m_time)
+                    router_key = max(uptimes_periods_per_node.keys()) + 1
 
                     ## Reconf periods
                     reconf_periods_per_node = _compute_reconf_periods_per_node(esds_data)
@@ -309,8 +310,10 @@ def generate_mascots_schedules():
 
                     ## Router periods
                     router_uptimes_periods = _compute_router_uptimes_periods(uptimes_periods_per_node)
-                    router_uptimes_key = max(uptimes_periods_per_node.keys()) + 1
-                    uptimes_periods_per_node[router_uptimes_key] = router_uptimes_periods
+                    uptimes_periods_per_node[router_key] = router_uptimes_periods
+                    merged_reconf_periods_per_node[router_key] = []
+                    sending_periods_during_uptime_per_node[router_key] = []
+                    receive_periods_during_uptime_per_node[router_key] = []
 
                     # Expe parameters file
                     title = f"esds_generated_data-{name_uptime}-{version_concerto_d}-{reconf_name}-{trans_times}"

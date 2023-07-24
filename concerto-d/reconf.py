@@ -20,7 +20,7 @@ def execute(api: Node):
     with open(api.args["expe_config_file"]) as f:
         expe_config = yaml.safe_load(f)
         title = expe_config["title"]
-        reconf_periods_per_node = expe_config["reconf_periods_per_node"][api.node_id % 6]
+        reconf_periods_per_node = expe_config["reconf_periods_per_node"][api.node_id % 7]
         max_execution_duration = expe_config["max_execution_duration"]
     tot_reconf_time, tot_flat_reconf_time, tot_no_reconf_time = 0, 0, 0
     reconf_cons = PowerStates(api, 0)

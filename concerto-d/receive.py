@@ -17,8 +17,8 @@ def execute(api: Node):
     with open(api.args["expe_config_file"]) as f:
         expe_config = yaml.safe_load(f)
         title = expe_config["title"]
-        node_uptimes = expe_config["uptimes_periods_per_node"][api.node_id % 6]
-        receive_periods_per_node = expe_config["receive_periods_per_node"][api.node_id % 6]
+        node_uptimes = expe_config["uptimes_periods_per_node"][api.node_id % 7]
+        receive_periods_per_node = expe_config["receive_periods_per_node"][api.node_id % 7]
         max_execution_duration = expe_config["max_execution_duration"]
     tot_receive_time_flat, tot_no_receive_time_flat = 0, 0
     interface_name = "ethReceive"
@@ -73,5 +73,5 @@ def execute(api: Node):
     }
     for key, val in results.items():
         print(f"{key}: {val}")
-    with open(f"/tmp/results/receives/{title}/{api.node_id % 6}.yaml", "w") as f:
+    with open(f"/tmp/results/receives/{title}/{api.node_id % 7}.yaml", "w") as f:
         yaml.safe_dump(results, f)

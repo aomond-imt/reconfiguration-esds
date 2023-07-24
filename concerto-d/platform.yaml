@@ -2,7 +2,7 @@ general:
   interferences: off
 
 nodes:
-  count: 24
+  count: 28
 #  count: 6
   implementations:
     # Idle
@@ -12,30 +12,35 @@ nodes:
     - 3 idle.py
     - 4 idle.py
     - 5 idle.py
+    - 6 idle.py  # Router
 
     # Reconf
-    - 6 reconf.py
     - 7 reconf.py
     - 8 reconf.py
     - 9 reconf.py
     - 10 reconf.py
     - 11 reconf.py
+    - 12 reconf.py
+    - 13 reconf.py  # Router
 
     # Sending
-    - 12 sending.py
-    - 13 sending.py
     - 14 sending.py
     - 15 sending.py
     - 16 sending.py
     - 17 sending.py
+    - 18 sending.py
+    - 19 sending.py
+    - 20 sending.py  # Router
 
     # Receive
-    - 18 receive.py
-    - 19 receive.py
-    - 20 receive.py
     - 21 receive.py
     - 22 receive.py
     - 23 receive.py
+    - 24 receive.py
+    - 25 receive.py
+    - 26 receive.py
+    - 27 receive.py  # Router
+
   groups: # id group_id
     # Idle
     - 0 0
@@ -44,30 +49,34 @@ nodes:
     - 3 3
     - 4 4
     - 5 5
+    - 6 6
 
     # Reconf
-    - 6 0
-    - 7 1
-    - 8 2
-    - 9 3
-    - 10 4
-    - 11 5
+    - 7 0
+    - 8 1
+    - 9 2
+    - 10 3
+    - 11 4
+    - 12 5
+    - 13 6
 
     # Sending
-    - 12 0
-    - 13 1
-    - 14 2
-    - 15 3
-    - 16 4
-    - 17 5
+    - 14 0
+    - 15 1
+    - 16 2
+    - 17 3
+    - 18 4
+    - 19 5
+    - 20 6
 
     # Receive
-    - 18 0
-    - 19 1
-    - 20 2
-    - 21 3
-    - 22 4
-    - 23 5
+    - 21 0
+    - 22 1
+    - 23 2
+    - 24 3
+    - 25 4
+    - 26 5
+    - 27 6
   arguments:
     all: {expe_config_file: "/tmp/current_esds_parameter_file.yaml"}
 #    all: {expe_config_file: "/tmp/expe_esds_parameter_files/esds_generated_data-ud1_od0_15_25-async-deploy-T1.yaml"}
@@ -79,11 +88,11 @@ interfaces:
       - all 1Bps 0s all  # Allsrouce bandwidth latency allreceive
     txperfs:
       - all 1Bps 0s  # Perf de chaque noeud sur cette interface
-    nodes: 12, 13, 14, 15, 16, 17
+    nodes: 14, 15, 16, 17, 18, 19
   ethReceive:
     type: "wireless"
     links:
       - all 1Bps 0s all
     txperfs:
       - all 1Bps 0s all
-    nodes: 18, 19, 20, 21, 22, 23
+    nodes: 21, 22, 23, 24, 25, 26
