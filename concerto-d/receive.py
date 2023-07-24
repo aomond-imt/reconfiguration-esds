@@ -21,7 +21,8 @@ def execute(api: Node):
         receive_periods_per_node = expe_config["receive_periods_per_node"][api.node_id % 7]
         max_execution_duration = expe_config["max_execution_duration"]
     tot_receive_time_flat, tot_no_receive_time_flat = 0, 0
-    interface_name = "ethReceive"
+    interface_name = "ethRouterReceive" if "async" in title else "ethReceive"
+    # interface_name = "ethReceive"
     receive_cons = PowerStatesComms(api)
     receive_cons.set_power(interface_name, 0, LORA_POWER, LORA_POWER)
 

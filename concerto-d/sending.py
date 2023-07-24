@@ -23,7 +23,8 @@ def execute(api: Node):
         sending_periods_per_node = expe_config["sending_periods_per_node"][api.node_id % 7]
         max_execution_duration = expe_config["max_execution_duration"]
     tot_sending_time_flat, tot_no_sending_time_flat = 0, 0
-    interface_name = "ethSending"
+    interface_name = "ethRouterSending" if "async" in title else "ethSending"
+    # interface_name = "ethSending"
     sending_cons = PowerStatesComms(api)
     sending_cons.set_power(interface_name, 0, LORA_POWER, LORA_POWER)
 
