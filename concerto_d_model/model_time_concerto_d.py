@@ -287,19 +287,33 @@ def generate_mascots_schedules():
                     result_str = f"max {trans_times} {reconf_name} {version_concerto_d} {name_uptime}: {m_time}s, delta: {round(delta_s, 2)}s - {round(delta_perc, 2)}% ({exp_val}s expe). Sum reconf: {round(sum_reconf_duration, 2)} ({round(expected_reconf_duration, 2)} expected)"
                     results_dict[name_uptime][version_concerto_d][reconf_name][trans_times] = result_str
 
+                    # Generate ESDS configuration
                     esds_data = _compute_esds_data_from_results(all_results_esds)
+
+                    ## Uptime periods
                     uptimes_periods_per_node = _compute_uptimes_periods_per_node(uptime_schedule, m_time)
+
+                    ## Reconf periods
                     reconf_periods_per_node = _compute_reconf_periods_per_node(esds_data)
                     merged_reconf_periods_per_node = {node_id: count_active_intervals(interval_list) for node_id, interval_list in reconf_periods_per_node.items()}
+
+                    ## Requests periods
                     sending_periods_per_node = _compute_sending_periods_per_node(esds_data)
                     merged_sending_periods_per_node = {node_id: count_active_intervals_sending(interval_list) for node_id, interval_list in sending_periods_per_node.items()}
                     sending_periods_during_uptime_per_node = _compute_sending_periods_during_uptime_per_node(uptimes_periods_per_node, merged_sending_periods_per_node)
+
+                    ## Responses periods
                     receive_periods_per_node = _compute_receive_periods_from_sending_periods(sending_periods_per_node)
                     merged_receive_periods_per_node = {node_id: count_active_intervals_sending(interval_list) for node_id, interval_list in receive_periods_per_node.items()}
                     receive_periods_during_uptime_per_node = _compute_sending_periods_during_uptime_per_node(uptimes_periods_per_node, merged_receive_periods_per_node)
-                    title = f"esds_generated_data-{name_uptime}-{version_concerto_d}-{reconf_name}-{trans_times}"
+
+                    ## Router periods
+                    router_uptimes_periods = _compute_router_uptimes_periods(uptimes_periods_per_node)
+                    router_uptimes_key = max(uptimes_periods_per_node.keys()) + 1
+                    uptimes_periods_per_node[router_uptimes_key] = router_uptimes_periods
 
                     # Expe parameters file
+                    title = f"esds_generated_data-{name_uptime}-{version_concerto_d}-{reconf_name}-{trans_times}"
                     expe_parameters = {
                         "title": title,
                         "uptimes_nodes": uptime_schedule,
@@ -335,6 +349,42 @@ def generate_mascots_schedules():
         i += 1
 
     print(json.dumps(results_dict, indent=4))
+
+
+def _compute_router_uptimes_periods(uptimes_periods_per_node):
+    flatten_uptimes_periods = []
+    for periods in uptimes_periods_per_node.values():
+        flatten_uptimes_periods.extend(periods)
+    flatten_uptimes_periods.sort(key=lambda period: period[0])  # Sort by start time
+
+    if len(flatten_uptimes_periods) == 0:
+        return []
+
+    first_start, first_end = flatten_uptimes_periods[0]
+    router_uptimes = [[first_start, first_end]]
+    for start, end in flatten_uptimes_periods[1:]:
+        last_start, last_end = router_uptimes[-1]
+        if start > last_end:
+            router_uptimes.append([start, end])
+        else:
+            router_uptimes[-1] = [last_start, max(end, last_end)]
+
+    return router_uptimes
+
+
+def test_compute_router_uptimes_periods():
+    uptimes_periods_per_node_0 = {
+        0: [[10, 20]],
+        1: [[5, 30], [40, 60]],
+    }
+    uptimes_periods_per_node_1 = {
+        0: [[0, 10], [100, 150]],
+        1: [[5, 20], [40, 60]],
+        2: [[7, 8], [15, 25]],
+        3: [[25, 40]]
+    }
+    assert _compute_router_uptimes_periods(uptimes_periods_per_node_0) == [[5, 30], [40, 60]]
+    assert _compute_router_uptimes_periods(uptimes_periods_per_node_1) == [[0, 60], [100, 150]]
 
 
 def _compute_sending_periods_during_uptime_per_node(uptimes_nodes, sending_periods):
