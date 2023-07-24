@@ -76,9 +76,9 @@ interfaces:
   ethSending:
     type: "wireless"
     links:
-      - all 1Bps 0s all
+      - all 1Bps 0s all  # Allsrouce bandwidth latency allreceive
     txperfs:
-      - all 1Bps 0s all
+      - all 1Bps 0s  # Perf de chaque noeud sur cette interface
     nodes: 12, 13, 14, 15, 16, 17
   ethReceive:
     type: "wireless"

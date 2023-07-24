@@ -142,7 +142,7 @@ def main():
 
     ## Run all experiments
     # limit_expes = math.inf
-    limit_expes = 5
+    limit_expes = 1
     parameter_files_list = os.listdir(expe_esds_parameter_files)
     sum_expes_duration = 0
     nb_expes_tot = min(len(parameter_files_list), limit_expes)

@@ -27,7 +27,7 @@ def execute(api: Node):
     sending_cons = PowerStatesComms(api)
     sending_cons.set_power(interface_name, 0, LORA_POWER, LORA_POWER)
 
-    size = 100
+    size = 1
     api.turn_off()
     for up_start, up_end in node_uptimes:
         # Sleeping period (no receive)
@@ -65,12 +65,13 @@ def execute(api: Node):
     remaining_no_sending_duration = max_execution_duration - api.read("clock")
     api.log(f"Waiting {remaining_no_sending_duration} before terminating")
     api.wait(remaining_no_sending_duration)
+    sending_cons_energy = sending_cons.get_energy()
 
     results = {
         "tot_sending_flat_time": tot_sending_time_flat,
         "tot_no_sending_time": round(tot_no_sending_time_flat, 2),
         "node_conso": 0,
-        "comms_cons": sending_cons.get_energy(),
+        "comms_cons": float(round(sending_cons_energy, 2)),
     }
     for key, val in results.items():
         print(f"{key}: {val}")
