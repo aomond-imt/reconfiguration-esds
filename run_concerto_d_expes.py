@@ -6,6 +6,8 @@ from pathlib import Path
 
 import yaml
 
+import print_results
+
 OFF_POWER = 0
 ON_POWER = 0.4
 PROCESS_POWER = 1  # TODO model energetic
@@ -205,16 +207,12 @@ def main():
         finally:
             nb_expes_done += 1
 
+    print("Dump results")
+    with open(os.path.join(root, "global_results.yaml"), "w") as f:
+        yaml.safe_dump(global_results, f)
+    print("Results dumped")
     print(f"All passed in {sum_expes_duration:.2f}s")
-
-    print(" ------------ Results --------------")
-    for key, nodes_results in global_results.items():
-        print(f"{key}:")
-        print(f"idles: {nodes_results['idles']}")
-        print(f"reconfs: {nodes_results['reconfs']}")
-        print(f"sendings: {nodes_results['sendings']}")
-        print(f"receives: {nodes_results['receives']}")
-    print("------------------------------------")
+    print_results.print_results()
 
 
 if __name__ == '__main__':
