@@ -10,6 +10,7 @@ import sys
 sys.path.insert(1, f"{current_dir_name}/..")
 
 LORA_POWER = 0.16
+LONGER_POWER = 0.16
 
 
 def execute(api: Node):
@@ -20,11 +21,18 @@ def execute(api: Node):
         node_uptimes = expe_config["uptimes_periods_per_node"][api.node_id % 7]
         receive_periods_per_node = expe_config["receive_periods_per_node"][api.node_id % 7]
         max_execution_duration = expe_config["max_execution_duration"]
+
+    # Version concerto_d parameters
+    if "async" in title:
+        interface_name = "ethRouterReceive"
+        power = LORA_POWER
+    else:
+        interface_name = "ethReceive"
+        power = LONGER_POWER
+
     tot_receive_time_flat, tot_no_receive_time_flat = 0, 0
-    interface_name = "ethRouterReceive" if "async" in title else "ethReceive"
-    # interface_name = "ethReceive"
     receive_cons = PowerStatesComms(api)
-    receive_cons.set_power(interface_name, 0, LORA_POWER, LORA_POWER)
+    receive_cons.set_power(interface_name, 0, power, power)
 
     size = 1
     api.turn_off()

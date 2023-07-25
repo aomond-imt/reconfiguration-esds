@@ -127,7 +127,7 @@ def main():
     # Setup variables
     ## Configuration files dirs
     root = "/home/aomond/reconfiguration-esds/concerto-d-results"
-    expe_esds_parameter_files = os.path.join(root, "expe_esds_parameter_files")
+    expe_esds_parameter_files = os.path.join(root, "expe_esds_parameter_files_to_compute")
     esds_current_parameter_file = os.path.join(root, "current_esds_parameter_file.yaml")
     expe_esds_verification_files = os.path.join(root, "expe_esds_verification_files")
 

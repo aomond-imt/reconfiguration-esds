@@ -1,6 +1,6 @@
 import yaml
 
-results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results.yaml"
+results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/saved_results/results_6_expes_big_power/global_results.yaml"
 
 
 def _gather_results(global_results):
