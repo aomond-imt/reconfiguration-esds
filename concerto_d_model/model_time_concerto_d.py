@@ -340,7 +340,7 @@ def generate_mascots_schedules():
                         "max_execution_duration": m
                     }
 
-                    expe_esds_parameter_files = "/tmp/expe_esds_parameter_files"
+                    expe_esds_parameter_files = "/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_parameter_files"
                     os.makedirs(expe_esds_parameter_files, exist_ok=True)
                     with open(os.path.join(expe_esds_parameter_files, f"{title}.yaml"), "w") as f:
                         yaml.safe_dump(expe_parameters, f)
@@ -358,7 +358,7 @@ def generate_mascots_schedules():
                         verification["receive_periods"][node_id] = _compute_sending_periods_per_connected_node(node_id, receive_periods, uptime_schedule)
 
                     ## Write file
-                    expe_esds_verification_files = "/tmp/expe_esds_verification_files"
+                    expe_esds_verification_files = "/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_verification_files"
                     os.makedirs(expe_esds_verification_files, exist_ok=True)
                     with open(os.path.join(expe_esds_verification_files, f"{title}.yaml"), "w") as f:
                         yaml.safe_dump(verification, f)

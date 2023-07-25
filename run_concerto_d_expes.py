@@ -126,7 +126,7 @@ def main():
     tests_timeout=60 # Max duration of a test
 
     ## Configuration files dirs
-    root = "/tmp"
+    root = "/home/aomond/reconfiguration-esds/concerto-d-results"
     expe_esds_parameter_files = os.path.join(root, "expe_esds_parameter_files")
     esds_current_parameter_file = os.path.join(root, "current_esds_parameter_file.yaml")
     expe_esds_verification_files = os.path.join(root, "expe_esds_verification_files")

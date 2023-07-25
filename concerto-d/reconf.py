@@ -58,5 +58,5 @@ def execute(api: Node):
     }
     for key, val in results.items():
         print(f"{key}: {val}")
-    with open(f"/tmp/results/reconfs/{title}/{api.node_id}.yaml", "w") as f:
+    with open(f"/home/aomond/reconfiguration-esds/concerto-d-results/results/reconfs/{title}/{api.node_id}.yaml", "w") as f:
         yaml.safe_dump(results, f)
