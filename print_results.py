@@ -1,7 +1,5 @@
 import yaml
 
-results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/saved_results/results_6_expes_big_power/global_results.yaml"
-
 
 def _gather_results(global_results):
     gathered_results = {}
@@ -26,7 +24,7 @@ def _gather_results(global_results):
     return gathered_results
 
 
-def print_results():
+def print_results(results_dir):
     with open(results_dir) as f:
         global_results = yaml.safe_load(f)
 
@@ -53,7 +51,7 @@ def _group_by_version_concerto_d(gathered_results):
     return grouped_results
 
 
-def analyse_results():
+def analyse_results(results_dir):
     with open(results_dir) as f:
         global_results = yaml.safe_load(f)
 
@@ -72,7 +70,7 @@ def analyse_results():
                 print(f"{node_id}: {round(res['tot'], 2)}J --- Detail: {res['detail']}")
 
 
-def compute_gain():
+def compute_gain(results_dir):
     with open(results_dir) as f:
         global_results = yaml.safe_load(f)
     gathered_results = _gather_results(global_results)
@@ -97,6 +95,8 @@ def compute_gain():
 
 
 if __name__ == "__main__":
-    # print_results()
-    # analyse_results()
-    compute_gain()
+    results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/saved_results/results_6_expes_big_power/global_results.yaml"
+
+    # print_results(results_dir)
+    # analyse_results(results_dir)
+    compute_gain(results_dir)
