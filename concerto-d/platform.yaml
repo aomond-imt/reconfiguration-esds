@@ -86,30 +86,30 @@ interfaces:
   ethSending:
     type: "wireless"
     links:
-      - all 1Bps 0s all  # Allsource bandwidth latency allreceive
+      - all 6250Bps 0s all  # Allsource bandwidth latency allreceive
     txperfs:
-      - all 1Bps 0s  # Perf de chaque noeud sur cette interface
+      - all 6250Bps 0s  # Perf de chaque noeud sur cette interface
     nodes: 14, 15, 16, 17, 18, 19
   ethReceive:
     type: "wireless"
     links:
-      - all 1Bps 0s all
+      - all 6250Bps 0s all
     txperfs:
-      - all 1Bps 0s all
+      - all 6250Bps 0s all
     nodes: 21, 22, 23, 24, 25, 26, 27
 
   # Asynchronous
   ethRouterSending:
     type: "wireless"
     links:
-      - 20 1Bps 0s 14-19
+      - 20 6250Bps 0s 14-19
     txperfs:
-      - all 1Bps 0s all
+      - all 6250Bps 0s all
     nodes: 14, 15, 16, 17, 18, 19, 20
   ethRouterReceive:
     type: "wireless"
     links:
-      - 27 1Bps 0s 21-26
+      - 27 6250Bps 0s 21-26
     txperfs:
-      - all 1Bps 0s all
+      - all 6250Bps 0s all
     nodes: 21, 22, 23, 24, 25, 26, 27
