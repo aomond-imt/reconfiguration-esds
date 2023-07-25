@@ -211,7 +211,7 @@ def main():
         yaml.safe_dump(global_results, f)
     print("Results dumped")
     print(f"All passed in {sum_expes_duration:.2f}s")
-    print_results.print_results()
+    print_results.analyse_results()
 
 
 if __name__ == '__main__':
