@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import math
 import os,subprocess,time
 import shutil
 import traceback
@@ -14,7 +15,8 @@ PROCESS_POWER = 1  # TODO model energetic
 LORA_POWER = 0.16
 
 NB_NODES = 6
-
+limit_expes = math.inf
+tests_timeout=600 # Max duration of a test
 
 def _assert_value(node_id, key, val, expected_val):
     try:
@@ -123,8 +125,6 @@ def _load_energetic_expe_results_from_title(title, idle_results_dir, reconf_resu
 
 def main():
     # Setup variables
-    tests_timeout=60 # Max duration of a test
-
     ## Configuration files dirs
     root = "/home/aomond/reconfiguration-esds/concerto-d-results"
     expe_esds_parameter_files = os.path.join(root, "expe_esds_parameter_files")
@@ -144,7 +144,6 @@ def main():
 
     ## Run all experiments
     # limit_expes = math.inf
-    limit_expes = 1
     parameter_files_list = os.listdir(expe_esds_parameter_files)
     sum_expes_duration = 0
     nb_expes_tot = min(len(parameter_files_list), limit_expes)
