@@ -10,7 +10,6 @@ from esds.plugins.power_states import PowerStates
 current_dir_name = os.path.dirname(os.path.abspath(__file__))
 import sys
 sys.path.insert(1, f"{current_dir_name}/..")
-from simulation_functions import execution_work
 
 PROCESS_POWER = 1
 
