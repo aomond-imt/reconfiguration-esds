@@ -13,6 +13,8 @@ sys.path.insert(1, f"{current_dir_name}/..")
 
 LORA_POWER = 0.16
 LONGER_POWER = 0.16
+FREQUENCE_POLLING = 1
+NB_POLL_PER_SEC = 10
 
 
 def execute(api: Node):
@@ -36,7 +38,8 @@ def execute(api: Node):
     sending_cons = PowerStatesComms(api)
     sending_cons.set_power(interface_name, 0, power, power)
 
-    size = 1
+    size = 257
+    bandwith = 6250
     api.turn_off()
     for up_start, up_end in node_uptimes:
         # Sleeping period (no receive)
@@ -57,13 +60,18 @@ def execute(api: Node):
 
                 # Sending period
                 api.log("Start sending")
+                sending_start = api.read("clock")
                 while api.read("clock") < end:
                     for node_id, count in node_send.items():
                         if api.read("clock") < end:
                             end_period = end - api.read("clock")
-                            data_to_send = min(size * count, end_period)
-                            api.sendt(interface_name, 1, data_to_send, 1, timeout=data_to_send)
-                            tot_sending_time_flat += data_to_send
+                            data_to_send = size * count * NB_POLL_PER_SEC
+                            timeout = min(data_to_send/bandwith, end_period)
+                            api.sendt(interface_name, 1, data_to_send, 1, timeout=timeout)
+                    if api.read("clock") < end:
+                        api.wait(min(FREQUENCE_POLLING, end - api.read("clock")))
+                tot_sending_time_flat += api.read("clock") - sending_start
+
         remaining_uptime = up_end - api.read("clock")
         api.log(f"Waiting remaining uptime {remaining_uptime}")
         api.wait(remaining_uptime)

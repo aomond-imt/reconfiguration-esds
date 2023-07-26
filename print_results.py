@@ -1,6 +1,9 @@
 import yaml
 
 
+ROUTER_ID = 6
+
+
 def _gather_results(global_results):
     gathered_results = {}
     for key, nodes_results in global_results.items():
@@ -16,7 +19,7 @@ def _gather_results(global_results):
             s = {"idles": 0, "reconfs": 0, "sendings": 0, "receives": 0}
             for name in s.keys():
                 s[name] += nodes_results[name][node_id]["node_conso"] + nodes_results[name][node_id]["comms_cons"]
-                if name in filter_tot:
+                if name in filter_tot or node_id == ROUTER_ID:
                     tot += s[name]
 
             gathered_results[key][node_id] = {"tot": round(tot, 2), "detail": s}
@@ -77,25 +80,39 @@ def compute_gain(results_dir):
     group_by_version_concerto_d = _group_by_version_concerto_d(gathered_results)
     for key, vals in group_by_version_concerto_d.items():
         print(key)
+        tot_ons_sync = 0
+        tot_ons_async = 0
+        tot_router = 0
         for vals_sync, vals_async in zip(vals["sync"].items(), vals["async"].items()):
             node_id, node_results_sync = vals_sync
             _, node_results_async = vals_async
             tot_gain = node_results_sync["tot"] - node_results_async["tot"]
+            if node_id == ROUTER_ID:
+                tot_router = node_results_async["tot"]
+            else:
+                tot_ons_sync += node_results_sync["tot"]
+                tot_ons_async += node_results_async["tot"]
             sign = "-" if tot_gain > 0 else "+"
-            print(f"{node_id}: tot_gain: {sign}{abs(round(tot_gain, 2))}J", end=" - ")
+            print(f"{node_id}: tot_gain: {sign}{abs(round(tot_gain, 2))}J ({node_results_sync['tot']}J, {node_results_async['tot']}J)", end=" - ")
 
             for detail_sync, detail_async in zip(node_results_sync["detail"].items(), node_results_async["detail"].items()):
                 name, val_sync = detail_sync
                 _, val_async = detail_async
                 gain = val_sync - val_async
                 s = "-" if gain > 0 else "+"
-                print(f"{name}: {s}{abs(round(gain, 2))}J", end=", ")
+                print(f"{name}: {s}{abs(round(gain, 2))}J ({val_sync}J, {val_async}J)", end=", ")
             print()
+        print(f"Total ONs sync: {round(tot_ons_sync, 2)}J")
+        print(f"Total ONs async no router: {round(tot_ons_async, 2)}J")
+        print(f"Total ONs async with router: {round(tot_ons_async + tot_router, 2)}J")
+        print(f"Gain ONs using async (no router) {round((tot_ons_sync - tot_ons_async) * 100 / tot_ons_sync, 2)}%")
+        print(f"Gain system using async (with router) {round((tot_ons_sync - (tot_ons_async+tot_router)) * 100 / tot_ons_sync, 2)}%")
+        print()
 
 
 
 if __name__ == "__main__":
-    results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/saved_results/results_6_expes_big_power/global_results.yaml"
+    results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/saved_results/results_all_mascots_lora_10_msg_per_sec/global_results.yaml"
 
     # print_results(results_dir)
     # analyse_results(results_dir)

@@ -16,7 +16,8 @@ LORA_POWER = 0.16
 
 NB_NODES = 6
 limit_expes = math.inf
-tests_timeout=600 # Max duration of a test
+tests_timeout=6000 # Max duration of a test
+
 
 def _assert_value(node_id, key, val, expected_val):
     try:
@@ -127,7 +128,7 @@ def main():
     # Setup variables
     ## Configuration files dirs
     root = "/home/aomond/reconfiguration-esds/concerto-d-results"
-    expe_esds_parameter_files = os.path.join(root, "expe_esds_parameter_files_to_compute")
+    expe_esds_parameter_files = os.path.join(root, "expe_esds_parameter_files")
     esds_current_parameter_file = os.path.join(root, "current_esds_parameter_file.yaml")
     expe_esds_verification_files = os.path.join(root, "expe_esds_verification_files")
 
