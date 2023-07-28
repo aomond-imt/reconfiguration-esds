@@ -8,10 +8,10 @@ from pathlib import Path
 import yaml
 
 import print_results
+import simulation_functions
 
 OFF_POWER = 0
 ON_POWER = 0.4
-PROCESS_POWER = 1  # TODO model energetic
 LORA_POWER = 0.16
 
 NB_NODES = 6
@@ -27,7 +27,7 @@ def _assert_value(node_id, key, val, expected_val):
         raise e
 
 
-def _esds_results_verification(esds_parameters, expe_esds_verification_files, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir, title):
+def _esds_results_verification(esds_parameters, expe_esds_verification_files, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir, title, stressConso, idleConso):
     # Retrieve verification file for the given configuration file
     verification = None
     for verif_file in os.listdir(expe_esds_verification_files):
@@ -65,14 +65,14 @@ def _esds_results_verification(esds_parameters, expe_esds_verification_files, id
         expected_no_uptime = max_exec_duration - expected_uptime
         _assert_value(node_id, "tot_uptime", results_idle["tot_uptime"], expected_uptime)
         _assert_value(node_id, "tot_sleeping_time", results_idle["tot_sleeping_time"], expected_no_uptime)
-        _assert_value(node_id, "node_conso", results_idle["node_conso"], expected_uptime*0.4)  # TODO magic value
+        _assert_value(node_id, "node_conso", results_idle["node_conso"], expected_uptime*idleConso)  # TODO magic value
 
         # Verification reconfs
         node_reconfs = esds_parameters["reconf_periods_per_node"][node_id]
         expected_reconf = sum((end-start)*nb_processes for start, end, nb_processes in node_reconfs)
         expected_reconf_flat = sum(end-start for start, end, nb_processes in node_reconfs if nb_processes > 0)
         expected_no_reconf_time = max_exec_duration - expected_reconf_flat
-        expected_node_conso = sum((end-start)*nb_processes*PROCESS_POWER for start, end, nb_processes in node_reconfs)
+        expected_node_conso = sum((end-start)*nb_processes*stressConso for start, end, nb_processes in node_reconfs)
         _assert_value(node_id, "tot_reconf_time", results_reconf["tot_reconf_time"], expected_reconf)
         _assert_value(node_id, "tot_reconf_flat_time", results_reconf["tot_reconf_flat_time"], expected_reconf_flat)
         _assert_value(node_id, "tot_no_reconf_time", results_reconf["tot_no_reconf_time"], expected_no_reconf_time)
@@ -128,7 +128,7 @@ def main():
     # Setup variables
     ## Configuration files dirs
     root = "/home/aomond/reconfiguration-esds/concerto-d-results"
-    expe_esds_parameter_files = os.path.join(root, "expe_esds_parameter_files")
+    expe_esds_parameter_files = os.path.join(root, "expe_esds_parameter_files_to_compute")
     esds_current_parameter_file = os.path.join(root, "current_esds_parameter_file.yaml")
     expe_esds_verification_files = os.path.join(root, "expe_esds_verification_files")
 
@@ -151,68 +151,78 @@ def main():
     nb_expes_done = 0
     print(f"Total nb experiments: {nb_expes_tot}")
     global_results = {}
-    for parameter_file in parameter_files_list:
-        ## Limit number of experiments
-        if nb_expes_done >= limit_expes:
-            break
 
-        ## Designate parameter file and create result dir
-        current_test_path=os.path.join(expe_esds_parameter_files,parameter_file)
-        shutil.rmtree(esds_current_parameter_file, ignore_errors=True)
-        shutil.copy(current_test_path, esds_current_parameter_file)
-        title = Path(parameter_file).stem
-        os.makedirs(os.path.join(idle_results_dir, title), exist_ok=True)
-        os.makedirs(os.path.join(reconf_results_dir, title), exist_ok=True)
-        os.makedirs(os.path.join(sends_results_dir, title), exist_ok=True)
-        os.makedirs(os.path.join(receive_results_dir, title), exist_ok=True)
+    ## Getting sweeped parameters
+    sweeper = simulation_functions.get_simulation_swepped_parameters()
+    nb_params_tot = len(sweeper)
+    nb_params_done = 0
+    print(f"Tot nb parameters: {nb_params_tot}")
 
-        platform_path = os.path.abspath("concerto-d/platform.yaml")
-        print(f"{nb_expes_done+1}/{nb_expes_tot} - {parameter_file} => ", end="")
-        try:
-            ## Launch experiment
-            start_at=time.time()
-            out=subprocess.check_output(["esds", "run", platform_path],stderr=subprocess.STDOUT,timeout=tests_timeout,encoding="utf-8")
-            # out = subprocess.Popen(["esds", "run", platform_path], stderr=subprocess.STDOUT, encoding="utf-8")
-            # out.wait()
-            if "AssertionError" in out:
-                for line in out.split("\n"):
-                    if line.startswith("AssertionError"):
-                        print(line)
-            end_at=time.time()
+    for parameter in sweeper:
+        joined_params = simulation_functions.get_params_joined(parameter)
+        print(f"{nb_params_done+1}/{nb_params_tot} - {joined_params}")
+        for parameter_file in parameter_files_list:
+            ## Limit number of experiments
+            if nb_expes_done >= limit_expes:
+                break
 
-            ## Run verification scripts
-            with open(current_test_path) as f:
-                esds_parameters = yaml.safe_load(f)
-            _esds_results_verification(esds_parameters, expe_esds_verification_files, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir, title)
-            expe_duration = end_at - start_at
-            print("passed (%0.1fs)" % (expe_duration))
-            sum_expes_duration += expe_duration
+            ## Designate parameter file and create result dir
+            current_test_path=os.path.join(expe_esds_parameter_files,parameter_file)
+            shutil.rmtree(esds_current_parameter_file, ignore_errors=True)
+            shutil.copy(current_test_path, esds_current_parameter_file)
+            title = Path(parameter_file).stem
+            os.makedirs(os.path.join(idle_results_dir, title), exist_ok=True)
+            os.makedirs(os.path.join(reconf_results_dir, title), exist_ok=True)
+            os.makedirs(os.path.join(sends_results_dir, title), exist_ok=True)
+            os.makedirs(os.path.join(receive_results_dir, title), exist_ok=True)
 
-            ## Aggregate to global results
-            global_results[title] = _load_energetic_expe_results_from_title(title, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir)
-        except subprocess.TimeoutExpired as err:
-            print("failed :(")
-            print("------------- Test duration expired (timeout="+str(tests_timeout)+"s) -------------")
-            print(err.output,end="")
-            exit(1)
-        except subprocess.CalledProcessError as err:
-            print("failed :(")
-            print("------------- Test has a non-zero exit code -------------")
-            print(err.output,end="")
-            exit(2)
-        except Exception as err:
-            print("failed :(")
-            traceback.print_exc()
-            exit(3)
-        finally:
-            nb_expes_done += 1
+            platform_path = os.path.abspath(f"concerto-d/platform-{joined_params}.yaml")
+            print(f"    {nb_expes_done+1}/{nb_expes_tot} - {parameter_file} => ", end="")
+            try:
+                ## Launch experiment
+                start_at=time.time()
+                out=subprocess.check_output(["esds", "run", platform_path],stderr=subprocess.STDOUT,timeout=tests_timeout,encoding="utf-8")
+                # out = subprocess.Popen(["esds", "run", platform_path], stderr=subprocess.STDOUT, encoding="utf-8")
+                # out.wait()
+                if "AssertionError" in out:
+                    for line in out.split("\n"):
+                        if line.startswith("AssertionError"):
+                            print(line)
+                end_at=time.time()
 
-    print("Dump results")
-    with open(os.path.join(root, "global_results.yaml"), "w") as f:
-        yaml.safe_dump(global_results, f)
-    print("Results dumped")
-    print(f"All passed in {sum_expes_duration:.2f}s")
-    print_results.analyse_results(os.path.join(root, "global_results.yaml"))
+                ## Run verification scripts
+                with open(current_test_path) as f:
+                    esds_parameters = yaml.safe_load(f)
+                _esds_results_verification(esds_parameters, expe_esds_verification_files, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir, title, parameter["stressConso"], parameter["idleConso"])
+                expe_duration = end_at - start_at
+                print("passed (%0.1fs)" % (expe_duration))
+                sum_expes_duration += expe_duration
+
+                ## Aggregate to global results
+                global_results[title] = _load_energetic_expe_results_from_title(title, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir)
+            except subprocess.TimeoutExpired as err:
+                print("failed :(")
+                print("------------- Test duration expired (timeout="+str(tests_timeout)+"s) -------------")
+                print(err.output,end="")
+                exit(1)
+            except subprocess.CalledProcessError as err:
+                print("failed :(")
+                print("------------- Test has a non-zero exit code -------------")
+                print(err.output,end="")
+                exit(2)
+            except Exception as err:
+                print("failed :(")
+                traceback.print_exc()
+                exit(3)
+            finally:
+                nb_expes_done += 1
+
+        print("Dump results")
+        with open(os.path.join(root, f"global_results-{joined_params}.yaml"), "w") as f:
+            yaml.safe_dump(global_results, f)
+        print("Results dumped")
+        print(f"All passed in {sum_expes_duration:.2f}s")
+        print_results.analyse_results(os.path.join(root, "global_results.yaml"))
 
 
 if __name__ == '__main__':

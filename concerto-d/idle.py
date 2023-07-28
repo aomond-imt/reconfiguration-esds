@@ -20,6 +20,7 @@ def execute(api: Node):
     tot_uptime, tot_sleeping_time = 0, 0
     idle_cons = PowerStates(api, 0)
     idle_cons.set_power(0)
+    idle_power = api.args["idleConso"]
 
     api.turn_off()
     for start, end in node_uptimes:
@@ -30,7 +31,7 @@ def execute(api: Node):
 
         # Uptime period
         api.turn_on()
-        idle_cons.set_power(0.4)
+        idle_cons.set_power(idle_power)
         api.wait(end - start)
         tot_uptime += end - start
 

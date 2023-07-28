@@ -1,0 +1,120 @@
+general:
+  interferences: off
+
+nodes:
+  count: 28
+  implementations:
+    # Idle
+    - 0 idle.py
+    - 1 idle.py
+    - 2 idle.py
+    - 3 idle.py
+    - 4 idle.py
+    - 5 idle.py
+    - 6 idle.py  # Router
+
+    # Reconf
+    - 7 reconf.py
+    - 8 reconf.py
+    - 9 reconf.py
+    - 10 reconf.py
+    - 11 reconf.py
+    - 12 reconf.py
+    - 13 reconf.py  # Router
+
+    # Sending
+    - 14 sending.py
+    - 15 sending.py
+    - 16 sending.py
+    - 17 sending.py
+    - 18 sending.py
+    - 19 sending.py
+    - 20 sending.py  # Router
+
+    # Receive
+    - 21 receive.py
+    - 22 receive.py
+    - 23 receive.py
+    - 24 receive.py
+    - 25 receive.py
+    - 26 receive.py
+    - 27 receive.py  # Router
+
+  groups: # id group_id
+    # Idle
+    - 0 0
+    - 1 1
+    - 2 2
+    - 3 3
+    - 4 4
+    - 5 5
+    - 6 6
+
+    # Reconf
+    - 7 0
+    - 8 1
+    - 9 2
+    - 10 3
+    - 11 4
+    - 12 5
+    - 13 6
+
+    # Sending
+    - 14 0
+    - 15 1
+    - 16 2
+    - 17 3
+    - 18 4
+    - 19 5
+    - 20 6
+
+    # Receive
+    - 21 0
+    - 22 1
+    - 23 2
+    - 24 3
+    - 25 4
+    - 26 5
+    - 27 6
+  arguments:
+    all: {
+      expe_config_file: "/home/aomond/reconfiguration-esds/concerto-d-results/current_esds_parameter_file.yaml",
+      # expe_config_file: "/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_parameter_files/esds_generated_data-ud1_od0_15_25-async-deploy-T1.yaml",
+      stressConso: 2.58,
+      idleConso: 1.38,
+      commsConso: 0.65,
+      typeSynchro: pullc
+    }
+
+interfaces:
+  # Synchronous
+  ethSending:
+    type: "wireless"
+    links:
+      - all 200kbps 0s all  # Allsource bandwidth latency allreceive
+    txperfs:
+      - all 200kbps 0s  # Perf de chaque noeud sur cette interface
+    nodes: 14, 15, 16, 17, 18, 19
+  ethReceive:
+    type: "wireless"
+    links:
+      - all 200kbps 0s all
+    txperfs:
+      - all 200kbps 0s all
+    nodes: 21, 22, 23, 24, 25, 26, 27
+
+  # Asynchronous
+  ethRouterSending:
+    type: "wireless"
+    links:
+      - 20 200kbps 0s 14-19
+    txperfs:
+      - all 200kbps 0s all
+    nodes: 14, 15, 16, 17, 18, 19, 20
+  ethRouterReceive:
+    type: "wireless"
+    links:
+      - 27 200kbps 0s 21-26
+    txperfs:
+      - all 200kbps 0s all
+    nodes: 21, 22, 23, 24, 25, 26, 27

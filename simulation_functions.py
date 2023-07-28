@@ -1,8 +1,6 @@
 import yaml
 from esds.plugins.power_states import PowerStatesComms
 
-LORA_POWER = 0.16
-LONGER_POWER = 0.16
 FREQUENCE_POLLING = 1
 NB_POLL_PER_SEC = 10
 
@@ -19,15 +17,14 @@ def sending(api, type_comm):
     # Version concerto_d parameters
     if "async" in title:
         interface_name = f"ethRouter{type_comm.title()}"
-        power = LORA_POWER
     else:
         interface_name = f"eth{type_comm.title()}"
-        power = LONGER_POWER
 
+    commsConso = api.args["commsConso"]
     api.log(f"Interface: {interface_name}")
     tot_sending_time_flat, tot_no_sending_time_flat = 0, 0
     sending_cons = PowerStatesComms(api)
-    sending_cons.set_power(interface_name, 0, power, power)
+    sending_cons.set_power(interface_name, 0, commsConso, commsConso)
 
     size = 257
     bandwith = 6250
@@ -86,3 +83,36 @@ def sending(api, type_comm):
     results_categ = "sends" if type_comm == "sending" else "receives"
     with open(f"/home/aomond/reconfiguration-esds/concerto-d-results/results/{results_categ}/{title}/{api.node_id % 7}.yaml", "w") as f:
         yaml.safe_dump(results, f)
+
+
+def get_simulation_swepped_parameters():
+    """
+    Source of truth of parameters
+    :return:
+    """
+    from execo_engine import sweep
+
+    parameters = {
+        "stressConso": [1.38, 2.58],
+        "idleConso": [1.38],
+        "techno": [{"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
+                   {"name": "nbiot", "bandwidth": "200kbps", "commsConso": 0.65}],
+        "typeSynchro": ["pullc"]
+    }
+    sweeper = sweep(parameters)
+    return sweeper
+
+
+def get_params_joined(parameter):
+    (
+        stressConso,
+        idleConso,
+        nameTechno,
+        typeSynchro
+    ) = (
+        parameter["stressConso"],
+        parameter["idleConso"],
+        parameter["techno"]["name"],
+        parameter["typeSynchro"]
+    )
+    return f"{stressConso}-{idleConso}-{nameTechno}-{typeSynchro}"

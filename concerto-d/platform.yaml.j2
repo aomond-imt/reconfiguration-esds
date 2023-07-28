@@ -3,7 +3,6 @@ general:
 
 nodes:
   count: 28
-#  count: 6
   implementations:
     # Idle
     - 0 idle.py
@@ -78,38 +77,44 @@ nodes:
     - 26 5
     - 27 6
   arguments:
-    all: {expe_config_file: "/home/aomond/reconfiguration-esds/concerto-d-results/current_esds_parameter_file.yaml"}
-#    all: {expe_config_file: "/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_parameter_files/esds_generated_data-ud1_od0_15_25-async-deploy-T1.yaml"}
+    all: {
+      expe_config_file: "/home/aomond/reconfiguration-esds/concerto-d-results/current_esds_parameter_file.yaml",
+      # expe_config_file: "/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_parameter_files/esds_generated_data-ud1_od0_15_25-async-deploy-T1.yaml",
+      stressConso: {{ stressConso }},
+      idleConso: {{ idleConso }},
+      commsConso: {{ commsConso }},
+      typeSynchro: {{ typeSynchro }}
+    }
 
 interfaces:
   # Synchronous
   ethSending:
     type: "wireless"
     links:
-      - all 6250Bps 0s all  # Allsource bandwidth latency allreceive
+      - all {{ bandwidth }} 0s all  # Allsource bandwidth latency allreceive
     txperfs:
-      - all 6250Bps 0s  # Perf de chaque noeud sur cette interface
+      - all {{ bandwidth }} 0s  # Perf de chaque noeud sur cette interface
     nodes: 14, 15, 16, 17, 18, 19
   ethReceive:
     type: "wireless"
     links:
-      - all 6250Bps 0s all
+      - all {{ bandwidth }} 0s all
     txperfs:
-      - all 6250Bps 0s all
+      - all {{ bandwidth }} 0s all
     nodes: 21, 22, 23, 24, 25, 26, 27
 
   # Asynchronous
   ethRouterSending:
     type: "wireless"
     links:
-      - 20 6250Bps 0s 14-19
+      - 20 {{ bandwidth }} 0s 14-19
     txperfs:
-      - all 6250Bps 0s all
+      - all {{ bandwidth }} 0s all
     nodes: 14, 15, 16, 17, 18, 19, 20
   ethRouterReceive:
     type: "wireless"
     links:
-      - 27 6250Bps 0s 21-26
+      - 27 {{ bandwidth }} 0s 21-26
     txperfs:
-      - all 6250Bps 0s all
+      - all {{ bandwidth }} 0s all
     nodes: 21, 22, 23, 24, 25, 26, 27
