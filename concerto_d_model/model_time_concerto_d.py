@@ -321,8 +321,8 @@ def generate_mascots_schedules():
                         esds_data = _compute_esds_data_from_results(all_results_esds)
 
                         ## Uptime periods
-                        uptimes_periods_per_node = _compute_uptimes_periods_per_node(uptime_schedule, m_time)
-                        router_key = max(uptimes_periods_per_node.keys()) + 1
+                        uptimes_periods_per_node = _compute_uptimes_periods_per_node(uptime_schedule[:nb_deps+1], m_time)
+                        router_key = len(uptime_schedule)
 
                         ## Reconf periods
                         reconf_periods_per_node = _compute_reconf_periods_per_node(esds_data)

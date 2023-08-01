@@ -9,14 +9,16 @@ def sending(api, type_comm):
     # Init
     with open(api.args["expe_config_file"]) as f:
         expe_config = yaml.safe_load(f)
-        title = expe_config["title"]
+
+        # Check if nb_deps is crossed
         nb_deps = expe_config["nb_deps"]
+        if api.node_id % 7 not in [0, 6] and api.node_id > nb_deps:
+            return
+
+        title = expe_config["title"]
         node_uptimes = expe_config["uptimes_periods_per_node"][api.node_id % 7]
         sending_periods_per_node = expe_config[f"{type_comm}_periods_per_node"][api.node_id % 7]
         max_execution_duration = expe_config["max_execution_duration"]
-
-    if api.node_id % 7 not in [0, 6] and api.node_id > nb_deps:
-        return
 
     # Version concerto_d parameters
     if "async" in title:

@@ -153,7 +153,15 @@ def main():
     global_results = {}
 
     ## Getting sweeped parameters
-    sweeper = simulation_functions.get_simulation_swepped_parameters()
+    # sweeper = simulation_functions.get_simulation_swepped_parameters()
+    sweeper = [
+        {
+            "stressConso": 1.38,
+            "idleConso": 1.38,
+            "techno": {"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
+            "typeSynchro": "pullc"
+        }
+    ]
     nb_params_tot = len(sweeper)
     nb_params_done = 0
     print(f"Tot nb parameters: {nb_params_tot}")
