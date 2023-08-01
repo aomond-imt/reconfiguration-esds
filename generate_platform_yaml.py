@@ -15,21 +15,24 @@ for parameter in sweeper:
         nameTechno,
         bandwidth,
         commsConso,
-        typeSynchro
+        typeSynchro,
+        nbDeps
     ) = (
         parameter["stressConso"],
         parameter["idleConso"],
         parameter["techno"]["name"],
         parameter["techno"]["bandwidth"],
         parameter["techno"]["commsConso"],
-        parameter["typeSynchro"]
+        parameter["typeSynchro"],
+        parameter["nbDeps"]
     )
     outputText = template.render(
         stressConso=stressConso,
         idleConso=idleConso,
         bandwidth=bandwidth,
         commsConso=commsConso,
-        typeSynchro=typeSynchro
+        typeSynchro=typeSynchro,
+        nbDeps=nbDeps
     )
 
     joined_params = simulation_functions.get_params_joined(parameter)

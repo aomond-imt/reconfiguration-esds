@@ -97,7 +97,8 @@ def get_simulation_swepped_parameters():
         "idleConso": [1.38],
         "techno": [{"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
                    {"name": "nbiot", "bandwidth": "200kbps", "commsConso": 0.65}],
-        "typeSynchro": ["pullc"]
+        "typeSynchro": ["pullc"],
+        "nbDeps": [1, 2, 3, 4, 5]
     }
     sweeper = sweep(parameters)
     return sweeper
@@ -108,11 +109,13 @@ def get_params_joined(parameter):
         stressConso,
         idleConso,
         nameTechno,
-        typeSynchro
+        typeSynchro,
+        nbDeps
     ) = (
         parameter["stressConso"],
         parameter["idleConso"],
         parameter["techno"]["name"],
-        parameter["typeSynchro"]
+        parameter["typeSynchro"],
+        parameter["nbDeps"]
     )
-    return f"{stressConso}-{idleConso}-{nameTechno}-{typeSynchro}"
+    return f"{stressConso}-{idleConso}-{nameTechno}-{typeSynchro}-{nbDeps}"
