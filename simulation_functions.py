@@ -6,18 +6,20 @@ NB_POLL_PER_SEC = 10
 
 
 def sending(api, type_comm):
+    node_id = api.node_id % 7
+
     # Init
     with open(api.args["expe_config_file"]) as f:
         expe_config = yaml.safe_load(f)
 
         # Check if nb_deps is crossed
         nb_deps = expe_config["nb_deps"]
-        if api.node_id % 7 not in [0, 6] and api.node_id > nb_deps:
+        if node_id not in [0, 6] and node_id > nb_deps:
             return
 
         title = expe_config["title"]
-        node_uptimes = expe_config["uptimes_periods_per_node"][api.node_id % 7]
-        sending_periods_per_node = expe_config[f"{type_comm}_periods_per_node"][api.node_id % 7]
+        node_uptimes = expe_config["uptimes_periods_per_node"][node_id]
+        sending_periods_per_node = expe_config[f"{type_comm}_periods_per_node"][node_id]
         max_execution_duration = expe_config["max_execution_duration"]
 
     # Version concerto_d parameters
@@ -56,12 +58,12 @@ def sending(api, type_comm):
                 api.log("Start sending")
                 sending_start = api.read("clock")
                 while api.read("clock") < end:
-                    for node_id, count in node_send.items():
+                    for sender_id, count in node_send.items():
                         if api.read("clock") < end:
                             end_period = end - api.read("clock")
                             data_to_send = size * count * NB_POLL_PER_SEC
                             timeout = min(data_to_send/bandwith, end_period)
-                            api.sendt(interface_name, 1, data_to_send, 1, timeout=timeout)
+                            api.sendt(interface_name, 1, data_to_send, sender_id, timeout=timeout)
                     if api.read("clock") < end:
                         api.wait(min(FREQUENCE_POLLING, end - api.read("clock")))
                 tot_sending_time_flat += api.read("clock") - sending_start
@@ -84,10 +86,9 @@ def sending(api, type_comm):
         "node_conso": 0,
         "comms_cons": float(round(sending_cons_energy, 2)),
     }
-    for key, val in results.items():
-        print(f"{key}: {val}")
+    print_esds_node_results(results, api)
     results_categ = "sends" if type_comm == "sending" else "receives"
-    with open(f"/home/aomond/reconfiguration-esds/concerto-d-results/results/{results_categ}/{title}/{api.node_id % 7}.yaml", "w") as f:
+    with open(f"/home/aomond/reconfiguration-esds/concerto-d-results/results/{results_categ}/{title}/{node_id}.yaml", "w") as f:
         yaml.safe_dump(results, f)
 
 
@@ -99,7 +100,7 @@ def get_simulation_swepped_parameters():
     from execo_engine import sweep
 
     parameters = {
-        "stressConso": [1.38, 2.58],
+        "stressConso": [0, 1.20],
         "idleConso": [1.38],
         "techno": [{"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
                    {"name": "nbiot", "bandwidth": "200kbps", "commsConso": 0.65}],
@@ -122,3 +123,11 @@ def get_params_joined(parameter):
         parameter["typeSynchro"]
     )
     return f"{stressConso}-{idleConso}-{nameTechno}-{typeSynchro}"
+
+
+def print_esds_node_results(results, api):
+    s = f"--- Results {api.node_id} ---\n"
+    for key, val in results.items():
+        s += f"{key}: {val}\n"
+    s += "-------------------------------"
+    print(s)

@@ -11,19 +11,22 @@ current_dir_name = os.path.dirname(os.path.abspath(__file__))
 import sys
 sys.path.insert(1, f"{current_dir_name}/..")
 
+import simulation_functions
 
 def execute(api: Node):
+    node_id = api.node_id % 7
+
     # Init
     with open(api.args["expe_config_file"]) as f:
         expe_config = yaml.safe_load(f)
 
         # Check if nb_deps is crossed
         nb_deps = expe_config["nb_deps"]
-        if api.node_id % 7 not in [0, 6] and api.node_id > nb_deps:
+        if node_id not in [0, 6] and node_id > nb_deps:
             return
 
         title = expe_config["title"]
-        reconf_periods_per_node = expe_config["reconf_periods_per_node"][api.node_id % 7]
+        reconf_periods_per_node = expe_config["reconf_periods_per_node"][node_id]
         max_execution_duration = expe_config["max_execution_duration"]
 
     tot_reconf_time, tot_flat_reconf_time, tot_no_reconf_time = 0, 0, 0
@@ -61,7 +64,6 @@ def execute(api: Node):
         "node_conso": round(reconf_cons.energy, 2),
         "comms_cons": 0,
     }
-    for key, val in results.items():
-        print(f"{key}: {val}")
-    with open(f"/home/aomond/reconfiguration-esds/concerto-d-results/results/reconfs/{title}/{api.node_id}.yaml", "w") as f:
+    simulation_functions.print_esds_node_results(results, api)
+    with open(f"/home/aomond/reconfiguration-esds/concerto-d-results/results/reconfs/{title}/{node_id}.yaml", "w") as f:
         yaml.safe_dump(results, f)

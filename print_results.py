@@ -93,14 +93,14 @@ def compute_gain(results_dir):
                 tot_ons_sync += node_results_sync["tot"]
                 tot_ons_async += node_results_async["tot"]
             sign = "-" if tot_gain > 0 else "+"
-            print(f"{node_id}: tot_gain: {sign}{abs(round(tot_gain, 2))}J ({node_results_sync['tot']}J, {node_results_async['tot']}J)", end=" - ")
+            print(f"{node_id}: tot_gain: {sign}{abs(round(tot_gain, 2))}J (sync: {node_results_sync['tot']}J, async: {node_results_async['tot']}J)", end=" - ")
 
             for detail_sync, detail_async in zip(node_results_sync["detail"].items(), node_results_async["detail"].items()):
                 name, val_sync = detail_sync
                 _, val_async = detail_async
                 gain = val_sync - val_async
                 s = "-" if gain > 0 else "+"
-                print(f"{name}: {s}{abs(round(gain, 2))}J ({val_sync}J, {val_async}J)", end=", ")
+                print(f"{name}: {s}{abs(round(gain, 2))}J (sync: {val_sync}J, async: {val_async}J)", end=", ")
             print()
         print(f"Total ONs sync: {round(tot_ons_sync, 2)}J")
         print(f"Total ONs async no router: {round(tot_ons_async, 2)}J")
@@ -112,7 +112,7 @@ def compute_gain(results_dir):
 
 
 if __name__ == "__main__":
-    results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/saved_results/results_all_mascots_lora_10_msg_per_sec/global_results.yaml"
+    results_dir = "/home/aomond/reconfiguration-esds/saved_results/global_results-0-1.38-lora-pullc-too-much-receive.yaml"
 
     # print_results(results_dir)
     # analyse_results(results_dir)

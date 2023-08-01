@@ -80,7 +80,7 @@ nodes:
     all: {
       expe_config_file: "/home/aomond/reconfiguration-esds/concerto-d-results/current_esds_parameter_file.yaml",
       # expe_config_file: "/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_parameter_files/esds_generated_data-ud1_od0_15_25-async-deploy-T1.yaml",
-      stressConso: 2.58,
+      stressConso: 1.2,
       idleConso: 1.38,
       commsConso: 0.65,
       typeSynchro: pullc

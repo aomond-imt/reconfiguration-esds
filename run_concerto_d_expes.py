@@ -56,6 +56,7 @@ def _esds_results_verification(esds_parameters, expe_esds_verification_files, id
         with open(os.path.join(receive_results, node_receive_file)) as f:
             results_receive = yaml.safe_load(f)
 
+        assert int(Path(node_idle_file).stem) == int(Path(node_reconf_file).stem) == int(Path(node_send_file).stem) == int(Path(node_receive_file).stem)
         node_id = int(Path(node_idle_file).stem)
         max_exec_duration = esds_parameters["max_execution_duration"]
 
@@ -156,7 +157,7 @@ def main():
     # sweeper = simulation_functions.get_simulation_swepped_parameters()
     sweeper = [
         {
-            "stressConso": 1.38,
+            "stressConso": 0,
             "idleConso": 1.38,
             "techno": {"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
             "typeSynchro": "pullc"
@@ -201,7 +202,7 @@ def main():
                 ## Run verification scripts
                 with open(current_test_path) as f:
                     esds_parameters = yaml.safe_load(f)
-                _esds_results_verification(esds_parameters, expe_esds_verification_files, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir, title, parameter["stressConso"]-parameter["idleConso"], parameter["idleConso"])
+                _esds_results_verification(esds_parameters, expe_esds_verification_files, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir, title, parameter["stressConso"], parameter["idleConso"])
                 expe_duration = end_at - start_at
                 print("passed (%0.1fs)" % (expe_duration))
                 sum_expes_duration += expe_duration
@@ -226,11 +227,12 @@ def main():
                 nb_expes_done += 1
 
         print("Dump results")
-        with open(os.path.join(root, f"global_results-{joined_params}.yaml"), "w") as f:
+        global_results_path = f"global_results-{joined_params}.yaml"
+        with open(os.path.join(root, global_results_path), "w") as f:
             yaml.safe_dump(global_results, f)
         print("Results dumped")
         print(f"All passed in {sum_expes_duration:.2f}s")
-        print_results.analyse_results(os.path.join(root, "global_results.yaml"))
+        print_results.analyse_results(os.path.join(root, global_results_path))
 
 
 if __name__ == '__main__':
