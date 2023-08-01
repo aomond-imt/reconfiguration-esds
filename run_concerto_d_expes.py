@@ -193,7 +193,7 @@ def main():
                 ## Run verification scripts
                 with open(current_test_path) as f:
                     esds_parameters = yaml.safe_load(f)
-                _esds_results_verification(esds_parameters, expe_esds_verification_files, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir, title, parameter["stressConso"], parameter["idleConso"])
+                _esds_results_verification(esds_parameters, expe_esds_verification_files, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir, title, parameter["stressConso"]-parameter["idleConso"], parameter["idleConso"])
                 expe_duration = end_at - start_at
                 print("passed (%0.1fs)" % (expe_duration))
                 sum_expes_duration += expe_duration

@@ -13,15 +13,17 @@ sys.path.insert(1, f"{current_dir_name}/..")
 
 
 def execute(api: Node):
-    if api.node_id % 7 not in [0, 6] and api.node_id > api.args["nbDeps"]:
-        return
-
     # Init
     with open(api.args["expe_config_file"]) as f:
         expe_config = yaml.safe_load(f)
         title = expe_config["title"]
+        nb_deps = expe_config["nb_deps"]
         reconf_periods_per_node = expe_config["reconf_periods_per_node"][api.node_id % 7]
         max_execution_duration = expe_config["max_execution_duration"]
+
+    if api.node_id % 7 not in [0, 6] and api.node_id > nb_deps:
+        return
+
     tot_reconf_time, tot_flat_reconf_time, tot_no_reconf_time = 0, 0, 0
     reconf_cons = PowerStates(api, 0)
     reconf_cons.set_power(0)

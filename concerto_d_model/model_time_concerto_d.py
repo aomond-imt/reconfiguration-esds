@@ -361,9 +361,10 @@ def generate_mascots_schedules():
                         sending_periods_during_uptime_per_node[router_key] = []
 
                         # Expe parameters file
-                        title = f"esds_generated_data-{name_uptime}-{version_concerto_d}-{reconf_name}-{trans_times}"
+                        title = f"esds_generated_data-{name_uptime}-{version_concerto_d}-{reconf_name}-{trans_times}-{nb_deps}"
                         expe_parameters = {
                             "title": title,
+                            "nb_deps": nb_deps,
                             "uptimes_periods_per_node": uptimes_periods_per_node,
                             "reconf_periods_per_node": merged_reconf_periods_per_node,
                             "sending_periods_per_node": sending_periods_during_uptime_per_node,
@@ -371,7 +372,7 @@ def generate_mascots_schedules():
                             "max_execution_duration": m
                         }
 
-                        expe_esds_parameter_files = f"/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_parameter_files-{nb_deps}"
+                        expe_esds_parameter_files = f"/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_parameter_files"
                         os.makedirs(expe_esds_parameter_files, exist_ok=True)
                         with open(os.path.join(expe_esds_parameter_files, f"{title}.yaml"), "w") as f:
                             yaml.safe_dump(expe_parameters, f)
@@ -389,7 +390,7 @@ def generate_mascots_schedules():
                             verification["receive_periods"][node_id] = _compute_sending_periods_per_connected_node(node_id, receive_periods, uptime_schedule)
 
                         ## Write file
-                        expe_esds_verification_files = f"/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_verification_files-{nb_deps}"
+                        expe_esds_verification_files = f"/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_verification_files"
                         os.makedirs(expe_esds_verification_files, exist_ok=True)
                         with open(os.path.join(expe_esds_verification_files, f"{title}.yaml"), "w") as f:
                             yaml.safe_dump(verification, f)

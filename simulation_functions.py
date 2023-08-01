@@ -10,9 +10,13 @@ def sending(api, type_comm):
     with open(api.args["expe_config_file"]) as f:
         expe_config = yaml.safe_load(f)
         title = expe_config["title"]
+        nb_deps = expe_config["nb_deps"]
         node_uptimes = expe_config["uptimes_periods_per_node"][api.node_id % 7]
         sending_periods_per_node = expe_config[f"{type_comm}_periods_per_node"][api.node_id % 7]
         max_execution_duration = expe_config["max_execution_duration"]
+
+    if api.node_id % 7 not in [0, 6] and api.node_id > nb_deps:
+        return
 
     # Version concerto_d parameters
     if "async" in title:
@@ -97,8 +101,7 @@ def get_simulation_swepped_parameters():
         "idleConso": [1.38],
         "techno": [{"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
                    {"name": "nbiot", "bandwidth": "200kbps", "commsConso": 0.65}],
-        "typeSynchro": ["pullc"],
-        "nbDeps": [1, 2, 3, 4, 5]
+        "typeSynchro": ["pullc"]
     }
     sweeper = sweep(parameters)
     return sweeper
@@ -109,13 +112,11 @@ def get_params_joined(parameter):
         stressConso,
         idleConso,
         nameTechno,
-        typeSynchro,
-        nbDeps
+        typeSynchro
     ) = (
         parameter["stressConso"],
         parameter["idleConso"],
         parameter["techno"]["name"],
-        parameter["typeSynchro"],
-        parameter["nbDeps"]
+        parameter["typeSynchro"]
     )
-    return f"{stressConso}-{idleConso}-{nameTechno}-{typeSynchro}-{nbDeps}"
+    return f"{stressConso}-{idleConso}-{nameTechno}-{typeSynchro}"

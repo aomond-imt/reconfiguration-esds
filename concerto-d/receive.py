@@ -18,7 +18,4 @@ NB_POLL_PER_SEC = 10
 
 
 def execute(api: Node):
-    if api.node_id % 7 not in [0, 6] and api.node_id > api.args["nbDeps"]:
-        return
-
     simulation_functions.sending(api, "receive")
