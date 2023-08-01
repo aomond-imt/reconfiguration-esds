@@ -11,6 +11,9 @@ sys.path.insert(1, f"{current_dir_name}/..")
 
 
 def execute(api: Node):
+    if api.node_id % 7 not in [0, 6] and api.node_id > api.args["nbDeps"]:
+        return
+
     # Init
     with open(api.args["expe_config_file"]) as f:
         expe_config = yaml.safe_load(f)

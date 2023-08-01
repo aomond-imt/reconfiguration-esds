@@ -29,7 +29,7 @@ def _compute_esds_data_from_results(all_results):
     return reconf_period_per_node
 
 
-def _get_deploy_parallel_use_case_model(tts):
+def _get_deploy_parallel_use_case_model(tts, nb_deps):
     t_sa = tts["server"]["t_sa"]
     t_scs = tts["server"]["t_sc"]
     t_sr = tts["server"]["t_sr"]
@@ -63,13 +63,16 @@ def _get_deploy_parallel_use_case_model(tts):
     in_config3 = DependencyComputeModel("use", 0, None, [[in_intermediate]], [[0]])
     in_config4 = DependencyComputeModel("use", 0, None, [[in_intermediate]], [[0]])
 
+    in_configs = [in_config0, in_config1, in_config2, in_config3, in_config4]
+    in_configs_to_use = [in_configs[i] for i in range(nb_deps)]
+
     # Ajout noeuds intermédiaires pour gérer les dépendances parallèles (pas un provide mais se calcul pareil)
     in_intermediate0 = DependencyComputeModel(
         "intermediate",
         0,
         None,
-        [[in_config0, in_config1, in_config2, in_config3, in_config4]],
-        [[t_scs[0]], [t_scs[1]], [t_scs[2]], [t_scs[3]], [t_scs[4]]]
+        [in_configs_to_use],
+        [[t_scs[i]] for i in range(nb_deps)]
     )
     in_intermediate1 = DependencyComputeModel(
         "intermediate",
@@ -107,20 +110,28 @@ def _get_deploy_parallel_use_case_model(tts):
     service4.connected_dep = in_service4
     in_service4.connected_dep = service4
 
-    return [
-        config0, config1, config2, config3, config4, service0, service1, service2, service3,
-        service4, in_intermediate, in_config0, in_config1, in_config2, in_config3,
-        in_config4, in_intermediate0, in_intermediate1, in_service0, in_service1, in_service2,
-        in_service3, in_service4
-    ], ["config0", "config1", "config2", "config3", "config4", "service0", "service1", "service2", "service3",
-        "service4", "in_intermediate", "in_config0", "in_config1", "in_config2", "in_config3", "in_config4",
-        "in_intermediate0", "in_intermediate1",
-        "in_service0", "in_service1", "in_service2",
-        "in_service3", "in_service4"
-    ]
+    configs = [config0, config1, config2, config3, config4]
+    services = [service0, service1, service2, service3, service4]
+    in_services = [in_service0, in_service1, in_service2, in_service3, in_service4]
+
+    configs_to_use = [configs[i] for i in range(nb_deps)]
+    services_to_use = [services[i] for i in range(nb_deps)]
+    in_services_to_use = [in_services[i] for i in range(nb_deps)]
+
+    configs_names = ["config0", "config1", "config2", "config3", "config4"]
+    services_names = ["service0", "service1", "service2", "service3", "service4"]
+    in_configs_names = ["in_config0", "in_config1", "in_config2", "in_config3", "in_config4"]
+    in_services_names = ["in_service0", "in_service1", "in_service2", "in_service3", "in_service4"]
+
+    configs_to_use_names = [configs_names[i] for i in range(nb_deps)]
+    services_to_use_names = [services_names[i] for i in range(nb_deps)]
+    in_configs_to_use_names = [in_configs_names[i] for i in range(nb_deps)]
+    in_services_to_use_names = [in_services_names[i] for i in range(nb_deps)]
+
+    return configs_to_use + services_to_use + [in_intermediate] + in_configs_to_use + [in_intermediate0, in_intermediate1] + in_services_to_use, configs_to_use_names + services_to_use_names + ["in_intermediate"] + in_configs_to_use_names + ["in_intermediate0", "in_intermediate1"] + in_services_to_use_names
 
 
-def _get_update_parallel_use_case_model(tts):
+def _get_update_parallel_use_case_model(tts, nb_deps):
     t_sr = tts["server"]["t_sr"]
     t_sss = tts["server"]["t_ss"]
     t_sps = tts["server"]["t_sp"]
@@ -153,19 +164,26 @@ def _get_update_parallel_use_case_model(tts):
     update_out_suspend_3 = DependencyComputeModel("provide", 0, None, [], [[t_sss[3]]])
     update_out_suspend_4 = DependencyComputeModel("provide", 0, None, [], [[t_sss[4]]])
 
+    update_out_suspends = [update_out_suspend_0, update_out_suspend_1, update_out_suspend_2, update_out_suspend_3, update_out_suspend_4]
+    update_out_suspends_to_use = [update_out_suspends[i] for i in range(nb_deps)]
+
     intermediate_configured = DependencyComputeModel(
         "intermediate",
         0,
         None,
-        [[update_out_suspend_0, update_out_suspend_1, update_out_suspend_2, update_out_suspend_3, update_out_suspend_4]],
-        [[t_sps[0]], [t_sps[1]], [t_sps[2]], [t_sps[3]], [t_sps[4]]]
+        [update_out_suspends_to_use],
+        [[t_sps[i]] for i in range(nb_deps)]
     )
     update_in_configured_0 = DependencyComputeModel("use", 0, None, [[intermediate_configured]], [[0]])
     update_in_configured_1 = DependencyComputeModel("use", 0, None, [[intermediate_configured]], [[0]])
     update_in_configured_2 = DependencyComputeModel("use", 0, None, [[intermediate_configured]], [[0]])
     update_in_configured_3 = DependencyComputeModel("use", 0, None, [[intermediate_configured]], [[0]])
     update_in_configured_4 = DependencyComputeModel("use", 0, None, [[intermediate_configured]], [[0]])
-    wait_all_true = DependencyComputeModel("intermediate", 0, None, [[update_in_configured_0, update_in_configured_1, update_in_configured_2, update_in_configured_3, update_in_configured_4]], [[0], [0], [0], [0], [0]])
+
+    update_in_configureds = [update_in_configured_0, update_in_configured_1, update_in_configured_2, update_in_configured_3, update_in_configured_4]
+    update_in_configureds_to_use = [update_in_configureds[i] for i in range(nb_deps)]
+
+    wait_all_true = DependencyComputeModel("intermediate", 0, None, [update_in_configureds_to_use], [[0] for _ in range(nb_deps)])
     update_service = DependencyComputeModel("intermediate", 0, None, [[wait_all_true]], [[t_sr]])
 
     update_in_suspend_0.connected_dep = update_out_suspend_0
@@ -190,19 +208,26 @@ def _get_update_parallel_use_case_model(tts):
     update_in_configured_4.connected_dep = update_service_4
     update_service_4.connected_dep = update_in_configured_4
 
-    return [
-        update_in_suspend_0, update_service_0, update_in_suspend_1, update_service_1, update_in_suspend_2,
-        update_service_2, update_in_suspend_3, update_service_3, update_in_suspend_4, update_service_4, update_out_suspend_0,
-        update_out_suspend_1, update_out_suspend_2, update_out_suspend_3, update_out_suspend_4, intermediate_configured,
-        update_in_configured_0, update_in_configured_1, update_in_configured_2, update_in_configured_3, update_in_configured_4,
-        wait_all_true, update_service
-    ], [
-        "update_in_suspend_0", "update_service_0", "update_in_suspend_1", "update_service_1", "update_service_2",
-        "update_in_suspend_2", "update_in_suspend_3", "update_service_3", "update_in_suspend_4", "update_service_4", "update_out_suspend_0",
-        "update_out_suspend_1", "update_out_suspend_2", "update_out_suspend_3", "update_out_suspend_4", "intermediate_configured",
-        "update_in_configured_0", "update_in_configured_1", "update_in_configured_2", "update_in_configured_3", "update_in_configured_4",
-        "wait_all_true", "update_service"
-    ]
+    update_in_suspends = [update_in_suspend_0, update_in_suspend_1, update_in_suspend_2, update_in_suspend_3, update_in_suspend_4]
+    update_services = [update_service_0, update_service_1, update_service_2, update_service_3, update_service_4]
+
+    update_in_suspends_to_use = [update_in_suspends[i] for i in range(nb_deps)]
+    update_services_to_use = [update_services[i] for i in range(nb_deps)]
+
+    update_in_suspends_names = ["update_in_suspend_0", "update_in_suspend_1", "update_in_suspend_2", "update_in_suspend_3", "update_in_suspend_4"]
+    update_out_suspends_names = ["update_out_suspend_0", "update_out_suspend_1", "update_out_suspend_2", "update_out_suspend_3", "update_out_suspend_4"]
+    update_in_configureds_names = ["update_in_configured_0", "update_in_configured_1", "update_in_configured_2", "update_in_configured_3", "update_in_configured_4"]
+    update_services_names = ["update_service_0", "update_service_1", "update_service_2", "update_service_3", "update_service_4"]
+
+    update_in_suspends_to_use_name = [update_in_suspends_names[i] for i in range(nb_deps)]
+    update_out_suspends_to_use_name = [update_out_suspends_names[i] for i in range(nb_deps)]
+    update_in_configureds_to_use_name = [update_in_configureds_names[i] for i in range(nb_deps)]
+    update_services_to_use_name = [update_services_names[i] for i in range(nb_deps)]
+
+    return (
+        update_in_suspends_to_use + update_services_to_use + update_out_suspends_to_use + [intermediate_configured] + update_in_configureds_to_use + [wait_all_true, update_service],
+        update_in_suspends_to_use_name + update_services_to_use_name + update_out_suspends_to_use_name + ["intermediate_configured"] + update_in_configureds_to_use_name + ["wait_all_true", "update_service"]
+    )
 
 
 def generate_mascots_schedules():
@@ -222,149 +247,169 @@ def generate_mascots_schedules():
     ud0_od0_7_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_7_25_perc.json"))
     ud0_od0_30_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_30_25_perc.json"))
 
-    i = 0
-    for uptime_schedule in [ud0_od0_15_25, ud1_od0_15_25, ud2_od0_15_25, ud0_od1_15_25, ud0_od2_15_25,
-                            ud0_od0_7_25, ud0_od0_30_25]:
-        for version_concerto_d in ["sync", "async"]:
-            for reconf_name in ["deploy", "update"]:
-                for trans_times in ["T0", "T1"]:
+    for nb_deps in [1, 2, 3, 4, 5]:
+        i = 0
+        print(f"Generating for nb_deps: {nb_deps}...")
+        for uptime_schedule in [ud0_od0_15_25, ud1_od0_15_25, ud2_od0_15_25, ud0_od1_15_25, ud0_od2_15_25,
+                                ud0_od0_7_25, ud0_od0_30_25]:
+            for version_concerto_d in ["sync", "async"]:
+                for reconf_name in ["deploy", "update"]:
+                    for trans_times in ["T0", "T1"]:
+                        name_uptime = [*expected.keys()][i]
+                        with open(f"/home/aomond/concerto-d-projects/experiment_files/parameters/transitions_times/transitions_times-1-30-deps12-{trans_times[1:]}.json") as f:
+                            tts = json.load(f)["transitions_times"]
 
-                    name_uptime = [*expected.keys()][i]
-                    with open(f"/home/aomond/concerto-d-projects/experiment_files/parameters/transitions_times/transitions_times-1-30-deps12-{trans_times[1:]}.json") as f:
-                        tts = json.load(f)["transitions_times"]
-
-                    # print(name_uptime, version_concerto_d, reconf_name, trans_times)
-                    if reconf_name == "deploy":
-                        list_deps, name_deps = _get_deploy_parallel_use_case_model(tts)
-                    else:
-                        list_deps, name_deps = _get_update_parallel_use_case_model(tts)
-
-                    for dep in list_deps:
-                        dep.nodes_schedules = uptime_schedule
-
-                    m = 0
-                    j = 0
-
-                    # Create result dict for 1 server and 5 deps
-                    all_results_esds = []
-                    sum_reconf_duration = 0
-                    for dep in list_deps:
-                        dct, result_dep = dep.compute_time(version_concerto_d)
-                        # print(dep.node_id, name_deps[j], dct, result_dep)
-                        connected_node_id = dep.connected_dep.node_id if dep.type_dep in ["provide", "use"] else None
-                        all_results_esds.append({"node_id": dep.node_id, "connected_node_id": connected_node_id, "name_dep": name_deps[j], "type_dep": dep.type_dep, "dct": dct, "trans_times": result_dep})
-                        if dct > m:
-                            m = dct
-
-                        for res in result_dep:
-                            for val in res.values():
-                                start, end = val["start"], val["end"]
-                                sum_reconf_duration += end - start
-
-                        # print(name_deps[j], dct, result_dep)
-                        j += 1
-                    # for dep in [self.in_config0, self.in_config1, self.in_config2, self.in_config3, self.in_config4,
-                    #             self.in_service0, self.in_service1, self.in_service2, self.in_service3, self.in_service4]:
-                    #     dct, result_dep = dep.compute_time()
-
-                    # TODO: retirer le temps du début sur toute la reconf et pas uniquement ici
-                    offset_start = min(uptime_schedule, key=lambda s: s[0][0] if s[0][0] != -1 else math.inf)[0][0]
-                    m_time = m - offset_start
-                    # print(f"removed {offset_start}")
-                    exp_val = [*expected.values()][i][version_concerto_d][reconf_name][trans_times]
-                    delta_s = m_time - exp_val
-                    delta_perc = delta_s*100/exp_val
-                    if trans_times == "T0":
+                        # print(name_uptime, version_concerto_d, reconf_name, trans_times)
                         if reconf_name == "deploy":
-                            expected_reconf_duration = 111.75
+                            list_deps, name_deps = _get_deploy_parallel_use_case_model(tts, nb_deps)
                         else:
-                            expected_reconf_duration = 73.96 + IMPLEM_OVERHEAD
-                    else:
-                        if reconf_name == "deploy":
-                            expected_reconf_duration = 91.23
+                            list_deps, name_deps = _get_update_parallel_use_case_model(tts, nb_deps)
+
+                        for dep in list_deps:
+                            dep.nodes_schedules = uptime_schedule
+
+                        m = 0
+                        j = 0
+
+                        # Create result dict for 1 server and 5 deps
+                        all_results_esds = []
+                        sum_reconf_duration = 0
+                        for dep in list_deps:
+                            dct, result_dep = dep.compute_time(version_concerto_d)
+                            # print(dep.node_id, name_deps[j], dct, result_dep)
+                            connected_node_id = dep.connected_dep.node_id if dep.type_dep in ["provide", "use"] else None
+                            all_results_esds.append({"node_id": dep.node_id, "connected_node_id": connected_node_id, "name_dep": name_deps[j], "type_dep": dep.type_dep, "dct": dct, "trans_times": result_dep})
+                            if dct > m:
+                                m = dct
+
+                            for res in result_dep:
+                                for val in res.values():
+                                    start, end = val["start"], val["end"]
+                                    sum_reconf_duration += end - start
+
+                            # print(name_deps[j], dct, result_dep)
+                            j += 1
+                        # for dep in [self.in_config0, self.in_config1, self.in_config2, self.in_config3, self.in_config4,
+                        #             self.in_service0, self.in_service1, self.in_service2, self.in_service3, self.in_service4]:
+                        #     dct, result_dep = dep.compute_time()
+
+                        # TODO: retirer le temps du début sur toute la reconf et pas uniquement ici
+                        offset_start = min(uptime_schedule, key=lambda s: s[0][0] if s[0][0] != -1 else math.inf)[0][0]
+                        m_time = m - offset_start
+                        # print(f"removed {offset_start}")
+                        exp_val = [*expected.values()][i][version_concerto_d][reconf_name][trans_times]
+                        delta_s = m_time - exp_val
+                        delta_perc = delta_s*100/exp_val
+                        if trans_times == "T0":
+                            if reconf_name == "deploy":
+                                expected_reconf_duration = 111.75
+                            else:
+                                expected_reconf_duration = 73.96 + IMPLEM_OVERHEAD
                         else:
-                            expected_reconf_duration = 100.24 + IMPLEM_OVERHEAD
-                    result_str = f"max {trans_times} {reconf_name} {version_concerto_d} {name_uptime}: {m_time}s, delta: {round(delta_s, 2)}s - {round(delta_perc, 2)}% ({exp_val}s expe). Sum reconf: {round(sum_reconf_duration, 2)} ({round(expected_reconf_duration, 2)} expected)"
-                    results_dict[name_uptime][version_concerto_d][reconf_name][trans_times] = result_str
+                            if reconf_name == "deploy":
+                                expected_reconf_duration = 91.23
+                            else:
+                                expected_reconf_duration = 100.24 + IMPLEM_OVERHEAD
 
-                    # Generate ESDS configuration
-                    esds_data = _compute_esds_data_from_results(all_results_esds)
+                        result_str = f"max {trans_times} {reconf_name} {version_concerto_d} {name_uptime}: {m_time}s, delta: {round(delta_s, 2)}s - {round(delta_perc, 2)}% ({exp_val}s expe). Sum reconf: {round(sum_reconf_duration, 2)} ({round(expected_reconf_duration, 2)} expected)"
+                        if abs(delta_perc) > 1:
+                            result_str = result_str + "#############################################"
+                        if nb_deps == 5:
+                            results_dict[name_uptime][version_concerto_d][reconf_name][trans_times] = {nb_deps: result_str}
 
-                    ## Uptime periods
-                    uptimes_periods_per_node = _compute_uptimes_periods_per_node(uptime_schedule, m_time)
-                    router_key = max(uptimes_periods_per_node.keys()) + 1
+                        # Generate ESDS configuration
+                        esds_data = _compute_esds_data_from_results(all_results_esds)
 
-                    ## Reconf periods
-                    reconf_periods_per_node = _compute_reconf_periods_per_node(esds_data)
-                    merged_reconf_periods_per_node = {node_id: count_active_intervals(interval_list) for node_id, interval_list in reconf_periods_per_node.items()}
+                        ## Uptime periods
+                        uptimes_periods_per_node = _compute_uptimes_periods_per_node(uptime_schedule, m_time)
+                        router_key = max(uptimes_periods_per_node.keys()) + 1
 
-                    ## Requests periods
-                    sending_periods_per_node = _compute_sending_periods_per_node(esds_data)
-                    merged_sending_periods_per_node = {node_id: count_active_intervals_sending(interval_list) for node_id, interval_list in sending_periods_per_node.items()}
-                    sending_periods_during_uptime_per_node = _compute_sending_periods_during_uptime_per_node(uptimes_periods_per_node, merged_sending_periods_per_node)
+                        ## Reconf periods
+                        reconf_periods_per_node = _compute_reconf_periods_per_node(esds_data)
+                        merged_reconf_periods_per_node = {node_id: count_active_intervals(interval_list) for node_id, interval_list in reconf_periods_per_node.items()}
 
-                    ## Responses periods
-                    receive_periods_per_node = _compute_receive_periods_from_sending_periods(sending_periods_per_node)
-                    merged_receive_periods_per_node = {node_id: count_active_intervals_sending(interval_list) for node_id, interval_list in receive_periods_per_node.items()}
-                    receive_periods_during_uptime_per_node = _compute_sending_periods_during_uptime_per_node(uptimes_periods_per_node, merged_receive_periods_per_node)
+                        ## Requests periods
+                        sending_periods_per_node = _compute_sending_periods_per_node(esds_data)
+                        merged_sending_periods_per_node = {node_id: count_active_intervals_sending(interval_list) for node_id, interval_list in sending_periods_per_node.items()}
+                        sending_periods_during_uptime_per_node = _compute_sending_periods_during_uptime_per_node(uptimes_periods_per_node, merged_sending_periods_per_node)
 
-                    ## Router periods
-                    if version_concerto_d == "async":
-                        ### Uptimes
-                        router_uptimes_periods = _compute_router_uptimes_periods(uptimes_periods_per_node)
-                        uptimes_periods_per_node[router_key] = router_uptimes_periods
+                        ## Responses periods
+                        receive_periods_per_node = _compute_receive_periods_from_sending_periods(sending_periods_per_node)
+                        merged_receive_periods_per_node = {node_id: count_active_intervals_sending(interval_list) for node_id, interval_list in receive_periods_per_node.items()}
+                        receive_periods_during_uptime_per_node = _compute_sending_periods_during_uptime_per_node(uptimes_periods_per_node, merged_receive_periods_per_node)
+                        # overlaps_periods_per_dep = _compute_uses_overlaps_with_provide(uptimes_periods_per_node)
+                        # receive_periods_during_uptime_per_node = _compute_sending_periods_during_uptime_per_node(overlaps_periods_per_dep, merged_receive_periods_per_node)
 
-                        ### Receive
-                        all_receive_periods = []
-                        for receive_periods in receive_periods_per_node.values():
-                            all_receive_periods.extend(receive_periods)
-                        router_receive_periods = {router_key: count_active_intervals_sending(all_receive_periods)}
-                        router_receive_periods_during_uptime = _compute_sending_periods_during_uptime_per_node(uptimes_periods_per_node, router_receive_periods)
-                        receive_periods_during_uptime_per_node.update(router_receive_periods_during_uptime)
-                    else:
-                        uptimes_periods_per_node[router_key] = []
-                        receive_periods_during_uptime_per_node[router_key] = []
+                        ## Router periods
+                        if version_concerto_d == "async":
+                            ### Uptimes
+                            router_uptimes_periods = _compute_router_uptimes_periods(uptimes_periods_per_node)
+                            uptimes_periods_per_node[router_key] = router_uptimes_periods
 
-                    merged_reconf_periods_per_node[router_key] = []
-                    sending_periods_during_uptime_per_node[router_key] = []
+                            ### Receive
+                            all_receive_periods = []
+                            for receive_periods in receive_periods_per_node.values():
+                                all_receive_periods.extend(receive_periods)
+                            router_receive_periods = {router_key: count_active_intervals_sending(all_receive_periods)}
+                            router_receive_periods_during_uptime = _compute_sending_periods_during_uptime_per_node(uptimes_periods_per_node, router_receive_periods)
+                            receive_periods_during_uptime_per_node.update(router_receive_periods_during_uptime)
+                        else:
+                            uptimes_periods_per_node[router_key] = []
+                            receive_periods_during_uptime_per_node[router_key] = []
 
-                    # Expe parameters file
-                    title = f"esds_generated_data-{name_uptime}-{version_concerto_d}-{reconf_name}-{trans_times}"
-                    expe_parameters = {
-                        "title": title,
-                        "uptimes_nodes": uptime_schedule,
-                        "uptimes_periods_per_node": uptimes_periods_per_node,
-                        "reconf_periods_per_node": merged_reconf_periods_per_node,
-                        "sending_periods_per_node": sending_periods_during_uptime_per_node,
-                        "receive_periods_per_node": receive_periods_during_uptime_per_node,
-                        "max_execution_duration": m
-                    }
+                        merged_reconf_periods_per_node[router_key] = []
+                        sending_periods_during_uptime_per_node[router_key] = []
 
-                    expe_esds_parameter_files = "/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_parameter_files"
-                    os.makedirs(expe_esds_parameter_files, exist_ok=True)
-                    with open(os.path.join(expe_esds_parameter_files, f"{title}.yaml"), "w") as f:
-                        yaml.safe_dump(expe_parameters, f)
+                        # Expe parameters file
+                        title = f"esds_generated_data-{name_uptime}-{version_concerto_d}-{reconf_name}-{trans_times}"
+                        expe_parameters = {
+                            "title": title,
+                            "uptimes_periods_per_node": uptimes_periods_per_node,
+                            "reconf_periods_per_node": merged_reconf_periods_per_node,
+                            "sending_periods_per_node": sending_periods_during_uptime_per_node,
+                            "receive_periods_per_node": receive_periods_during_uptime_per_node,
+                            "max_execution_duration": m
+                        }
 
-                    # Verification file
-                    verification = {"max_execution_duration": m, "reconf_periods": {}, "sending_periods": {}, "receive_periods": {}}
-                    ## Reconf
-                    for node_id, reconf_periods in merged_reconf_periods_per_node.items():
-                        verification["reconf_periods"][node_id] = sum((end - start) * nb_processes for start, end, nb_processes in reconf_periods)
-                    ## Send
-                    for node_id, sending_periods in merged_sending_periods_per_node.items():
-                        verification["sending_periods"][node_id] = _compute_sending_periods_per_connected_node(node_id, sending_periods, uptime_schedule)
-                    ## Receive
-                    for node_id, receive_periods in merged_receive_periods_per_node.items():
-                        verification["receive_periods"][node_id] = _compute_sending_periods_per_connected_node(node_id, receive_periods, uptime_schedule)
+                        expe_esds_parameter_files = f"/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_parameter_files-{nb_deps}"
+                        os.makedirs(expe_esds_parameter_files, exist_ok=True)
+                        with open(os.path.join(expe_esds_parameter_files, f"{title}.yaml"), "w") as f:
+                            yaml.safe_dump(expe_parameters, f)
 
-                    ## Write file
-                    expe_esds_verification_files = "/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_verification_files"
-                    os.makedirs(expe_esds_verification_files, exist_ok=True)
-                    with open(os.path.join(expe_esds_verification_files, f"{title}.yaml"), "w") as f:
-                        yaml.safe_dump(verification, f)
-        i += 1
+                        # Verification file
+                        verification = {"max_execution_duration": m, "reconf_periods": {}, "sending_periods": {}, "receive_periods": {}}
+                        ## Reconf
+                        for node_id, reconf_periods in merged_reconf_periods_per_node.items():
+                            verification["reconf_periods"][node_id] = sum((end - start) * nb_processes for start, end, nb_processes in reconf_periods)
+                        ## Send
+                        for node_id, sending_periods in merged_sending_periods_per_node.items():
+                            verification["sending_periods"][node_id] = _compute_sending_periods_per_connected_node(node_id, sending_periods, uptime_schedule)
+                        ## Receive
+                        for node_id, receive_periods in merged_receive_periods_per_node.items():
+                            verification["receive_periods"][node_id] = _compute_sending_periods_per_connected_node(node_id, receive_periods, uptime_schedule)
+
+                        ## Write file
+                        expe_esds_verification_files = f"/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_verification_files-{nb_deps}"
+                        os.makedirs(expe_esds_verification_files, exist_ok=True)
+                        with open(os.path.join(expe_esds_verification_files, f"{title}.yaml"), "w") as f:
+                            yaml.safe_dump(verification, f)
+            i += 1
 
     print(json.dumps(results_dict, indent=4))
+
+
+def _compute_uses_overlaps_with_provide(uptimes_periods_per_node):
+    overlaps_periods = {node_id: {} for node_id in uptimes_periods_per_node.keys()}
+    for node_id, node_uptimes in uptimes_periods_per_node.items():
+        for provide_up_start, provide_up_end in node_uptimes:
+            for remote_node_id, remote_node_uptimes in uptimes_periods_per_node.items():
+                if node_id != remote_node_id:
+                    for remote_up_start, remote_up_end in remote_node_uptimes:
+                        if remote_node_id not in overlaps_periods[node_id].keys():
+                            overlaps_periods[node_id][remote_node_id] = []
+                        if min(provide_up_end, remote_up_end) - max(provide_up_start, remote_up_start) > 0:
+                            overlaps_periods[node_id][remote_node_id].append([max(provide_up_start, remote_up_start), min(provide_up_end, remote_up_end)])
+    return overlaps_periods
 
 
 def _compute_router_uptimes_periods(uptimes_periods_per_node):
@@ -413,6 +458,17 @@ def _compute_sending_periods_during_uptime_per_node(uptimes_nodes, sending_perio
     return result
 
 
+def _compute_receive_periods_from_overlaps_per_node(overlaps_nodes, sending_periods):
+    result = {node_id: [] for node_id in sending_periods.keys()}
+    for node_id, periods in sending_periods.items():
+        for start_period, end_period, send_nodes in periods:
+            for remote_id, nb_send in send_nodes.items():
+                for start_uptime, end_uptime in overlaps_nodes[node_id][remote_id]:
+                    if start_period < end_uptime and end_period > start_uptime:
+                        result[node_id].append([max(start_uptime, start_period), min(end_period, end_uptime), send_nodes])
+    return result
+
+
 def test_compute_sending_periods_during_uptime_per_node():
     uptimes = [
         [[0, 50], [100, 150], [300, 350]],
@@ -436,8 +492,6 @@ def test_compute_sending_periods_during_uptime_per_node():
         1: [],
         2: [[300, 350, {}]]
     }
-
-
 
 
 def _compute_uptimes_periods_per_node(uptime_schedule, m_time: float):
@@ -535,7 +589,6 @@ def count_active_intervals_sending(interval_list):
 
 
 def _compute_reconf_periods_per_node(esds_data):
-    # TODO: handle overlaps
     result = {}
 
     # Flatten reconf_periods and sort by starting period
@@ -551,7 +604,6 @@ def _compute_reconf_periods_per_node(esds_data):
 
 
 def _compute_sending_periods_per_node(esds_data):
-    # TODO: handle overlaps
     result = {}
 
     for node_id, node_values in esds_data.items():

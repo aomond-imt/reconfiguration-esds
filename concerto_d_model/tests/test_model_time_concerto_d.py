@@ -6,6 +6,29 @@ from concerto_d_model.model_time_concerto_d import _compute_receive_periods_from
     _compute_sending_periods_per_node, _get_deploy_parallel_use_case_model
 
 
+def test_compute_uses_overlaps_with_provide():
+    uptimes_periods_per_node_0 = {
+        0: [[0, 10]],
+        1: [[0, 10]]
+    }
+    uptimes_periods_per_node_1 = {
+        0: [[1, 10], [12, 20]],
+        1: [[5, 15]],
+        2: [[15, 17], [25, 30]],
+        3: [[0, 25]]
+    }
+    assert model_time_concerto_d._compute_uses_overlaps_with_provide(uptimes_periods_per_node_0) == {
+        0: {1: [[0, 10]]},
+        1: {0: [[0, 10]]}
+    }
+    assert model_time_concerto_d._compute_uses_overlaps_with_provide(uptimes_periods_per_node_1) == {
+        0: {1: [[5, 10], [12, 15]], 2: [[15, 17]], 3: [[1, 10], [12, 20]]},
+        1: {0: [[5, 10], [12, 15]], 2: [], 3: [[5, 15]]},
+        2: {0: [[15, 17]], 1: [], 3: [[15, 17]]},
+        3: {0: [[1, 10], [12, 20]], 1: [[5, 15]], 2: [[15, 17]]}
+    }
+
+
 def test_compute_uptimes_periods_per_node():
     uptime_schedule_0 = [
         [[0, 1], [90, 1]],
