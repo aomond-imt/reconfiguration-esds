@@ -110,9 +110,8 @@ def compute_gain(results_dir):
         print()
 
 
-
 if __name__ == "__main__":
-    results_dir = "/home/aomond/reconfiguration-esds/saved_results/global_results-0-1.38-lora-pullc-too-much-receive.yaml"
+    results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-0-1.38-lora-pullc.yaml"
 
     # print_results(results_dir)
     # analyse_results(results_dir)

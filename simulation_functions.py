@@ -23,11 +23,10 @@ def sending(api, type_comm):
         max_execution_duration = expe_config["max_execution_duration"]
 
     # Version concerto_d parameters
-    if "async" in title:
-        interface_name = f"ethRouter{type_comm.title()}"
+    if "async" not in title:
+        interface_name = f"eth0"
     else:
-        interface_name = f"eth{type_comm.title()}"
-
+        interface_name = f"eth0Router"
     commsConso = api.args["commsConso"]
     api.log(f"Interface: {interface_name}")
     tot_sending_time_flat, tot_no_sending_time_flat = 0, 0
@@ -63,7 +62,7 @@ def sending(api, type_comm):
                             end_period = end - api.read("clock")
                             data_to_send = size * count * NB_POLL_PER_SEC
                             timeout = min(data_to_send/bandwith, end_period)
-                            api.sendt(interface_name, 1, data_to_send, sender_id, timeout=timeout)
+                            api.sendt(interface_name, (node_id, sender_id), data_to_send, sender_id, timeout=timeout)
                     if api.read("clock") < end:
                         api.wait(min(FREQUENCE_POLLING, end - api.read("clock")))
                 tot_sending_time_flat += api.read("clock") - sending_start

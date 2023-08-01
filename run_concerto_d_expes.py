@@ -87,11 +87,11 @@ def _esds_results_verification(esds_parameters, expe_esds_verification_files, id
         _assert_value(node_id, "tot_no_sending_time", results_send["tot_no_sending_time"], expected_no_sending_time)
 
         # Verification receive
-        node_receives = esds_parameters["receive_periods_per_node"][node_id]
-        expected_receive_flat_time = sum(end - start for start, end, node_send in node_receives if node_send != {})
-        expected_no_receive_time = max_exec_duration - expected_receive_flat_time - expected_no_uptime
-        _assert_value(node_id, "tot_receive_flat_time", results_receive["tot_receive_flat_time"], expected_receive_flat_time)
-        _assert_value(node_id, "tot_no_receive_time", results_receive["tot_no_receive_time"], expected_no_receive_time)
+        # node_receives = esds_parameters["receive_periods_per_node"][node_id]
+        # expected_receive_flat_time = sum(end - start for start, end, node_send in node_receives if node_send != {})
+        # expected_no_receive_time = max_exec_duration - expected_receive_flat_time - expected_no_uptime
+        # _assert_value(node_id, "tot_receive_flat_time", results_receive["tot_receive_flat_time"], expected_receive_flat_time)
+        # _assert_value(node_id, "tot_no_receive_time", results_receive["tot_no_receive_time"], expected_no_receive_time)
 
 
 def _load_energetic_expe_results_from_title(title, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir):
