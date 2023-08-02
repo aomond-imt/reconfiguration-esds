@@ -60,7 +60,7 @@ class DependencyComputeModel:
         result[uptime_num] = {"start": round(start, 2), "end": round(current_time, 2)}
         return current_time, result
 
-    def compute_time(self, version_concerto_d):
+    def compute_time(self, version_concerto_d, type_synchro):
         """
         Returns:
         The time where information is provided in case of use. The maximum end endpoints of all the actions durations
@@ -68,7 +68,7 @@ class DependencyComputeModel:
         """
         if len(self.previous_use_deps) > 0:
             last_previous_deps = self.previous_use_deps[-1]
-            last_previous_deps_times = [lpd.compute_time(version_concerto_d)[0] for lpd in last_previous_deps]
+            last_previous_deps_times = [lpd.compute_time(version_concerto_d, type_synchro)[0] for lpd in last_previous_deps]
         else:
             last_previous_deps_times = [0]
 
@@ -84,10 +84,11 @@ class DependencyComputeModel:
             all_results.append(results)
 
         # max_results = max(all_results, key=lambda res: max([*res.values()], key=lambda val: val["end"])["end"])
-        if self.type_dep in ["provide", "intermediate"]:
+        type_dep_to_sync = "provide" if type_synchro == "pull" else "use"
+        if self.type_dep in [type_dep_to_sync, "intermediate"]:
             return round(m, 2), all_results
         else:
-            time_use, _ = self.connected_dep.compute_time(version_concerto_d)
+            time_use, _ = self.connected_dep.compute_time(version_concerto_d, type_synchro)
             total_lp_time = max(m, time_use)
             if version_concerto_d == "sync":
                 next_information_time = get_next_overlap(total_lp_time, self.node_id, self.connected_dep.node_id, self.nodes_schedules, "sync")
