@@ -63,15 +63,25 @@ def analyse_energy_results(results_dir):
     gathered_results = _gather_results(global_results)
     group_by_version_concerto_d = _group_by_version_concerto_d(gathered_results)
     for key, vals in group_by_version_concerto_d.items():
+        sum_reconf_sync = 0
+        sum_sending_sync = 0
+        sum_reconf_async = 0
+        sum_sending_async = 0
         print(key)
         if "sync" in vals.keys():
             print("sync")
             for node_id, res in vals["sync"].items():
                 print(f"{node_id}: {round(res['tot'], 2)}J --- Detail: {res['detail']}")
+                sum_reconf_sync += res['detail']['reconfs']
+                sum_sending_sync += res['detail']['sendings'] + res['detail']['receives']
+            print(f"Ratio reconf/sending: {sum_reconf_sync:.2f}/{sum_sending_sync:.2f} ({sum_reconf_sync/sum_sending_sync:.2f})")
         if "async" in vals.keys():
             print("async")
             for node_id, res in vals["async"].items():
                 print(f"{node_id}: {round(res['tot'], 2)}J --- Detail: {res['detail']}")
+                sum_reconf_async += res['detail']['reconfs']
+                sum_sending_async += res['detail']['sendings'] + res['detail']['receives']
+            print(f"Ratio reconf/sending: {sum_reconf_async:.2f}/{sum_sending_async:.2f} ({sum_reconf_async / sum_sending_async:.2f})")
 
 
 def compute_energy_gain(results_dir):
@@ -116,6 +126,9 @@ if __name__ == "__main__":
     # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-0-1.38-nbiot-pullc.yaml"
     # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-1.2-1.38-lora-pullc.yaml"
     results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-1.2-1.38-nbiot-pullc.yaml"
+
+    # results_dir = "/home/aomond/reconfiguration-esds/saved_results/global_results-1.2-1.38-lora-pullc-7-overlaps.yaml"
+    # results_dir = "/home/aomond/reconfiguration-esds/saved_results/global_results-1.2-1.38-nbiot-pullc-7-overlaps.yaml"
 
     # print_energy_results(results_dir)
     analyse_energy_results(results_dir)
