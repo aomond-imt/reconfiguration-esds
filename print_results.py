@@ -7,6 +7,7 @@ ROUTER_ID = 6
 def _gather_results(global_results):
     gathered_results = {}
     for key, nodes_results in global_results.items():
+        energy_results = nodes_results["energy"]
         gathered_results[key] = {}
         # print(f"{key}:")
         # print(f"idles: {nodes_results['idles']}")
@@ -14,11 +15,11 @@ def _gather_results(global_results):
         # print(f"sendings: {nodes_results['sendings']}")
         # print(f"receives: {nodes_results['receives']}")
         filter_tot = ["reconfs", "sendings", "receives"]
-        for node_id in sorted(nodes_results["idles"].keys()):
+        for node_id in sorted(energy_results["idles"].keys()):
             tot = 0
             s = {"idles": 0, "reconfs": 0, "sendings": 0, "receives": 0}
             for name in s.keys():
-                s[name] += nodes_results[name][node_id]["node_conso"] + nodes_results[name][node_id]["comms_cons"]
+                s[name] += energy_results[name][node_id]["node_conso"] + energy_results[name][node_id]["comms_cons"]
                 if name in filter_tot or node_id == ROUTER_ID:
                     tot += s[name]
 
@@ -27,7 +28,7 @@ def _gather_results(global_results):
     return gathered_results
 
 
-def print_results(results_dir):
+def print_energy_results(results_dir):
     with open(results_dir) as f:
         global_results = yaml.safe_load(f)
 
@@ -54,7 +55,7 @@ def _group_by_version_concerto_d(gathered_results):
     return grouped_results
 
 
-def analyse_results(results_dir):
+def analyse_energy_results(results_dir):
     with open(results_dir) as f:
         global_results = yaml.safe_load(f)
 
@@ -73,7 +74,7 @@ def analyse_results(results_dir):
                 print(f"{node_id}: {round(res['tot'], 2)}J --- Detail: {res['detail']}")
 
 
-def compute_gain(results_dir):
+def compute_energy_gain(results_dir):
     with open(results_dir) as f:
         global_results = yaml.safe_load(f)
     gathered_results = _gather_results(global_results)
@@ -111,8 +112,11 @@ def compute_gain(results_dir):
 
 
 if __name__ == "__main__":
-    results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-0-1.38-lora-pullc.yaml"
+    # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-0-1.38-lora-pullc.yaml"
+    # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-0-1.38-nbiot-pullc.yaml"
+    # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-1.2-1.38-lora-pullc.yaml"
+    results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-1.2-1.38-nbiot-pullc.yaml"
 
-    # print_results(results_dir)
-    # analyse_results(results_dir)
-    compute_gain(results_dir)
+    # print_energy_results(results_dir)
+    analyse_energy_results(results_dir)
+    # compute_energy_gain(results_dir)

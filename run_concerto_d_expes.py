@@ -149,25 +149,37 @@ def main():
     parameter_files_list = os.listdir(expe_esds_parameter_files)
     sum_expes_duration = 0
     nb_expes_tot = min(len(parameter_files_list), limit_expes)
-    nb_expes_done = 0
-    print(f"Total nb experiments: {nb_expes_tot}")
+    print(f"Total nb experiments per param: {nb_expes_tot}")
     global_results = {}
 
     ## Getting sweeped parameters
     # sweeper = simulation_functions.get_simulation_swepped_parameters()
     sweeper = [
         {
-            "stressConso": 0,
+            "stressConso": 1.20,
             "idleConso": 1.38,
             "techno": {"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
             "typeSynchro": "pullc"
-        }
+        },
+        {
+            "stressConso": 0,
+            "idleConso": 1.38,
+            "techno": {"name": "nbiot", "bandwidth": "200kbps", "commsConso": 0.65},
+            "typeSynchro": "pullc"
+        },
+        {
+            "stressConso": 1.20,
+            "idleConso": 1.38,
+            "techno": {"name": "nbiot", "bandwidth": "200kbps", "commsConso": 0.65},
+            "typeSynchro": "pullc"
+        },
     ]
     nb_params_tot = len(sweeper)
     nb_params_done = 0
     print(f"Tot nb parameters: {nb_params_tot}")
 
     for parameter in sweeper:
+        nb_expes_done = 0
         joined_params = simulation_functions.get_params_joined(parameter)
         print(f"{nb_params_done+1}/{nb_params_tot} - {joined_params}")
         for parameter_file in parameter_files_list:
@@ -190,6 +202,7 @@ def main():
             try:
                 ## Launch experiment
                 start_at=time.time()
+                print(f"Starting experiment, platform_path: {platform_path}")
                 out=subprocess.check_output(["esds", "run", platform_path],stderr=subprocess.STDOUT,timeout=tests_timeout,encoding="utf-8")
                 # out = subprocess.Popen(["esds", "run", platform_path], stderr=subprocess.STDOUT, encoding="utf-8")
                 # out.wait()
@@ -208,7 +221,7 @@ def main():
                 sum_expes_duration += expe_duration
 
                 ## Aggregate to global results
-                global_results[title] = _load_energetic_expe_results_from_title(title, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir)
+                global_results[title] = {"energy": _load_energetic_expe_results_from_title(title, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir), "time": esds_parameters["max_execution_duration"]}
             except subprocess.TimeoutExpired as err:
                 print("failed :(")
                 print("------------- Test duration expired (timeout="+str(tests_timeout)+"s) -------------")
@@ -232,7 +245,8 @@ def main():
             yaml.safe_dump(global_results, f)
         print("Results dumped")
         print(f"All passed in {sum_expes_duration:.2f}s")
-        print_results.analyse_results(os.path.join(root, global_results_path))
+        print_results.analyse_energy_results(os.path.join(root, global_results_path))
+        nb_params_done += 1
 
 
 if __name__ == '__main__':
