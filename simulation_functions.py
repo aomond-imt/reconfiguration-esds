@@ -34,7 +34,6 @@ def sending(api, type_comm):
     sending_cons.set_power(interface_name, 0, commsConso, commsConso)
 
     size = 257
-    bandwith = 6250
     api.turn_off()
     for up_start, up_end in node_uptimes:
         # Sleeping period (no receive)
@@ -61,8 +60,7 @@ def sending(api, type_comm):
                         if api.read("clock") < end:
                             end_period = end - api.read("clock")
                             data_to_send = size * count * NB_POLL_PER_SEC
-                            timeout = min(data_to_send/bandwith, end_period)
-                            api.sendt(interface_name, (node_id, sender_id), data_to_send, sender_id, timeout=timeout)
+                            api.sendt(interface_name, (node_id, sender_id), data_to_send, sender_id, timeout=end_period)
                     if api.read("clock") < end:
                         api.wait(min(FREQUENCE_POLLING, end - api.read("clock")))
                 tot_sending_time_flat += api.read("clock") - sending_start
