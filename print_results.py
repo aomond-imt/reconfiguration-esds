@@ -1,4 +1,8 @@
+import itertools
+
 import yaml
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 ROUTER_ID = 6
@@ -89,36 +93,113 @@ def compute_energy_gain(results_dir):
         global_results = yaml.safe_load(f)
     gathered_results = _gather_results(global_results)
     group_by_version_concerto_d = _group_by_version_concerto_d(gathered_results)
+    all_energy_results = {}
     for key, vals in group_by_version_concerto_d.items():
-        print(key)
+        all_energy_results[key] = {}
         tot_ons_sync = 0
         tot_ons_async = 0
         tot_router = 0
         for vals_sync, vals_async in zip(vals["sync"].items(), vals["async"].items()):
             node_id, node_results_sync = vals_sync
             _, node_results_async = vals_async
-            tot_gain = node_results_sync["tot"] - node_results_async["tot"]
+            tot_gain = node_results_async["tot"] - node_results_sync["tot"]
             if node_id == ROUTER_ID:
                 tot_router = node_results_async["tot"]
             else:
                 tot_ons_sync += node_results_sync["tot"]
                 tot_ons_async += node_results_async["tot"]
-            sign = "-" if tot_gain > 0 else "+"
-            print(f"{node_id}: tot_gain: {sign}{abs(round(tot_gain, 2))}J (sync: {node_results_sync['tot']}J, async: {node_results_async['tot']}J)", end=" - ")
-
+            all_energy_results[key][node_id] = {"gain": round(tot_gain, 2), "sync": node_results_sync['tot'], "async": node_results_async['tot']}
+            all_energy_results[key][node_id]["details"] = {}
             for detail_sync, detail_async in zip(node_results_sync["detail"].items(), node_results_async["detail"].items()):
                 name, val_sync = detail_sync
                 _, val_async = detail_async
-                gain = val_sync - val_async
-                s = "-" if gain > 0 else "+"
-                print(f"{name}: {s}{abs(round(gain, 2))}J (sync: {val_sync}J, async: {val_async}J)", end=", ")
-            print()
-        print(f"Total ONs sync: {round(tot_ons_sync, 2)}J")
-        print(f"Total ONs async no router: {round(tot_ons_async, 2)}J")
-        print(f"Total ONs async with router: {round(tot_ons_async + tot_router, 2)}J")
-        print(f"Gain ONs using async (no router) {round((tot_ons_sync - tot_ons_async) * 100 / tot_ons_sync, 2)}%")
-        print(f"Gain system using async (with router) {round((tot_ons_sync - (tot_ons_async+tot_router)) * 100 / tot_ons_sync, 2)}%")
-        print()
+                gain = val_async - val_sync
+                all_energy_results[key][node_id]["details"][name] = {"gain": round(gain, 2), "sync": val_sync, "async": val_async}
+
+        all_energy_results[key]["total"] = {
+            "sync": round(tot_ons_sync, 2),
+            "async_no_router": round(tot_ons_async, 2),
+            "async_with_router": round(tot_ons_async + tot_router, 2),
+            "gain_no_router": round((tot_ons_sync - tot_ons_async) * 100 / tot_ons_sync, 2),
+            "gain_with_router": round((tot_ons_sync - (tot_ons_async+tot_router)) * 100 / tot_ons_sync, 2),
+        }
+
+    return all_energy_results
+
+
+def print_energy_gain(energy_gain):
+    for key, vals in energy_gain.items():
+        print(key)
+        for element, values in vals.items():
+            if element != "total":
+                print(f"{element}: tot_gain: {values['gain']}J (sync: {values['sync']}J, async: {values['async']}J)", end=" - ")
+                for name, val in values["details"].items():
+                    print(f"{name}: {round(val['gain'], 2)}J (sync: {val['sync']}J, async: {val['async']}J)", end=", ")
+                print()
+            else:
+                print(f"Total ONs sync: {values['sync']}J")
+                print(f"Total ONs async no router: {values['async_no_router']}J")
+                print(f"Total ONs async with router: {values['async_with_router']}J")
+                print(f"Gain ONs using async (no router) {values['gain_no_router']}%")
+                print(f"Gain system using async (with router) {values['gain_with_router']}%")
+                print()
+
+
+def compute_energy_gain_by_nb_deps(energy_gains):
+    energy_gain_by_nb_deps = {}
+    print()
+    for key, val in itertools.groupby(energy_gains.items(), key=lambda x: "-".join(x[0].split("-")[:-2])):
+        energy_gain_by_nb_deps[key] = {}
+        for scenario, values in val:
+            nb_deps = scenario.split("-")[-2]
+            energy_gain_by_nb_deps[key][nb_deps] = values
+
+    return energy_gain_by_nb_deps
+
+
+def plot_results(energy_gain_by_nb_deps):
+    scenario_name = 'esds_generated_data-ud0_od0_30_25-deploy-T0'
+    gain_by_nb_deps = energy_gain_by_nb_deps[scenario_name]
+    x = np.arange(len(gain_by_nb_deps.keys()))
+    elements = {
+        "sync": [el["total"]["sync"] for el in gain_by_nb_deps.values()],
+        "async": {
+            "ons": [el["total"]["async_no_router"] for el in gain_by_nb_deps.values()],
+            "router": [el["total"]["async_with_router"]-el["total"]["async_no_router"] for el in gain_by_nb_deps.values()],
+        },
+    }
+    # print(json.dumps(elements, indent=2))
+
+    bottom = {
+        "sync": np.zeros(len(gain_by_nb_deps.keys())),
+        "async": np.zeros(len(gain_by_nb_deps.keys())),
+    }
+    fig, ax = plt.subplots()
+    multiplier = 0
+    width = 0.4
+    for attribute, measurement in elements.items():
+        offset = width * multiplier
+        if attribute == "sync":
+            rects = ax.bar(x + offset, measurement, width, bottom=bottom[attribute], label=attribute)
+            bottom[attribute] = bottom[attribute] + measurement
+            ax.bar_label(rects, padding=3)
+        elif attribute == "async":
+            rects = ax.bar(x + offset, measurement["ons"], width, bottom=bottom[attribute], label="async (ons)")
+            bottom[attribute] = bottom[attribute] + measurement["ons"]
+            ax.bar_label(rects, padding=3)
+            rects = ax.bar(x + offset, measurement["router"], width, bottom=bottom[attribute], label="async (router)")
+            bottom[attribute] = bottom[attribute] + measurement["router"]
+            ax.bar_label(rects, padding=3)
+
+        multiplier += 1
+
+    ax.set_ylabel('Energy')
+    ax.set_title(f'{scenario_name}')
+    ax.set_xticks(x + width, gain_by_nb_deps.keys())
+    ax.legend(loc='upper left', ncols=3)
+    ax.set_ylim(0, 400)
+
+    plt.show()
 
 
 if __name__ == "__main__":
@@ -131,5 +212,9 @@ if __name__ == "__main__":
     # results_dir = "/home/aomond/reconfiguration-esds/saved_results/global_results-1.2-1.38-nbiot-pullc-7-overlaps.yaml"
 
     # print_energy_results(results_dir)
-    analyse_energy_results(results_dir)
-    # compute_energy_gain(results_dir)
+    # analyse_energy_results(results_dir)
+    energy_gains = compute_energy_gain(results_dir)
+    energy_gain_by_nb_deps = compute_energy_gain_by_nb_deps(energy_gains)
+    # print(json.dumps(energy_gains, indent=4))
+    # print_energy_gain(energy_gains)
+    plot_results(energy_gain_by_nb_deps)
