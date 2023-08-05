@@ -35,43 +35,33 @@ def _get_deploy_parallel_use_case_model(tts, nb_deps):
     t_sr = tts["server"]["t_sr"]
 
     ### Deploy
-    # dep0
-    config0 = DependencyComputeModel("provide", 1, None, [], [[tts["dep0"]["t_di"]]])
-    service0 = DependencyComputeModel("provide", 1, None, [[config0]], [[tts["dep0"]["t_dr"]]])
-
-    # dep1
-    config1 = DependencyComputeModel("provide", 2, None, [], [[tts["dep1"]["t_di"]]])
-    service1 = DependencyComputeModel("provide", 2, None, [[config1]], [[tts["dep1"]["t_dr"]]])
-
-    # dep2
-    config2 = DependencyComputeModel("provide", 3, None, [], [[tts["dep2"]["t_di"]]])
-    service2 = DependencyComputeModel("provide", 3, None, [[config2]], [[tts["dep2"]["t_dr"]]])
-
-    # dep3
-    config3 = DependencyComputeModel("provide", 4, None, [], [[tts["dep3"]["t_di"]]])
-    service3 = DependencyComputeModel("provide", 4, None, [[config3]], [[tts["dep3"]["t_dr"]]])
-
-    # dep4
-    config4 = DependencyComputeModel("provide", 5, None, [], [[tts["dep4"]["t_di"]]])
-    service4 = DependencyComputeModel("provide", 5, None, [[config4]], [[tts["dep4"]["t_dr"]]])
+    configs = []
+    services = []
+    configs_names = []
+    services_names = []
+    for dep_num in range(nb_deps):
+        config = DependencyComputeModel("provide", dep_num+1, None, [], [[tts[f"dep{dep_num}"]["t_di"]]])
+        service = DependencyComputeModel("provide", dep_num+1, None, [[config]], [[tts[f"dep{dep_num}"]["t_dr"]]])
+        configs.append(config)
+        services.append(service)
+        configs_names.append(f"config{dep_num}")
+        services_names.append(f"service{dep_num}")
 
     # server
     in_intermediate = DependencyComputeModel("intermediate", 0, None, [], [[t_sa]])
-    in_config0 = DependencyComputeModel("use", 0, None, [[in_intermediate]], [[0]])
-    in_config1 = DependencyComputeModel("use", 0, None, [[in_intermediate]], [[0]])
-    in_config2 = DependencyComputeModel("use", 0, None, [[in_intermediate]], [[0]])
-    in_config3 = DependencyComputeModel("use", 0, None, [[in_intermediate]], [[0]])
-    in_config4 = DependencyComputeModel("use", 0, None, [[in_intermediate]], [[0]])
 
-    in_configs = [in_config0, in_config1, in_config2, in_config3, in_config4]
-    in_configs_to_use = [in_configs[i] for i in range(nb_deps)]
+    in_configs = []
+    in_configs_names = []
+    for dep_num in range(nb_deps):
+        in_configs.append(DependencyComputeModel("use", 0, None, [[in_intermediate]], [[0]]))
+        in_configs_names.append(f"in_config{dep_num}")
 
     # Ajout noeuds intermédiaires pour gérer les dépendances parallèles (pas un provide mais se calcul pareil)
     in_intermediate0 = DependencyComputeModel(
         "intermediate",
         0,
         None,
-        [in_configs_to_use],
+        [in_configs],
         [[t_scs[i]] for i in range(nb_deps)]
     )
     in_intermediate1 = DependencyComputeModel(
@@ -82,53 +72,23 @@ def _get_deploy_parallel_use_case_model(tts, nb_deps):
         [[t_sr]]
     )
 
-    in_service0 = DependencyComputeModel("use", 0, None, [[in_intermediate1]], [[0]])
-    in_service1 = DependencyComputeModel("use", 0, None, [[in_intermediate1]], [[0]])
-    in_service2 = DependencyComputeModel("use", 0, None, [[in_intermediate1]], [[0]])
-    in_service3 = DependencyComputeModel("use", 0, None, [[in_intermediate1]], [[0]])
-    in_service4 = DependencyComputeModel("use", 0, None, [[in_intermediate1]], [[0]])
+    in_services = []
+    in_services_names = []
+    for dep_num in range(nb_deps):
+        in_services.append(DependencyComputeModel("use", 0, None, [[in_intermediate1]], [[0]]))
+        in_services_names.append(f"in_service{dep_num}")
 
-    config0.connected_dep = in_config0
-    in_config0.connected_dep = config0
-    config1.connected_dep = in_config1
-    in_config1.connected_dep = config1
-    config2.connected_dep = in_config2
-    in_config2.connected_dep = config2
-    config3.connected_dep = in_config3
-    in_config3.connected_dep = config3
-    config4.connected_dep = in_config4
-    in_config4.connected_dep = config4
+    for dep_num in range(nb_deps):
+        configs[dep_num].connected_dep = in_configs[dep_num]
+        in_configs[dep_num].connected_dep = configs[dep_num]
 
-    service0.connected_dep = in_service0
-    in_service0.connected_dep = service0
-    service1.connected_dep = in_service1
-    in_service1.connected_dep = service1
-    service2.connected_dep = in_service2
-    in_service2.connected_dep = service2
-    service3.connected_dep = in_service3
-    in_service3.connected_dep = service3
-    service4.connected_dep = in_service4
-    in_service4.connected_dep = service4
+        services[dep_num].connected_dep = in_services[dep_num]
+        in_services[dep_num].connected_dep = services[dep_num]
 
-    configs = [config0, config1, config2, config3, config4]
-    services = [service0, service1, service2, service3, service4]
-    in_services = [in_service0, in_service1, in_service2, in_service3, in_service4]
-
-    configs_to_use = [configs[i] for i in range(nb_deps)]
-    services_to_use = [services[i] for i in range(nb_deps)]
-    in_services_to_use = [in_services[i] for i in range(nb_deps)]
-
-    configs_names = ["config0", "config1", "config2", "config3", "config4"]
-    services_names = ["service0", "service1", "service2", "service3", "service4"]
-    in_configs_names = ["in_config0", "in_config1", "in_config2", "in_config3", "in_config4"]
-    in_services_names = ["in_service0", "in_service1", "in_service2", "in_service3", "in_service4"]
-
-    configs_to_use_names = [configs_names[i] for i in range(nb_deps)]
-    services_to_use_names = [services_names[i] for i in range(nb_deps)]
-    in_configs_to_use_names = [in_configs_names[i] for i in range(nb_deps)]
-    in_services_to_use_names = [in_services_names[i] for i in range(nb_deps)]
-
-    return configs_to_use + services_to_use + [in_intermediate] + in_configs_to_use + [in_intermediate0, in_intermediate1] + in_services_to_use, configs_to_use_names + services_to_use_names + ["in_intermediate"] + in_configs_to_use_names + ["in_intermediate0", "in_intermediate1"] + in_services_to_use_names
+    return (
+        configs + services + [in_intermediate] + in_configs + [in_intermediate0, in_intermediate1] + in_services,
+        configs_names + services_names + ["in_intermediate"] + in_configs_names + ["in_intermediate0", "in_intermediate1"] + in_services_names
+    )
 
 
 def _get_update_parallel_use_case_model(tts, nb_deps):
@@ -137,96 +97,51 @@ def _get_update_parallel_use_case_model(tts, nb_deps):
     t_sps = tts["server"]["t_sp"]
 
     ### Update
-    # dep0
-    update_in_suspend_0 = DependencyComputeModel("use", 1, None, [], [[0]])
-    update_service_0 = DependencyComputeModel("provide", 1, None, [[update_in_suspend_0]], [[tts["dep0"]["t_du"] + tts["dep0"]["t_dr"]]])
-
-    # dep1
-    update_in_suspend_1 = DependencyComputeModel("use", 2, None, [], [[0]])
-    update_service_1 = DependencyComputeModel("provide", 2, None, [[update_in_suspend_1]], [[tts["dep1"]["t_du"] + tts["dep1"]["t_dr"] + IMPLEM_OVERHEAD]])
-
-    # dep2
-    update_in_suspend_2 = DependencyComputeModel("use", 3, None, [], [[0]])
-    update_service_2 = DependencyComputeModel("provide", 3, None, [[update_in_suspend_2]], [[tts["dep2"]["t_du"] + tts["dep2"]["t_dr"]]])
-
-    # dep3
-    update_in_suspend_3 = DependencyComputeModel("use", 4, None, [], [[0]])
-    update_service_3 = DependencyComputeModel("provide", 4, None, [[update_in_suspend_3]], [[tts["dep3"]["t_du"] + tts["dep3"]["t_dr"]]])
-
-    # dep4
-    update_in_suspend_4 = DependencyComputeModel("use", 5, None, [], [[0]])
-    update_service_4 = DependencyComputeModel("provide", 5, None, [[update_in_suspend_4]], [[tts["dep4"]["t_du"] + tts["dep4"]["t_dr"]]])
+    update_in_suspends = []
+    update_services = []
+    update_in_suspends_names = []
+    update_services_names = []
+    for dep_num in range(nb_deps):
+        update_in_suspend = DependencyComputeModel("use", dep_num+1, None, [], [[0]])
+        update_in_suspends.append(update_in_suspend)
+        update_services.append(DependencyComputeModel("provide", dep_num+1, None, [[update_in_suspend]], [[tts[f"dep{dep_num}"]["t_du"] + tts[f"dep{dep_num}"]["t_dr"] + IMPLEM_OVERHEAD]]))
+        update_in_suspends_names.append(f"update_in_suspend_{dep_num}")
+        update_services_names.append(f"update_service_{dep_num}")
 
     # server
-    update_out_suspend_0 = DependencyComputeModel("provide", 0, None, [], [[t_sss[0]]])
-    update_out_suspend_1 = DependencyComputeModel("provide", 0, None, [], [[t_sss[1]]])
-    update_out_suspend_2 = DependencyComputeModel("provide", 0, None, [], [[t_sss[2]]])
-    update_out_suspend_3 = DependencyComputeModel("provide", 0, None, [], [[t_sss[3]]])
-    update_out_suspend_4 = DependencyComputeModel("provide", 0, None, [], [[t_sss[4]]])
-
-    update_out_suspends = [update_out_suspend_0, update_out_suspend_1, update_out_suspend_2, update_out_suspend_3, update_out_suspend_4]
-    update_out_suspends_to_use = [update_out_suspends[i] for i in range(nb_deps)]
+    update_out_suspends = []
+    update_out_suspends_names = []
+    for dep_num in range(nb_deps):
+        update_out_suspends.append(DependencyComputeModel("provide", 0, None, [], [[t_sss[dep_num]]]))
+        update_out_suspends_names.append(f"update_out_suspend_{dep_num}")
 
     intermediate_configured = DependencyComputeModel(
         "intermediate",
         0,
         None,
-        [update_out_suspends_to_use],
+        [update_out_suspends],
         [[t_sps[i]] for i in range(nb_deps)]
     )
-    update_in_configured_0 = DependencyComputeModel("use", 0, None, [[intermediate_configured]], [[0]])
-    update_in_configured_1 = DependencyComputeModel("use", 0, None, [[intermediate_configured]], [[0]])
-    update_in_configured_2 = DependencyComputeModel("use", 0, None, [[intermediate_configured]], [[0]])
-    update_in_configured_3 = DependencyComputeModel("use", 0, None, [[intermediate_configured]], [[0]])
-    update_in_configured_4 = DependencyComputeModel("use", 0, None, [[intermediate_configured]], [[0]])
 
-    update_in_configureds = [update_in_configured_0, update_in_configured_1, update_in_configured_2, update_in_configured_3, update_in_configured_4]
-    update_in_configureds_to_use = [update_in_configureds[i] for i in range(nb_deps)]
+    update_in_configureds = []
+    update_in_configureds_names = []
+    for dep_num in range(nb_deps):
+        update_in_configureds.append(DependencyComputeModel("use", 0, None, [[intermediate_configured]], [[0]]))
+        update_in_configureds_names.append(f"update_in_configured_{dep_num}")
 
-    wait_all_true = DependencyComputeModel("intermediate", 0, None, [update_in_configureds_to_use], [[0] for _ in range(nb_deps)])
+    wait_all_true = DependencyComputeModel("intermediate", 0, None, [update_in_configureds], [[0] for _ in range(nb_deps)])
     update_service = DependencyComputeModel("intermediate", 0, None, [[wait_all_true]], [[t_sr]])
 
-    update_in_suspend_0.connected_dep = update_out_suspend_0
-    update_out_suspend_0.connected_dep = update_in_suspend_0
-    update_in_suspend_1.connected_dep = update_out_suspend_1
-    update_out_suspend_1.connected_dep = update_in_suspend_1
-    update_in_suspend_2.connected_dep = update_out_suspend_2
-    update_out_suspend_2.connected_dep = update_in_suspend_2
-    update_in_suspend_3.connected_dep = update_out_suspend_3
-    update_out_suspend_3.connected_dep = update_in_suspend_3
-    update_in_suspend_4.connected_dep = update_out_suspend_4
-    update_out_suspend_4.connected_dep = update_in_suspend_4
+    for dep_num in range(nb_deps):
+        update_in_suspends[dep_num].connected_dep = update_out_suspends[dep_num]
+        update_out_suspends[dep_num].connected_dep = update_in_suspends[dep_num]
 
-    update_in_configured_0.connected_dep = update_service_0
-    update_service_0.connected_dep = update_in_configured_0
-    update_in_configured_1.connected_dep = update_service_1
-    update_service_1.connected_dep = update_in_configured_1
-    update_in_configured_2.connected_dep = update_service_2
-    update_service_2.connected_dep = update_in_configured_2
-    update_in_configured_3.connected_dep = update_service_3
-    update_service_3.connected_dep = update_in_configured_3
-    update_in_configured_4.connected_dep = update_service_4
-    update_service_4.connected_dep = update_in_configured_4
-
-    update_in_suspends = [update_in_suspend_0, update_in_suspend_1, update_in_suspend_2, update_in_suspend_3, update_in_suspend_4]
-    update_services = [update_service_0, update_service_1, update_service_2, update_service_3, update_service_4]
-
-    update_in_suspends_to_use = [update_in_suspends[i] for i in range(nb_deps)]
-    update_services_to_use = [update_services[i] for i in range(nb_deps)]
-
-    update_in_suspends_names = ["update_in_suspend_0", "update_in_suspend_1", "update_in_suspend_2", "update_in_suspend_3", "update_in_suspend_4"]
-    update_out_suspends_names = ["update_out_suspend_0", "update_out_suspend_1", "update_out_suspend_2", "update_out_suspend_3", "update_out_suspend_4"]
-    update_in_configureds_names = ["update_in_configured_0", "update_in_configured_1", "update_in_configured_2", "update_in_configured_3", "update_in_configured_4"]
-    update_services_names = ["update_service_0", "update_service_1", "update_service_2", "update_service_3", "update_service_4"]
-
-    update_in_suspends_to_use_name = [update_in_suspends_names[i] for i in range(nb_deps)]
-    update_out_suspends_to_use_name = [update_out_suspends_names[i] for i in range(nb_deps)]
-    update_in_configureds_to_use_name = [update_in_configureds_names[i] for i in range(nb_deps)]
-    update_services_to_use_name = [update_services_names[i] for i in range(nb_deps)]
+        update_in_configureds[dep_num].connected_dep = update_services[dep_num]
+        update_services[dep_num].connected_dep = update_in_configureds[dep_num]
 
     return (
-        update_in_suspends_to_use + update_services_to_use + update_out_suspends_to_use + [intermediate_configured] + update_in_configureds_to_use + [wait_all_true, update_service],
-        update_in_suspends_to_use_name + update_services_to_use_name + update_out_suspends_to_use_name + ["intermediate_configured"] + update_in_configureds_to_use_name + ["wait_all_true", "update_service"]
+        update_in_suspends + update_services + update_out_suspends + [intermediate_configured] + update_in_configureds + [wait_all_true, update_service],
+        update_in_suspends_names + update_services_names + update_out_suspends_names + ["intermediate_configured"] + update_in_configureds_names + ["wait_all_true", "update_service"]
     )
 
 
@@ -239,26 +154,39 @@ def generate_mascots_schedules():
     with open(f"{dir_name}/mascots_2023/mascots_struct.json") as f:
         results_dict = json.load(f)
 
-    ud0_od0_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_15_25_perc.json"))
-    ud1_od0_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud1_od0_15_25_perc.json"))
-    ud2_od0_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud2_od0_15_25_perc.json"))
-    ud0_od1_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od1_15_25_perc.json"))
-    ud0_od2_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od2_15_25_perc.json"))
-    ud0_od0_7_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_7_25_perc.json"))
-    ud0_od0_30_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_30_25_perc.json"))
+    uptimes_schedules = {
+        # "ud1_od0_15_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud1_od0_15_25_perc.json")),
+        # "ud2_od0_15_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud2_od0_15_25_perc.json")),
+        # "ud0_od1_15_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od1_15_25_perc.json")),
+        # "ud0_od2_15_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od2_15_25_perc.json")),
+        "ud0_od0_15_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_15_25_perc-31_nodes.json")),
+        "ud0_od0_7_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_7_25_perc-31_nodes.json")),
+        "ud0_od0_30_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_30_25_perc-31_nodes.json")),
+    }
+    # ud1_od0_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud1_od0_15_25_perc.json"))
+    # ud2_od0_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud2_od0_15_25_perc.json"))
+    # ud0_od1_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od1_15_25_perc.json"))
+    # ud0_od2_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od2_15_25_perc.json"))
+    #
+    # ud0_od0_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_15_25_perc-31_nodes.json"))
+    # ud0_od0_7_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_7_25_perc-31_nodes.json"))
+    # ud0_od0_30_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_30_25_perc-31_nodes.json"))
 
-    for nb_deps in [1, 2, 3, 4, 5]:
+    # for nb_deps in [1, 2, 3, 4, 5]:
+    for nb_deps in [5, 10, 20, 30]:
         i = 0
         print(f"Generating for nb_deps: {nb_deps}...")
-        for uptime_schedule in [ud0_od0_15_25, ud1_od0_15_25, ud2_od0_15_25, ud0_od1_15_25, ud0_od2_15_25,
-                                ud0_od0_7_25, ud0_od0_30_25]:
+        # for uptime_schedule in [ud0_od0_15_25, ud1_od0_15_25, ud2_od0_15_25, ud0_od1_15_25, ud0_od2_15_25, ud0_od0_7_25, ud0_od0_30_25]:
+        # for uptime_schedule in [ud0_od0_15_25, ud0_od0_7_25, ud0_od0_30_25]:
+        for name_uptime, uptime_schedule_nodes in uptimes_schedules.items():
             for version_concerto_d in ["sync", "async"]:
                 for reconf_name in ["deploy", "update"]:
                     for trans_times in ["T0", "T1"]:
-                        for type_synchro in ["pull", "push"]:
-                            name_uptime = [*expected.keys()][i]
+                        for type_synchro in ["pull"]:
                             with open(f"/home/aomond/concerto-d-projects/experiment_files/parameters/transitions_times/transitions_times-1-30-deps12-{trans_times[1:]}.json") as f:
                                 tts = json.load(f)["transitions_times"]
+
+                            uptime_schedule = uptime_schedule_nodes[:nb_deps+1]
 
                             # print(name_uptime, version_concerto_d, reconf_name, trans_times)
                             if reconf_name == "deploy":
@@ -298,7 +226,7 @@ def generate_mascots_schedules():
                             offset_start = min(uptime_schedule, key=lambda s: s[0][0] if s[0][0] != -1 else math.inf)[0][0]
                             m_time = m - offset_start
                             # print(f"removed {offset_start}")
-                            exp_val = [*expected.values()][i][version_concerto_d][reconf_name][trans_times]
+                            exp_val = expected[name_uptime][version_concerto_d][reconf_name][trans_times]
                             delta_s = m_time - exp_val
                             delta_perc = delta_s*100/exp_val
                             if trans_times == "T0":
@@ -322,8 +250,8 @@ def generate_mascots_schedules():
                             esds_data = _compute_esds_data_from_results(all_results_esds)
 
                             ## Uptime periods
-                            uptimes_periods_per_node = _compute_uptimes_periods_per_node(uptime_schedule[:nb_deps+1], m_time)
-                            router_key = len(uptime_schedule)
+                            uptimes_periods_per_node = _compute_uptimes_periods_per_node(uptime_schedule, m_time)
+                            router_key = nb_deps+1
 
                             ## Reconf periods
                             reconf_periods_per_node = _compute_reconf_periods_per_node(esds_data)
@@ -378,23 +306,23 @@ def generate_mascots_schedules():
                             with open(os.path.join(expe_esds_parameter_files, f"{title}.yaml"), "w") as f:
                                 yaml.safe_dump(expe_parameters, f)
 
-                            # Verification file
-                            verification = {"max_execution_duration": m, "reconf_periods": {}, "sending_periods": {}, "receive_periods": {}}
-                            ## Reconf
-                            for node_id, reconf_periods in merged_reconf_periods_per_node.items():
-                                verification["reconf_periods"][node_id] = sum((end - start) * nb_processes for start, end, nb_processes in reconf_periods)
-                            ## Send
-                            for node_id, sending_periods in merged_sending_periods_per_node.items():
-                                verification["sending_periods"][node_id] = _compute_sending_periods_per_connected_node(node_id, sending_periods, uptime_schedule)
-                            ## Receive
-                            for node_id, receive_periods in merged_receive_periods_per_node.items():
-                                verification["receive_periods"][node_id] = _compute_sending_periods_per_connected_node(node_id, receive_periods, uptime_schedule)
-
-                            ## Write file
-                            expe_esds_verification_files = f"/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_verification_files"
-                            os.makedirs(expe_esds_verification_files, exist_ok=True)
-                            with open(os.path.join(expe_esds_verification_files, f"{title}.yaml"), "w") as f:
-                                yaml.safe_dump(verification, f)
+                            # # Verification file
+                            # verification = {"max_execution_duration": m, "reconf_periods": {}, "sending_periods": {}, "receive_periods": {}}
+                            # ## Reconf
+                            # for node_id, reconf_periods in merged_reconf_periods_per_node.items():
+                            #     verification["reconf_periods"][node_id] = sum((end - start) * nb_processes for start, end, nb_processes in reconf_periods)
+                            # ## Send
+                            # for node_id, sending_periods in merged_sending_periods_per_node.items():
+                            #     verification["sending_periods"][node_id] = _compute_sending_periods_per_connected_node(node_id, sending_periods, uptime_schedule)
+                            # ## Receive
+                            # for node_id, receive_periods in merged_receive_periods_per_node.items():
+                            #     verification["receive_periods"][node_id] = _compute_sending_periods_per_connected_node(node_id, receive_periods, uptime_schedule)
+                            #
+                            # ## Write file
+                            # expe_esds_verification_files = f"/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_verification_files"
+                            # os.makedirs(expe_esds_verification_files, exist_ok=True)
+                            # with open(os.path.join(expe_esds_verification_files, f"{title}.yaml"), "w") as f:
+                            #     yaml.safe_dump(verification, f)
             i += 1
 
     print(json.dumps(results_dict, indent=4))
