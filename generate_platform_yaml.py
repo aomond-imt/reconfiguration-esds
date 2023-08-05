@@ -5,7 +5,7 @@ templateLoader = jinja2.FileSystemLoader(searchpath="./concerto-d")
 templateEnv = jinja2.Environment(loader=templateLoader)
 TEMPLATE_FILE = "platform.yaml.j2"
 template = templateEnv.get_template(TEMPLATE_FILE)
-nb_deps = 5
+nb_deps = 30
 
 sweeper = simulation_functions.get_simulation_swepped_parameters()
 nodes_per_batch = nb_deps+2
