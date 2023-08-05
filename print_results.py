@@ -207,8 +207,8 @@ def plot_results(energy_gain_by_nb_deps, param_names):
         max_bound = 0
         for attribute, measurement in elements.items():
             offset = width * multiplier
-            # max_bound = _plot_tot(attribute, ax, bottom, max_bound, measurement, offset, width, x)
-            max_bound = _plot_detail(attribute, ax, bottom, max_bound, measurement, offset, width, x)
+            max_bound = _plot_tot(attribute, ax, bottom, max_bound, measurement, offset, width, x)
+            # max_bound = _plot_detail(attribute, ax, bottom, max_bound, measurement, offset, width, x)
             multiplier += 1
 
         ax.set_ylabel('Energy (J)')
@@ -240,6 +240,8 @@ def _plot_tot(attribute, ax, bottom, max_bound, measurement, offset, width, x):
 
 def _plot_detail(attribute, ax, bottom, max_bound, measurement, offset, width, x):
     if attribute == "sync":
+        # rects = ax.bar(x + offset, measurement["detail_ons_idles"], width, bottom=bottom[attribute], label="sync ons (idles)")
+        # bottom[attribute] = bottom[attribute] + measurement["detail_ons_idles"]
         rects = ax.bar(x + offset, measurement["detail_ons_reconfs"], width, bottom=bottom[attribute], label="sync ons (reconfs)")
         bottom[attribute] = bottom[attribute] + measurement["detail_ons_reconfs"]
         rects = ax.bar(x + offset, measurement["detail_ons_sendings"], width, bottom=bottom[attribute], label="sync ons (requests)")
@@ -272,7 +274,7 @@ if __name__ == "__main__":
         # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-0-1.38-lora-pullc.yaml"
         # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-0-1.38-nbiot-pullc.yaml"
         # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-1.2-1.38-lora-pullc.yaml"
-        results_dir = f"/home/aomond/reconfiguration-esds/saved_results/global_results-{param}-30-overlaps.yaml"
+        results_dir = f"/home/aomond/reconfiguration-esds/saved_results/global_results-{param}-7-overlaps.yaml"
 
         # results_dir = "/home/aomond/reconfiguration-esds/saved_results/global_results-1.2-1.38-lora-pullc-7-overlaps.yaml"
         # results_dir = f"/home/aomond/reconfiguration-esds/saved_results/global_results-{param}-7-overlaps.yaml"
@@ -282,5 +284,5 @@ if __name__ == "__main__":
         energy_gains = compute_energy_gain(results_dir)
         energy_gain_by_nb_deps = compute_energy_gain_by_nb_deps(energy_gains)
         # print(json.dumps(energy_gains, indent=4))
-        # print_energy_gain(energy_gains)
-        plot_results(energy_gain_by_nb_deps, param)
+        print_energy_gain(energy_gains)
+        # plot_results(energy_gain_by_nb_deps, param)

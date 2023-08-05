@@ -2,80 +2,34 @@ general:
   interferences: off
 
 nodes:
-  count: 28
+  count: {{ nodes_count }}
   implementations:
     # Idle
-    - 0 idle.py
-    - 1 idle.py
-    - 2 idle.py
-    - 3 idle.py
-    - 4 idle.py
-    - 5 idle.py
-    - 6 idle.py  # Router
+    {% for idle_num in range(nodes_per_batch) -%}
+    - {{ idle_num }} idle.py
+    {% endfor %}
 
     # Reconf
-    - 7 reconf.py
-    - 8 reconf.py
-    - 9 reconf.py
-    - 10 reconf.py
-    - 11 reconf.py
-    - 12 reconf.py
-    - 13 reconf.py  # Router
+    {% for reconf_num in range(nodes_per_batch, nodes_per_batch*2) -%}
+    - {{ reconf_num }} reconf.py
+    {% endfor %}
 
     # Sending
-    - 14 sending.py
-    - 15 sending.py
-    - 16 sending.py
-    - 17 sending.py
-    - 18 sending.py
-    - 19 sending.py
-    - 20 sending.py  # Router
+    {% for sending_num in range(nodes_per_batch*2, nodes_per_batch*3) -%}
+    - {{ sending_num }} sending.py
+    {% endfor %}
 
     # Receive
-    - 21 receive.py
-    - 22 receive.py
-    - 23 receive.py
-    - 24 receive.py
-    - 25 receive.py
-    - 26 receive.py
-    - 27 receive.py  # Router
+    {% for receive_num in range(nodes_per_batch*3, nodes_per_batch*4) -%}
+    - {{ receive_num }} receive.py
+    {% endfor %}
 
   groups: # id group_id
     # Idle
-    - 0 0
-    - 1 1
-    - 2 2
-    - 3 3
-    - 4 4
-    - 5 5
-    - 6 6
+    {% for node_num in range(nodes_count) -%}
+    - {{ node_num }} {{ node_num % nodes_per_batch }}
+    {% endfor %}
 
-    # Reconf
-    - 7 0
-    - 8 1
-    - 9 2
-    - 10 3
-    - 11 4
-    - 12 5
-    - 13 6
-
-    # Sending
-    - 14 0
-    - 15 1
-    - 16 2
-    - 17 3
-    - 18 4
-    - 19 5
-    - 20 6
-
-    # Receive
-    - 21 0
-    - 22 1
-    - 23 2
-    - 24 3
-    - 25 4
-    - 26 5
-    - 27 6
   arguments:
     all: {
       expe_config_file: "/home/aomond/reconfiguration-esds/concerto-d-results/current_esds_parameter_file.yaml",
@@ -83,7 +37,8 @@ nodes:
       stressConso: {{ stressConso }},
       idleConso: {{ idleConso }},
       commsConso: {{ commsConso }},
-      typeSynchro: {{ typeSynchro }}
+      typeSynchro: {{ typeSynchro }},
+      nodes_per_batch: {{ nodes_per_batch }}
     }
 
 interfaces:
@@ -91,21 +46,18 @@ interfaces:
   eth0:
     type: "wireless"
     links:
-      - 14 {{ bandwidth }} 0s 22-26  # Allsource bandwidth latency allreceive
-      - 15 {{ bandwidth }} 0s 21,23,24,25,26  # Allsource bandwidth latency allreceive
-      - 16 {{ bandwidth }} 0s 21,22,24,25,26  # Allsource bandwidth latency allreceive
-      - 17 {{ bandwidth }} 0s 21,22,23,25,26  # Allsource bandwidth latency allreceive
-      - 18 {{ bandwidth }} 0s 21,22,23,24,26  # Allsource bandwidth latency allreceive
-      - 19 {{ bandwidth }} 0s 21-25  # Allsource bandwidth latency allreceive
+      {% for link in links_eth0 -%}
+        {{ link }}  # Allsource bandwidth latency allreceive
+      {% endfor %}
     txperfs:
       - all {{ bandwidth }} 0s  # Perf de chaque noeud sur cette interface
-    nodes: 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27
+    nodes: {{ communicating_nodes }}
 
   # Asynchronous
   eth0Router:
     type: "wireless"
     links:
-      - 14-19 {{ bandwidth }} 0s 27
+      - {{ nodes_per_batch*2 }}-{{ nodes_per_batch*3-2 }} {{ bandwidth }} 0s {{ nodes_count-1 }}
     txperfs:
       - all {{ bandwidth }} 0s all
-    nodes: 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27
+    nodes: {{ communicating_nodes }}
