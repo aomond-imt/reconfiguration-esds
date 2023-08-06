@@ -29,12 +29,12 @@ def _assert_value(node_id, key, val, expected_val):
 
 def _esds_results_verification(esds_parameters, expe_esds_verification_files, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir, title, stressConso, idleConso):
     # Retrieve verification file for the given configuration file
-    verification = None
-    for verif_file in os.listdir(expe_esds_verification_files):
-        if Path(verif_file).stem == title:
-            abs_verif_file = os.path.join(expe_esds_verification_files, verif_file)
-            with open(abs_verif_file) as f:
-                verification = yaml.safe_load(f)
+    # verification = None
+    # for verif_file in os.listdir(expe_esds_verification_files):
+    #     if Path(verif_file).stem == title:
+    #         abs_verif_file = os.path.join(expe_esds_verification_files, verif_file)
+    #         with open(abs_verif_file) as f:
+    #             verification = yaml.safe_load(f)
 
     # Retrieve results files for reconfs, sends and receives
     idle_results = os.path.join(idle_results_dir, title)
@@ -156,21 +156,21 @@ def main():
     # sweeper = simulation_functions.get_simulation_swepped_parameters()
     sweeper = [
         {
-            "stressConso": 1.20,
+            "stressConso": 0,
             "idleConso": 1.38,
             "techno": {"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
             "typeSynchro": "pullc"
         },
-        {
-            "stressConso": 0,
-            "idleConso": 1.38,
-            "techno": {"name": "nbiot", "bandwidth": "200kbps", "commsConso": 0.65},
-            "typeSynchro": "pullc"
-        },
+        # {
+        #     "stressConso": 0,
+        #     "idleConso": 1.38,
+        #     "techno": {"name": "nbiot", "bandwidth": "200kbps", "commsConso": 0.65},
+        #     "typeSynchro": "pullc"
+        # },
         {
             "stressConso": 1.20,
             "idleConso": 1.38,
-            "techno": {"name": "nbiot", "bandwidth": "200kbps", "commsConso": 0.65},
+            "techno": {"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
             "typeSynchro": "pullc"
         },
     ]
@@ -202,7 +202,7 @@ def main():
             try:
                 ## Launch experiment
                 start_at=time.time()
-                print(f"Starting experiment, platform_path: {platform_path}")
+                # print(f"Starting experiment, platform_path: {platform_path}")
                 out=subprocess.check_output(["esds", "run", platform_path],stderr=subprocess.STDOUT,timeout=tests_timeout,encoding="utf-8")
                 # out = subprocess.Popen(["esds", "run", platform_path], stderr=subprocess.STDOUT, encoding="utf-8")
                 # out.wait()

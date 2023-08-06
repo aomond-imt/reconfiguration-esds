@@ -14,7 +14,7 @@ sys.path.insert(1, f"{current_dir_name}/..")
 import simulation_functions
 
 def execute(api: Node):
-    node_id = api.node_id % 7
+    node_id = api.node_id % api.args["nodes_per_batch"]
 
     # Init
     with open(api.args["expe_config_file"]) as f:

@@ -6,7 +6,7 @@ NB_POLL_PER_SEC = 10
 
 
 def sending(api, type_comm):
-    node_id = api.node_id % 7
+    node_id = api.node_id % api.args["nodes_per_batch"]
 
     # Init
     with open(api.args["expe_config_file"]) as f:
