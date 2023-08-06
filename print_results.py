@@ -5,12 +5,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-ROUTER_ID = 6
-
-
 def _gather_results(global_results):
     gathered_results = {}
     for key, nodes_results in global_results.items():
+        router_id = max(nodes_results["energy"]["idles"].keys())
         energy_results = nodes_results["energy"]
         gathered_results[key] = {"energy": {}, "time": nodes_results["time"]}
         # print(f"{key}:")
@@ -24,7 +22,7 @@ def _gather_results(global_results):
             s = {"idles": 0, "reconfs": 0, "sendings": 0, "receives": 0}
             for name in s.keys():
                 s[name] += energy_results[name][node_id]["node_conso"] + energy_results[name][node_id]["comms_cons"]
-                if name in filter_tot or node_id == ROUTER_ID:
+                if name in filter_tot or node_id == router_id:
                     tot += s[name]
 
             gathered_results[key]["energy"][node_id] = {"tot": round(tot, 2), "detail": s}
@@ -96,6 +94,8 @@ def compute_energy_gain(results_dir):
     group_by_version_concerto_d = _group_by_version_concerto_d(gathered_results)
     all_results = {}
     for key, vals in group_by_version_concerto_d.items():
+        router_id = max(vals["async"]["energy"].keys())
+        assert router_id == max(vals["sync"]["energy"].keys())
         all_results[key] = {}
         tot_ons_sync = 0
         tot_ons_async = 0
@@ -108,7 +108,7 @@ def compute_energy_gain(results_dir):
             node_id, node_results_sync = vals_sync
             _, node_results_async = vals_async
             tot_gain = node_results_async["tot"] - node_results_sync["tot"]
-            if node_id == ROUTER_ID:
+            if node_id == router_id:
                 tot_router = node_results_async["tot"]
             else:
                 tot_ons_sync += node_results_sync["tot"]
@@ -121,7 +121,7 @@ def compute_energy_gain(results_dir):
                 gain = val_async - val_sync
                 all_results[key][node_id]["details"][name] = {"gain": round(gain, 2), "sync": val_sync, "async": val_async}
 
-                if node_id < ROUTER_ID:
+                if node_id < router_id:
                     tot_detail["detail_ons_sync"][name] += val_sync
                     tot_detail["detail_ons_async"][name] += val_async
                 else:
@@ -274,8 +274,10 @@ def _plot_detail(attribute, ax, bottom, max_bound, measurement, offset, width, x
         # rects = ax.bar(x + offset, measurement["detail_ons_idles"], width, bottom=bottom[attribute], label="sync ons (idles)")
         # bottom[attribute] = bottom[attribute] + measurement["detail_ons_idles"]
         rects = ax.bar(x + offset, measurement["detail_ons_reconfs"], width, bottom=bottom[attribute], label="sync ons (reconfs)")
+        ax.bar_label(rects, padding=3)
         bottom[attribute] = bottom[attribute] + measurement["detail_ons_reconfs"]
         rects = ax.bar(x + offset, measurement["detail_ons_sendings"], width, bottom=bottom[attribute], label="sync ons (requests)")
+        ax.bar_label(rects, padding=3)
         bottom[attribute] = bottom[attribute] + measurement["detail_ons_sendings"]
         rects = ax.bar(x + offset, measurement["detail_ons_receives"], width, bottom=bottom[attribute], label="sync ons (responses)")
         bottom[attribute] = bottom[attribute] + measurement["detail_ons_receives"]
@@ -284,14 +286,19 @@ def _plot_detail(attribute, ax, bottom, max_bound, measurement, offset, width, x
     elif attribute == "async":
         rects = ax.bar(x + offset, measurement["detail_ons_reconfs"], width, bottom=bottom[attribute], label="async ons (reconfs)")
         bottom[attribute] = bottom[attribute] + measurement["detail_ons_reconfs"]
+        ax.bar_label(rects, padding=3)
         rects = ax.bar(x + offset, measurement["detail_ons_sendings"], width, bottom=bottom[attribute], label="async ons (requests)")
         bottom[attribute] = bottom[attribute] + measurement["detail_ons_sendings"]
+        ax.bar_label(rects, padding=3)
         rects = ax.bar(x + offset, measurement["detail_ons_receives"], width, bottom=bottom[attribute], label="async ons (responses)")
         bottom[attribute] = bottom[attribute] + measurement["detail_ons_receives"]
+        ax.bar_label(rects, padding=3)
         rects = ax.bar(x + offset, measurement["detail_router_idles"], width, bottom=bottom[attribute], label="async router (idles)")
         bottom[attribute] = bottom[attribute] + measurement["detail_router_idles"]
+        ax.bar_label(rects, padding=3)
         rects = ax.bar(x + offset, measurement["detail_router_sendings"], width, bottom=bottom[attribute], label="async router (requests)")
         bottom[attribute] = bottom[attribute] + measurement["detail_router_sendings"]
+        ax.bar_label(rects, padding=3)
         rects = ax.bar(x + offset, measurement["detail_router_receives"], width, bottom=bottom[attribute], label="async router (responses)")
         bottom[attribute] = bottom[attribute] + measurement["detail_router_receives"]
         ax.bar_label(rects, padding=3)
@@ -301,7 +308,7 @@ def _plot_detail(attribute, ax, bottom, max_bound, measurement, offset, width, x
 
 if __name__ == "__main__":
     # name_params = ["1.2-1.38-nbiot-pullc", "1.2-1.38-lora-pullc", "0-1.38-nbiot-pullc"]
-    name_params = ["0-1.38-lora-pullc", "1.2-1.38-lora-pullc"]
+    name_params = ["1.2-1.38-lora-pullc"]
     for param in name_params:
         # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-0-1.38-lora-pullc.yaml"
         # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-0-1.38-nbiot-pullc.yaml"
@@ -317,5 +324,5 @@ if __name__ == "__main__":
         energy_gain_by_nb_deps = compute_energy_gain_by_nb_deps(energy_gains)
         # print(json.dumps(energy_gains, indent=4))
         # print_energy_gain(energy_gains)
-        # plot_bar_results(energy_gain_by_nb_deps, param)
-        plot_scatter_results(energy_gain_by_nb_deps, param)
+        plot_bar_results(energy_gain_by_nb_deps, param)
+        # plot_scatter_results(energy_gain_by_nb_deps, param)
