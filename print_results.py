@@ -12,7 +12,7 @@ def _gather_results(global_results):
     gathered_results = {}
     for key, nodes_results in global_results.items():
         energy_results = nodes_results["energy"]
-        gathered_results[key] = {}
+        gathered_results[key] = {"energy": {}, "time": nodes_results["time"]}
         # print(f"{key}:")
         # print(f"idles: {nodes_results['idles']}")
         # print(f"reconfs: {nodes_results['reconfs']}")
@@ -27,7 +27,7 @@ def _gather_results(global_results):
                 if name in filter_tot or node_id == ROUTER_ID:
                     tot += s[name]
 
-            gathered_results[key][node_id] = {"tot": round(tot, 2), "detail": s}
+            gathered_results[key]["energy"][node_id] = {"tot": round(tot, 2), "detail": s}
             # print(f"{node_id}: {round(tot, 2)}J --- Detail: {s}")
     return gathered_results
 
@@ -41,8 +41,9 @@ def print_energy_results(results_dir):
 
     for key, vals in gathered_results.items():
         print(key)
-        for node_id, res in vals.items():
+        for node_id, res in vals["energy"].items():
             print(f"{node_id}: {round(res['tot'], 2)}J --- Detail: {res['detail']}")
+        print(f"time: {vals['time']}s")
     print("------------------------------------")
 
 
@@ -74,17 +75,17 @@ def analyse_energy_results(results_dir):
         print(key)
         if "sync" in vals.keys():
             print("sync")
-            for node_id, res in vals["sync"].items():
-                print(f"{node_id}: {round(res['tot'], 2)}J --- Detail: {res['detail']}")
-                sum_reconf_sync += res['detail']['reconfs']
-                sum_sending_sync += res['detail']['sendings'] + res['detail']['receives']
+            for node_id, res_energy in vals["sync"]["energy"].items():
+                print(f"{node_id}: {round(res_energy['tot'], 2)}J --- Detail: {res_energy['detail']}")
+                sum_reconf_sync += res_energy['detail']['reconfs']
+                sum_sending_sync += res_energy['detail']['sendings'] + res_energy['detail']['receives']
             print(f"Ratio reconf/sending: {sum_reconf_sync:.2f}/{sum_sending_sync:.2f} ({sum_reconf_sync/sum_sending_sync:.2f})")
         if "async" in vals.keys():
             print("async")
-            for node_id, res in vals["async"].items():
-                print(f"{node_id}: {round(res['tot'], 2)}J --- Detail: {res['detail']}")
-                sum_reconf_async += res['detail']['reconfs']
-                sum_sending_async += res['detail']['sendings'] + res['detail']['receives']
+            for node_id, res_energy in vals["async"]["energy"].items():
+                print(f"{node_id}: {round(res_energy['tot'], 2)}J --- Detail: {res_energy['detail']}")
+                sum_reconf_async += res_energy['detail']['reconfs']
+                sum_sending_async += res_energy['detail']['sendings'] + res_energy['detail']['receives']
             print(f"Ratio reconf/sending: {sum_reconf_async:.2f}/{sum_sending_async:.2f} ({sum_reconf_async / sum_sending_async:.2f})")
 
 
@@ -93,9 +94,9 @@ def compute_energy_gain(results_dir):
         global_results = yaml.safe_load(f)
     gathered_results = _gather_results(global_results)
     group_by_version_concerto_d = _group_by_version_concerto_d(gathered_results)
-    all_energy_results = {}
+    all_results = {}
     for key, vals in group_by_version_concerto_d.items():
-        all_energy_results[key] = {}
+        all_results[key] = {}
         tot_ons_sync = 0
         tot_ons_async = 0
         tot_router = 0
@@ -103,7 +104,7 @@ def compute_energy_gain(results_dir):
         for name in ["detail_ons_sync", "detail_ons_async", "detail_router"]:
             tot_detail[name] = {"idles": 0, "reconfs": 0, "sendings": 0, "receives": 0}
 
-        for vals_sync, vals_async in zip(vals["sync"].items(), vals["async"].items()):
+        for vals_sync, vals_async in zip(vals["sync"]["energy"].items(), vals["async"]["energy"].items()):
             node_id, node_results_sync = vals_sync
             _, node_results_async = vals_async
             tot_gain = node_results_async["tot"] - node_results_sync["tot"]
@@ -112,13 +113,13 @@ def compute_energy_gain(results_dir):
             else:
                 tot_ons_sync += node_results_sync["tot"]
                 tot_ons_async += node_results_async["tot"]
-            all_energy_results[key][node_id] = {"gain": round(tot_gain, 2), "sync": node_results_sync['tot'], "async": node_results_async['tot']}
-            all_energy_results[key][node_id]["details"] = {}
+            all_results[key][node_id] = {"gain": round(tot_gain, 2), "sync": node_results_sync['tot'], "async": node_results_async['tot']}
+            all_results[key][node_id]["details"] = {}
             for detail_sync, detail_async in zip(node_results_sync["detail"].items(), node_results_async["detail"].items()):
                 name, val_sync = detail_sync
                 _, val_async = detail_async
                 gain = val_async - val_sync
-                all_energy_results[key][node_id]["details"][name] = {"gain": round(gain, 2), "sync": val_sync, "async": val_async}
+                all_results[key][node_id]["details"][name] = {"gain": round(gain, 2), "sync": val_sync, "async": val_async}
 
                 if node_id < ROUTER_ID:
                     tot_detail["detail_ons_sync"][name] += val_sync
@@ -126,16 +127,19 @@ def compute_energy_gain(results_dir):
                 else:
                     tot_detail["detail_router"][name] += val_async
 
-        all_energy_results[key]["total"] = {
+        all_results[key]["total"] = {
             "sync": round(tot_ons_sync, 2),
             "async_no_router": round(tot_ons_async, 2),
             "async_with_router": round(tot_ons_async + tot_router, 2),
             "gain_no_router": round((tot_ons_sync - tot_ons_async) * 100 / tot_ons_sync, 2),
             "gain_with_router": round((tot_ons_sync - (tot_ons_async+tot_router)) * 100 / tot_ons_sync, 2),
+            "time_sync": vals["sync"]["time"],
+            "time_async": vals["async"]["time"],
+            "gain_time": round((vals["sync"]["time"] - vals["async"]["time"]) * 100 / vals["sync"]["time"], 2)
         }
-        all_energy_results[key]["total"].update(tot_detail)
+        all_results[key]["total"].update(tot_detail)
 
-    return all_energy_results
+    return all_results
 
 
 def print_energy_gain(energy_gain):
@@ -168,7 +172,34 @@ def compute_energy_gain_by_nb_deps(energy_gains):
     return energy_gain_by_nb_deps
 
 
-def plot_results(energy_gain_by_nb_deps, param_names):
+def plot_scatter_results(energy_gain_by_nb_deps, param_names):
+    color_num = 0
+    fig, ax = plt.subplots()
+    colors = ['tab:blue', 'tab:orange', 'tab:green']
+    for scenario_name, gain_by_nb_deps in energy_gain_by_nb_deps.items():
+        gains_energy_list = []
+        gains_time_list = []
+        sizes = []
+        for nb_dep, gains in gain_by_nb_deps.items():
+            gains_energy_list.append(gains["total"]["gain_with_router"])
+            gains_time_list.append(gains["total"]["gain_time"])
+            sizes.append(int(nb_dep) * 5)
+        scatter = ax.scatter(gains_time_list, gains_energy_list, c=colors[color_num], label=scenario_name, s=sizes)
+        handles, labels = scatter.legend_elements(prop="sizes", alpha=0.6, func=lambda x: x//5)
+        legend1 = ax.legend(handles, labels, title="Nb deps", loc="lower left")
+        ax.add_artist(legend1)
+        color_num += 1
+
+    ax.set_xlabel("% Time gain")
+    ax.set_ylabel("% Energy gain")
+    ax.legend(loc="upper left")
+    ax.axvline(0, c='black', ls='--')
+    ax.axhline(0, c='black', ls='--')
+    ax.set_title(param_names)
+    plt.show()
+
+
+def plot_bar_results(energy_gain_by_nb_deps, param_names):
     for scenario_name, gain_by_nb_deps in energy_gain_by_nb_deps.items():
         # scenario_name = 'esds_generated_data-ud0_od0_30_25-deploy-T0'
         # gain_by_nb_deps = energy_gain_by_nb_deps[scenario_name]
@@ -286,4 +317,5 @@ if __name__ == "__main__":
         energy_gain_by_nb_deps = compute_energy_gain_by_nb_deps(energy_gains)
         # print(json.dumps(energy_gains, indent=4))
         # print_energy_gain(energy_gains)
-        plot_results(energy_gain_by_nb_deps, param)
+        # plot_bar_results(energy_gain_by_nb_deps, param)
+        plot_scatter_results(energy_gain_by_nb_deps, param)
