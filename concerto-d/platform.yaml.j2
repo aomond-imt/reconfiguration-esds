@@ -57,7 +57,10 @@ interfaces:
   eth0Router:
     type: "wireless"
     links:
-      - {{ nodes_per_batch*2 }}-{{ nodes_per_batch*3-2 }} {{ bandwidth }} 0s {{ nodes_count-1 }}
+      {# TODO: ad-hoc routeur links #}
+      {% for link in links_eth0Router -%}
+        {{ link }}  # Allsource bandwidth latency allreceive
+      {% endfor %}
     txperfs:
       - all {{ bandwidth }} 0s all
     nodes: {{ communicating_nodes }}

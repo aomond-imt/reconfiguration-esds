@@ -42,11 +42,15 @@ def execute(api: Node):
         max_execution_duration = expe_config["max_execution_duration"]
 
     # Version concerto_d parameters
+    commsConso = api.args["commsConso"]
     if "async" not in title:
         interface_name = f"eth0"
     else:
         interface_name = f"eth0Router"
-    commsConso = api.args["commsConso"]
+        # TODO: ad-hoc routeur links
+        if node_id != nb_nodes - 1:
+            commsConso = 0
+
     api.log(f"Interface: {interface_name}")
     tot_sending_time_flat, tot_no_sending_time_flat = 0, 0
     sending_cons = PowerStatesComms(api)
@@ -69,7 +73,7 @@ def execute(api: Node):
             if data is not None:
                 sender_id, receiver_id = data
                 if receiver_id == node_id or _is_router(node_id, nb_nodes):
-                    api.log(f"Sending response to {receiver_id}")
+                    api.log(f"Sending response to {sender_id}")
                     # Send response
                     start_send = api.read("clock")
                     api.sendt(interface_name, node_id, size, sender_id, timeout=timeout)
@@ -93,7 +97,6 @@ def execute(api: Node):
     }
     simulation_functions.print_esds_node_results(results, api)
     results_categ = "receives"
-    with open(f"/home/aomond/reconfiguration-esds/concerto-d-results/results/{results_categ}/{title}/{node_id}.yaml",
-              "w") as f:
+    with open(f"/home/aomond/reconfiguration-esds/concerto-d-results/results/{results_categ}/{title}/{node_id}.yaml", "w") as f:
         yaml.safe_dump(results, f)
 
