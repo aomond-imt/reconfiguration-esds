@@ -12,11 +12,6 @@ sys.path.insert(1, f"{current_dir_name}/..")
 
 import simulation_functions
 
-LORA_POWER = 0.16
-LONGER_POWER = 0.16
-FREQUENCE_POLLING = 1
-NB_POLL_PER_SEC = 10
-
 
 def _is_router(node_id, nb_nodes):
     return node_id == nb_nodes-1
@@ -56,7 +51,7 @@ def execute(api: Node):
     sending_cons = PowerStatesComms(api)
     sending_cons.set_power(interface_name, 0, commsConso, commsConso)
 
-    size = 257
+    size = 97
     api.turn_off()
     for up_start, up_end in node_uptimes:
         # Sleeping period (no receive)
@@ -67,8 +62,7 @@ def execute(api: Node):
         # Uptime period
         api.turn_on()
         while api.read("clock") < up_end:
-            timeout = up_end - api.read("clock")
-            code, data = api.receivet(interface_name, timeout=timeout)
+            code, data = api.receivet(interface_name, timeout=up_end - api.read("clock"))
             api.log(f"Received: {data}")
             if data is not None:
                 sender_id, receiver_id = data
@@ -76,7 +70,7 @@ def execute(api: Node):
                     api.log(f"Sending response to {sender_id}")
                     # Send response
                     start_send = api.read("clock")
-                    api.sendt(interface_name, node_id, size, sender_id, timeout=timeout)
+                    api.sendt(interface_name, node_id, size, sender_id, timeout=up_end - api.read("clock"))
                     tot_sending_time_flat += api.read("clock") - start_send
 
             else:

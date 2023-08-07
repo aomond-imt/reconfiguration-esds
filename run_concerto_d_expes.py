@@ -149,7 +149,6 @@ def main():
     sum_expes_duration = 0
     nb_expes_tot = min(len(parameter_files_list), limit_expes)
     print(f"Total nb experiments per param: {nb_expes_tot}")
-    global_results = {}
 
     ## Getting sweeped parameters
     # sweeper = simulation_functions.get_simulation_swepped_parameters()
@@ -178,6 +177,7 @@ def main():
     print(f"Tot nb parameters: {nb_params_tot}")
 
     for parameter in sweeper:
+        global_results = {}
         nb_expes_done = 0
         joined_params = simulation_functions.get_params_joined(parameter)
         print(f"{nb_params_done+1}/{nb_params_tot} - {joined_params}")
