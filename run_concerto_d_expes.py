@@ -14,7 +14,6 @@ OFF_POWER = 0
 ON_POWER = 0.4
 LORA_POWER = 0.16
 
-NB_NODES = 6
 limit_expes = math.inf
 tests_timeout=6000 # Max duration of a test
 
@@ -155,12 +154,12 @@ def main():
     ## Getting sweeped parameters
     # sweeper = simulation_functions.get_simulation_swepped_parameters()
     sweeper = [
-        {
-            "stressConso": 0,
-            "idleConso": 1.38,
-            "techno": {"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
-            "typeSynchro": "pullc"
-        },
+        # {
+        #     "stressConso": 0,
+        #     "idleConso": 1.38,
+        #     "techno": {"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
+        #     "typeSynchro": "pullc"
+        # },
         # {
         #     "stressConso": 0,
         #     "idleConso": 1.38,

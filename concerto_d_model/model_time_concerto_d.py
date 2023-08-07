@@ -293,7 +293,7 @@ def generate_mascots_schedules():
                             title = f"esds_generated_data-{name_uptime}-{version_concerto_d}-{reconf_name}-{trans_times}-{nb_deps}-{type_synchro}"
                             expe_parameters = {
                                 "title": title,
-                                "nb_deps": nb_deps,
+                                "nb_nodes": nb_deps + 2,
                                 "uptimes_periods_per_node": uptimes_periods_per_node,
                                 "reconf_periods_per_node": merged_reconf_periods_per_node,
                                 "sending_periods_per_node": sending_periods_during_uptime_per_node,
@@ -301,7 +301,7 @@ def generate_mascots_schedules():
                                 "max_execution_duration": m
                             }
 
-                            expe_esds_parameter_files = f"/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_parameter_files"
+                            expe_esds_parameter_files = f"/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_parameter_files_to_compute"
                             os.makedirs(expe_esds_parameter_files, exist_ok=True)
                             with open(os.path.join(expe_esds_parameter_files, f"{title}.yaml"), "w") as f:
                                 yaml.safe_dump(expe_parameters, f)

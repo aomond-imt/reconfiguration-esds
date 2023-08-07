@@ -13,8 +13,8 @@ def sending(api, type_comm):
         expe_config = yaml.safe_load(f)
 
         # Check if nb_deps is crossed
-        nb_deps = expe_config["nb_deps"]
-        if node_id not in [0, 6] and node_id > nb_deps:
+        nb_nodes = expe_config["nb_nodes"]
+        if node_id >= nb_nodes:
             return
 
         title = expe_config["title"]

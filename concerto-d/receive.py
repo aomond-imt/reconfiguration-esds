@@ -18,6 +18,10 @@ FREQUENCE_POLLING = 1
 NB_POLL_PER_SEC = 10
 
 
+def _is_router(node_id, nb_nodes):
+    return node_id == nb_nodes-1
+
+
 def execute(api: Node):
     node_id = api.node_id % api.args["nodes_per_batch"]
 
@@ -26,9 +30,12 @@ def execute(api: Node):
         expe_config = yaml.safe_load(f)
 
         # Check if nb_deps is crossed
-        nb_deps = expe_config["nb_deps"]
-        if node_id not in [0, 6] and node_id > nb_deps:
+        nb_nodes = expe_config["nb_nodes"]
+        if node_id >= nb_nodes:
+            api.log(f"Removing: node_id: {node_id} nb_nodes: {nb_nodes}")
             return
+        else:
+            api.log(f"Ok: {node_id} nb_nodes: {nb_nodes}")
 
         title = expe_config["title"]
         node_uptimes = expe_config["uptimes_periods_per_node"][node_id]
@@ -61,8 +68,7 @@ def execute(api: Node):
             api.log(f"Received: {data}")
             if data is not None:
                 sender_id, receiver_id = data
-                print(sender_id, receiver_id, node_id)
-                if receiver_id == node_id:
+                if receiver_id == node_id or _is_router(node_id, nb_nodes):
                     api.log(f"Sending response to {receiver_id}")
                     # Send response
                     start_send = api.read("clock")
