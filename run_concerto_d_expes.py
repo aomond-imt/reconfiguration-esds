@@ -220,7 +220,12 @@ def main():
                 sum_expes_duration += expe_duration
 
                 ## Aggregate to global results
-                global_results[title] = {"energy": _load_energetic_expe_results_from_title(title, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir), "time": esds_parameters["max_execution_duration"]}
+                result = {title: {"energy": _load_energetic_expe_results_from_title(title, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir), "time": esds_parameters["max_execution_duration"]}}
+                global_results.update(result)
+                global_results_path = f"global_results-{title}-{joined_params}.yaml"
+                with open(os.path.join(root, global_results_path), "w") as f:
+                    yaml.safe_dump(result, f)
+
             except subprocess.TimeoutExpired as err:
                 print("failed :(")
                 print("------------- Test duration expired (timeout="+str(tests_timeout)+"s) -------------")

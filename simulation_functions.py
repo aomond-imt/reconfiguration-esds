@@ -6,10 +6,6 @@ NB_POLL_PER_SEC = 10
 
 
 def get_simulation_swepped_parameters():
-    """
-    Source of truth of parameters
-    :return:
-    """
     from execo_engine import sweep
 
     parameters = {
