@@ -188,18 +188,27 @@ def main():
             if nb_expes_done >= limit_expes:
                 break
 
+            print(f"    {nb_expes_done + 1}/{nb_expes_tot} - {parameter_file} => ", end="")
+
             ## Designate parameter file and create result dir
             current_test_path=os.path.join(expe_esds_parameter_files,parameter_file)
             shutil.rmtree(esds_current_parameter_file, ignore_errors=True)
             shutil.copy(current_test_path, esds_current_parameter_file)
             title = Path(parameter_file).stem
+
+            results_names = os.listdir(root)
+            if any(title in result_name for result_name in results_names):
+                print("already done, skip")
+                nb_expes_done += 1
+                continue
+
             os.makedirs(os.path.join(idle_results_dir, title), exist_ok=True)
             os.makedirs(os.path.join(reconf_results_dir, title), exist_ok=True)
             os.makedirs(os.path.join(sends_results_dir, title), exist_ok=True)
             os.makedirs(os.path.join(receive_results_dir, title), exist_ok=True)
 
             platform_path = os.path.abspath(f"concerto-d/platform-{joined_params}.yaml")
-            print(f"    {nb_expes_done+1}/{nb_expes_tot} - {parameter_file} => ", end="")
+
             try:
                 ## Launch experiment
                 start_at=time.time()
