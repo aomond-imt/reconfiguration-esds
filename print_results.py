@@ -1,4 +1,5 @@
 import itertools
+import os
 
 import yaml
 import numpy as np
@@ -87,13 +88,14 @@ def analyse_energy_results(results_dir):
             print(f"Ratio reconf/sending: {sum_reconf_async:.2f}/{sum_sending_async:.2f} ({sum_reconf_async / sum_sending_async:.2f})")
 
 
-def compute_energy_gain(results_dir):
-    with open(results_dir) as f:
-        global_results = yaml.safe_load(f)
+def compute_energy_gain(global_results):
     gathered_results = _gather_results(global_results)
     group_by_version_concerto_d = _group_by_version_concerto_d(gathered_results)
     all_results = {}
     for key, vals in group_by_version_concerto_d.items():
+        if "async" not in vals.keys() or "sync" not in vals.keys():
+            print("Async or sync missing, skip")
+            continue
         router_id = max(vals["async"]["energy"].keys())
         assert router_id == max(vals["sync"]["energy"].keys())
         all_results[key] = {}
@@ -175,7 +177,19 @@ def compute_energy_gain_by_nb_deps(energy_gains):
 def plot_scatter_results(energy_gain_by_nb_deps, param_names):
     color_num = 0
     fig, ax = plt.subplots()
-    colors = ['tab:blue', 'tab:orange', 'tab:green']
+    colors = [
+        'tab:blue',
+        'tab:orange',
+        'tab:green',
+        'tab:red',
+        'tab:purple',
+        'tab:brown',
+        'tab:pink',
+        'tab:gray',
+        'tab:olive',
+        'tab:cyan'
+    ]
+
     for scenario_name, gain_by_nb_deps in energy_gain_by_nb_deps.items():
         gains_energy_list = []
         gains_time_list = []
@@ -192,10 +206,11 @@ def plot_scatter_results(energy_gain_by_nb_deps, param_names):
 
     ax.set_xlabel("% Time gain")
     ax.set_ylabel("% Energy gain")
-    ax.legend(loc="upper left")
+    ax.legend(loc=(1.04, 0))
     ax.axvline(0, c='black', ls='--')
     ax.axhline(0, c='black', ls='--')
     ax.set_title(param_names)
+    plt.subplots_adjust(right=0.5)
     plt.show()
 
 
@@ -274,10 +289,10 @@ def _plot_detail(attribute, ax, bottom, max_bound, measurement, offset, width, x
         # rects = ax.bar(x + offset, measurement["detail_ons_idles"], width, bottom=bottom[attribute], label="sync ons (idles)")
         # bottom[attribute] = bottom[attribute] + measurement["detail_ons_idles"]
         rects = ax.bar(x + offset, measurement["detail_ons_reconfs"], width, bottom=bottom[attribute], label="sync ons (reconfs)")
-        ax.bar_label(rects, padding=3)
+        # ax.bar_label(rects, padding=3)
         bottom[attribute] = bottom[attribute] + measurement["detail_ons_reconfs"]
         rects = ax.bar(x + offset, measurement["detail_ons_sendings"], width, bottom=bottom[attribute], label="sync ons (requests)")
-        ax.bar_label(rects, padding=3)
+        # ax.bar_label(rects, padding=3)
         bottom[attribute] = bottom[attribute] + measurement["detail_ons_sendings"]
         rects = ax.bar(x + offset, measurement["detail_ons_receives"], width, bottom=bottom[attribute], label="sync ons (responses)")
         bottom[attribute] = bottom[attribute] + measurement["detail_ons_receives"]
@@ -286,19 +301,19 @@ def _plot_detail(attribute, ax, bottom, max_bound, measurement, offset, width, x
     elif attribute == "async":
         rects = ax.bar(x + offset, measurement["detail_ons_reconfs"], width, bottom=bottom[attribute], label="async ons (reconfs)")
         bottom[attribute] = bottom[attribute] + measurement["detail_ons_reconfs"]
-        ax.bar_label(rects, padding=3)
+        # ax.bar_label(rects, padding=3)
         rects = ax.bar(x + offset, measurement["detail_ons_sendings"], width, bottom=bottom[attribute], label="async ons (requests)")
         bottom[attribute] = bottom[attribute] + measurement["detail_ons_sendings"]
-        ax.bar_label(rects, padding=3)
+        # ax.bar_label(rects, padding=3)
         rects = ax.bar(x + offset, measurement["detail_ons_receives"], width, bottom=bottom[attribute], label="async ons (responses)")
         bottom[attribute] = bottom[attribute] + measurement["detail_ons_receives"]
-        ax.bar_label(rects, padding=3)
+        # ax.bar_label(rects, padding=3)
         rects = ax.bar(x + offset, measurement["detail_router_idles"], width, bottom=bottom[attribute], label="async router (idles)")
         bottom[attribute] = bottom[attribute] + measurement["detail_router_idles"]
-        ax.bar_label(rects, padding=3)
+        # ax.bar_label(rects, padding=3)
         rects = ax.bar(x + offset, measurement["detail_router_sendings"], width, bottom=bottom[attribute], label="async router (requests)")
         bottom[attribute] = bottom[attribute] + measurement["detail_router_sendings"]
-        ax.bar_label(rects, padding=3)
+        # ax.bar_label(rects, padding=3)
         rects = ax.bar(x + offset, measurement["detail_router_receives"], width, bottom=bottom[attribute], label="async router (responses)")
         bottom[attribute] = bottom[attribute] + measurement["detail_router_receives"]
         ax.bar_label(rects, padding=3)
@@ -308,21 +323,27 @@ def _plot_detail(attribute, ax, bottom, max_bound, measurement, offset, width, x
 
 if __name__ == "__main__":
     # name_params = ["1.2-1.38-nbiot-pullc", "1.2-1.38-lora-pullc", "0-1.38-nbiot-pullc"]
-    name_params = ["1.2-1.38-lora-pullc"]
-    for param in name_params:
-        # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-0-1.38-lora-pullc.yaml"
-        # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-0-1.38-nbiot-pullc.yaml"
-        # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-1.2-1.38-lora-pullc.yaml"
-        results_dir = f"/home/aomond/reconfiguration-esds/saved_results/global_results-{param}-30-deps.yaml"
+    # name_params = ["1.2-1.38-lora-pullc"]
 
-        # results_dir = "/home/aomond/reconfiguration-esds/saved_results/global_results-1.2-1.38-lora-pullc-7-overlaps.yaml"
-        # results_dir = f"/home/aomond/reconfiguration-esds/saved_results/global_results-{param}-7-overlaps.yaml"
+    # for param in name_params:
+    # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-0-1.38-lora-pullc.yaml"
+    # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-0-1.38-nbiot-pullc.yaml"
+    # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-1.2-1.38-lora-pullc.yaml"
+    results_dir = f"/home/aomond/reconfiguration-esds/to_analyse/"
+    param = "0.181-1.5778-lora-pullc"
+    global_results = {}
+    for file in os.listdir(results_dir):
+        with open(os.path.join(results_dir,file)) as f:
+            global_results.update(yaml.safe_load(f))
 
-        # print_energy_results(results_dir)
-        # analyse_energy_results(results_dir)
-        energy_gains = compute_energy_gain(results_dir)
-        energy_gain_by_nb_deps = compute_energy_gain_by_nb_deps(energy_gains)
-        # print(json.dumps(energy_gains, indent=4))
-        # print_energy_gain(energy_gains)
-        plot_bar_results(energy_gain_by_nb_deps, param)
-        # plot_scatter_results(energy_gain_by_nb_deps, param)
+    # results_dir = "/home/aomond/reconfiguration-esds/saved_results/global_results-1.2-1.38-lora-pullc-7-overlaps.yaml"
+    # results_dir = f"/home/aomond/reconfiguration-esds/saved_results/global_results-{param}-7-overlaps.yaml"
+
+    # print_energy_results(results_dir)
+    # analyse_energy_results(results_dir)
+    energy_gains = compute_energy_gain(global_results)
+    energy_gain_by_nb_deps = compute_energy_gain_by_nb_deps(energy_gains)
+    # print(json.dumps(energy_gains, indent=4))
+    # print_energy_gain(energy_gains)
+    # plot_bar_results(energy_gain_by_nb_deps, param)
+    plot_scatter_results(energy_gain_by_nb_deps, param)

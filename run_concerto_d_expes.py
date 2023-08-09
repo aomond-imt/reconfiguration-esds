@@ -254,13 +254,13 @@ def main():
             finally:
                 nb_expes_done += 1
 
-        print("Dump results")
-        global_results_path = f"global_results-{joined_params}.yaml"
-        with open(os.path.join(root, global_results_path), "w") as f:
-            yaml.safe_dump(global_results, f)
-        print("Results dumped")
+        # print("Dump results")
+        # global_results_path = f"global_results-{joined_params}.yaml"
+        # with open(os.path.join(root, global_results_path), "w") as f:
+        #     yaml.safe_dump(global_results, f)
+        # print("Results dumped")
         print(f"All passed in {sum_expes_duration:.2f}s")
-        print_results.analyse_energy_results(os.path.join(root, global_results_path))
+        # print_results.analyse_energy_results(os.path.join(root, global_results_path))
         nb_params_done += 1
 
 
