@@ -9,8 +9,8 @@ def get_simulation_swepped_parameters():
     from execo_engine import sweep
 
     parameters = {
-        "stressConso": [0, 1.20],
-        "idleConso": [1.38],
+        "stressConso": [0.181],
+        "idleConso": [1.5778],
         "techno": [{"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
                    {"name": "nbiot", "bandwidth": "200kbps", "commsConso": 0.65}],
         "typeSynchro": ["pullc"]

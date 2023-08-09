@@ -33,6 +33,7 @@ def execute(api: Node):
     reconf_cons = PowerStates(api, 0)
     reconf_cons.set_power(0)
     stress_power = api.args["stressConso"]
+    cpu_utilization_per_process = 1 / (nb_nodes-2)
 
     api.turn_on()
     for start, end, nb_processes in reconf_periods_per_node:
@@ -45,7 +46,7 @@ def execute(api: Node):
             # Reconf period
             reconf_duration = end - start
             reconf_duration_ponderee = reconf_duration * nb_processes
-            reconf_cons.set_power(stress_power * nb_processes)
+            reconf_cons.set_power(stress_power * cpu_utilization_per_process * nb_processes)
             api.wait(reconf_duration)
             tot_reconf_time += reconf_duration_ponderee
             tot_flat_reconf_time += reconf_duration
