@@ -168,8 +168,8 @@ def main():
         #     "typeSynchro": "pullc"
         # },
         {
-            "stressConso": 1.20,
-            "idleConso": 1.38,
+            "stressConso": 0.181,
+            "idleConso": 1.5778,
             "techno": {"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
             "typeSynchro": "pullc"
         },
