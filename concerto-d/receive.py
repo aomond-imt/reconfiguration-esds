@@ -51,7 +51,6 @@ def execute(api: Node):
     sending_cons = PowerStatesComms(api)
     sending_cons.set_power(interface_name, 0, commsConso, commsConso)
 
-    size = 97
     api.turn_off()
     for up_start, up_end in node_uptimes:
         # Sleeping period (no receive)
@@ -70,7 +69,7 @@ def execute(api: Node):
                     api.log(f"Sending response to {sender_id}")
                     # Send response
                     start_send = api.read("clock")
-                    api.sendt(interface_name, node_id, size, sender_id, timeout=up_end - api.read("clock"))
+                    api.sendt(interface_name, node_id, data_to_send, sender_id, timeout=up_end - api.read("clock"))
                     tot_sending_time_flat += api.read("clock") - start_send
 
             else:

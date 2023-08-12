@@ -43,10 +43,11 @@ def execute(api: Node):
     commsConso = api.args["commsConso"]
     api.log(f"Interface: {interface_name}")
     tot_sending_time_flat, tot_no_sending_time_flat = 0, 0
+    tot_msg_sent, tot_wait_polling = {}, {}
     sending_cons = PowerStatesComms(api)
     sending_cons.set_power(interface_name, 0, commsConso, commsConso)
 
-    size = 97
+    size = 257
     api.turn_off()
     for up_start, up_end in node_uptimes:
         # Sleeping period (no receive)
@@ -73,9 +74,20 @@ def execute(api: Node):
                         if api.read("clock") < end:
                             end_period = end - api.read("clock")
                             data_to_send = size * count
-                            api.sendt(interface_name, (node_id, sender_id), data_to_send, sender_id, timeout=end_period)
+                            api.sendt(interface_name, (node_id, sender_id, data_to_send), data_to_send, sender_id, timeout=end_period)
+                            # Save wait_polling
+                            if data_to_send not in tot_msg_sent.keys():
+                                tot_msg_sent[data_to_send] = 1
+                            else:
+                                tot_msg_sent[data_to_send] += 1
                     if api.read("clock") < end:
-                        api.wait(min(FREQUENCE_POLLING, end - api.read("clock")))
+                        wait_polling = min(FREQUENCE_POLLING, end - api.read("clock"))
+                        api.wait(wait_polling)
+                        # Save wait_polling
+                        if wait_polling not in tot_wait_polling.keys():
+                            tot_wait_polling[wait_polling] = 1
+                        else:
+                            tot_wait_polling[wait_polling] += 1
                 tot_sending_time_flat += api.read("clock") - sending_start
 
         remaining_uptime = up_end - api.read("clock")
@@ -95,6 +107,8 @@ def execute(api: Node):
         f"tot_no_sending_time": round(tot_no_sending_time_flat, 2),
         "node_conso": 0,
         "comms_cons": float(round(sending_cons_energy, 2)),
+        "tot_msg_sent": tot_msg_sent,
+        "tot_wait_polling": tot_wait_polling
     }
     simulation_functions.print_esds_node_results(results, api)
     with open(f"/home/aomond/reconfiguration-esds/concerto-d-results/results/sends/{title}/{node_id}.yaml",
