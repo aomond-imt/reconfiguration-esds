@@ -72,9 +72,10 @@ def _esds_results_verification(esds_parameters, expe_esds_verification_files, id
         expected_reconf = sum((end-start)*nb_processes for start, end, nb_processes in node_reconfs)
         expected_reconf_flat = sum(end-start for start, end, nb_processes in node_reconfs if nb_processes > 0)
         expected_no_reconf_time = max_exec_duration - expected_reconf_flat
-        nb_deps = len(list_files_idles) - 2
-        cpu_utilization_per_process = 1/nb_deps
-        expected_node_conso = sum((end-start)*nb_processes*cpu_utilization_per_process*stressConso for start, end, nb_processes in node_reconfs)
+        # nb_deps = len(list_files_idles) - 2
+        # cpu_utilization_per_process = 1/nb_deps
+        # expected_node_conso = sum((end-start)*nb_processes*cpu_utilization_per_process*stressConso for start, end, nb_processes in node_reconfs)
+        expected_node_conso = sum((end-start)*stressConso for start, end, _ in node_reconfs)
         _assert_value(node_id, "tot_reconf_time", results_reconf["tot_reconf_time"], expected_reconf)
         _assert_value(node_id, "tot_reconf_flat_time", results_reconf["tot_reconf_flat_time"], expected_reconf_flat)
         _assert_value(node_id, "tot_no_reconf_time", results_reconf["tot_no_reconf_time"], expected_no_reconf_time)
