@@ -159,9 +159,9 @@ def generate_mascots_schedules():
         # "ud2_od0_15_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud2_od0_15_25_perc.json")),
         # "ud0_od1_15_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od1_15_25_perc.json")),
         # "ud0_od2_15_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od2_15_25_perc.json")),
-        "ud0_od0_15_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_15_25_perc-31_nodes.json")),
-        "ud0_od0_7_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_7_25_perc-31_nodes.json")),
-        "ud0_od0_30_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_30_25_perc-31_nodes.json")),
+        "ud0_od0_15_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_15_25_perc-dao.json")),
+        "ud0_od0_7_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_7_25_perc-dao.json")),
+        "ud0_od0_30_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_30_25_perc-dao.json")),
     }
     # ud1_od0_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud1_od0_15_25_perc.json"))
     # ud2_od0_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud2_od0_15_25_perc.json"))
@@ -428,9 +428,9 @@ def _compute_uptimes_periods_per_node(uptime_schedule, m_time: float):
     for node_id, node_schedule in enumerate(uptime_schedule):
         for uptime, _ in node_schedule:
             if uptime != -1 and uptime < m_time:
-                uptime_end = min(uptime + 50, m_time)  # TODO magic value
+                uptime_end = min(uptime + 60, m_time)  # TODO magic value
                 uptimes_periods_per_node[node_id].append([uptime, uptime_end])
-                if uptime + 50 >= m_time:
+                if uptime + 60 >= m_time:
                     break
 
     return uptimes_periods_per_node
@@ -440,7 +440,7 @@ def _compute_sending_periods_per_connected_node(node_id, sending_periods, uptime
     sending_periods_per_connected_node = {}
     for uptime, _ in uptime_schedule[node_id]:
         if uptime != -1:
-            uptime_end = uptime + 50  # TODO magic value
+            uptime_end = uptime + 60  # TODO magic value
             for start_send, end_send, count_sends in sending_periods:
                 if count_sends != {} and start_send < uptime_end and end_send >= uptime:
                     for conn_id, count in count_sends.items():

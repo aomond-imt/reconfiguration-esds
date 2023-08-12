@@ -1,7 +1,7 @@
 from typing import List
 
 
-def get_next_overlap(time_start: float, num_node_a: int, num_node_b: int, nodes_schedule: List, version: str, duration: float = 50):
+def get_next_overlap(time_start: float, num_node_a: int, num_node_b: int, nodes_schedule: List, version: str, duration: float = 60):
     schedule_a = nodes_schedule[num_node_a]
     schedule_b = nodes_schedule[num_node_b]
 
@@ -20,7 +20,7 @@ def get_next_overlap(time_start: float, num_node_a: int, num_node_b: int, nodes_
     return None
 
 
-def get_next_uptime(time_start: float, num_node: int, nodes_schedule: List, duration: float = 50):
+def get_next_uptime(time_start: float, num_node: int, nodes_schedule: List, duration: float = 60):
     schedule_node = nodes_schedule[num_node]
 
     uptime_num = 0
@@ -43,7 +43,7 @@ class DependencyComputeModel:
         self.lp_list = lp_list
         self.nodes_schedules = nodes_schedules
 
-    def _compute_time_lp_end(self, all_trans: List[float], next_uptime, uptime_num, duration: float = 50):
+    def _compute_time_lp_end(self, all_trans: List[float], next_uptime, uptime_num, duration: float = 60):
         time_until_sleep = self.nodes_schedules[self.node_id][uptime_num][0] + duration
         result = {}
         start = next_uptime
