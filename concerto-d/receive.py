@@ -48,6 +48,7 @@ def execute(api: Node):
 
     api.log(f"Interface: {interface_name}")
     tot_sending_time_flat, tot_no_sending_time_flat = 0, 0
+    tot_msg_received, tot_msg_responded = {}, {}
     sending_cons = PowerStatesComms(api)
     sending_cons.set_power(interface_name, 0, commsConso, commsConso)
 
@@ -64,14 +65,23 @@ def execute(api: Node):
             code, data = api.receivet(interface_name, timeout=up_end - api.read("clock"))
             api.log(f"Received: {data}")
             if data is not None:
-                sender_id, receiver_id = data
+                sender_id, receiver_id, data_to_send = data
+                # Save msg received
+                if data_to_send not in tot_msg_received.keys():
+                    tot_msg_received[data_to_send] = 1
+                else:
+                    tot_msg_received[data_to_send] += 1
                 if receiver_id == node_id or _is_router(node_id, nb_nodes):
                     api.log(f"Sending response to {sender_id}")
                     # Send response
                     start_send = api.read("clock")
                     api.sendt(interface_name, node_id, data_to_send, sender_id, timeout=up_end - api.read("clock"))
                     tot_sending_time_flat += api.read("clock") - start_send
-
+                    # Save msg responded
+                    if data_to_send not in tot_msg_responded.keys():
+                        tot_msg_responded[data_to_send] = 1
+                    else:
+                        tot_msg_responded[data_to_send] += 1
             else:
                 api.log("Received None data")
 
@@ -87,6 +97,8 @@ def execute(api: Node):
         f"tot_no_receive_time": round(tot_no_sending_time_flat, 2),
         "node_conso": 0,
         "comms_cons": float(round(sending_cons_energy, 2)),
+        "tot_msg_received": tot_msg_received,
+        "tot_msg_responded": tot_msg_responded,
     }
     simulation_functions.print_esds_node_results(results, api)
     results_categ = "receives"

@@ -1,3 +1,4 @@
+import collections
 import itertools
 import os
 
@@ -25,16 +26,19 @@ def _gather_results(global_results):
                 s[name] += energy_results[name][node_id]["node_conso"] + energy_results[name][node_id]["comms_cons"]
                 if name in filter_tot or node_id == router_id:
                     tot += s[name]
+            s.update({
+                "tot_msg_sent": energy_results["sendings"][node_id]["tot_msg_sent"],
+                "tot_wait_polling": energy_results["sendings"][node_id]["tot_wait_polling"],
+                "tot_msg_received": energy_results["receives"][node_id]["tot_msg_received"],
+                "tot_msg_responded": energy_results["receives"][node_id]["tot_msg_responded"]
+            })
 
             gathered_results[key]["energy"][node_id] = {"tot": round(tot, 2), "detail": s}
             # print(f"{node_id}: {round(tot, 2)}J --- Detail: {s}")
     return gathered_results
 
 
-def print_energy_results(results_dir):
-    with open(results_dir) as f:
-        global_results = yaml.safe_load(f)
-
+def print_energy_results(global_results):
     print(" ------------ Results --------------")
     gathered_results = _gather_results(global_results)
 
@@ -59,10 +63,7 @@ def _group_by_version_concerto_d(gathered_results):
     return grouped_results
 
 
-def analyse_energy_results(results_dir):
-    with open(results_dir) as f:
-        global_results = yaml.safe_load(f)
-
+def analyse_energy_results(global_results):
     print(" ------------ Results --------------")
     gathered_results = _gather_results(global_results)
     group_by_version_concerto_d = _group_by_version_concerto_d(gathered_results)
@@ -340,7 +341,7 @@ if __name__ == "__main__":
     # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-0-1.38-lora-pullc.yaml"
     # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-0-1.38-nbiot-pullc.yaml"
     # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-1.2-1.38-lora-pullc.yaml"
-    results_dir = f"/home/aomond/reconfiguration-esds/to_analyse/"
+    results_dir = f"/home/aomond/reconfiguration-esds/concerto-d-results/to_analyse_test/"
     param = "0.181-1.5778-lora-pullc"
     global_results = {}
     for file in os.listdir(results_dir):
@@ -350,11 +351,11 @@ if __name__ == "__main__":
     # results_dir = "/home/aomond/reconfiguration-esds/saved_results/global_results-1.2-1.38-lora-pullc-7-overlaps.yaml"
     # results_dir = f"/home/aomond/reconfiguration-esds/saved_results/global_results-{param}-7-overlaps.yaml"
 
-    # print_energy_results(results_dir)
-    # analyse_energy_results(results_dir)
-    energy_gains = compute_energy_gain(global_results)
-    energy_gain_by_nb_deps = compute_energy_gain_by_nb_deps(energy_gains)
+    print_energy_results(global_results)
+    # analyse_energy_results(global_results)
+    # energy_gains = compute_energy_gain(global_results)
+    # energy_gain_by_nb_deps = compute_energy_gain_by_nb_deps(energy_gains)
     # print(json.dumps(energy_gains, indent=4))
     # print_energy_gain(energy_gains)
     # plot_bar_results(energy_gain_by_nb_deps, param)
-    plot_scatter_results(energy_gain_by_nb_deps, param)
+    # plot_scatter_results(energy_gain_by_nb_deps, param)
