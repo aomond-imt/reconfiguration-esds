@@ -172,6 +172,7 @@ def generate_mascots_schedules():
     # ud0_od0_7_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_7_25_perc-31_nodes.json"))
     # ud0_od0_30_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_30_25_perc-31_nodes.json"))
 
+    all_expe_parameters = {}
     # for nb_deps in [1, 2, 3, 4, 5]:
     for nb_deps in [5, 10, 20, 30]:
         i = 0
@@ -233,12 +234,12 @@ def generate_mascots_schedules():
                                 if reconf_name == "deploy":
                                     expected_reconf_duration = 111.75
                                 else:
-                                    expected_reconf_duration = 73.96 + IMPLEM_OVERHEAD
+                                    expected_reconf_duration = 73.96 + IMPLEM_OVERHEAD  # Not gonna be correct bc IMPLEM_OVERHEAD is added more than 1 time
                             else:
                                 if reconf_name == "deploy":
                                     expected_reconf_duration = 91.23
                                 else:
-                                    expected_reconf_duration = 100.24 + IMPLEM_OVERHEAD
+                                    expected_reconf_duration = 100.24 + IMPLEM_OVERHEAD  # Not gonna be correct bc IMPLEM_OVERHEAD is added more 1 time
 
                             result_str = f"max {trans_times} {reconf_name} {version_concerto_d} {name_uptime}: {m_time}s, delta: {round(delta_s, 2)}s - {round(delta_perc, 2)}% ({exp_val}s expe). Sum reconf: {round(sum_reconf_duration, 2)} ({round(expected_reconf_duration, 2)} expected)"
                             if abs(delta_perc) > 1:
@@ -301,10 +302,7 @@ def generate_mascots_schedules():
                                 "max_execution_duration": m
                             }
 
-                            expe_esds_parameter_files = f"/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_parameter_files_to_compute"
-                            os.makedirs(expe_esds_parameter_files, exist_ok=True)
-                            with open(os.path.join(expe_esds_parameter_files, f"{title}.yaml"), "w") as f:
-                                yaml.safe_dump(expe_parameters, f)
+                            all_expe_parameters[title] = expe_parameters
 
                             # # Verification file
                             # verification = {"max_execution_duration": m, "reconf_periods": {}, "sending_periods": {}, "receive_periods": {}}
@@ -326,6 +324,7 @@ def generate_mascots_schedules():
             i += 1
 
     print(json.dumps(results_dict, indent=4))
+    return all_expe_parameters
 
 
 def _compute_uses_overlaps_with_provide(uptimes_periods_per_node):
@@ -551,4 +550,11 @@ def _compute_sending_periods_per_node(esds_data):
 
 
 if __name__ == "__main__":
-    generate_mascots_schedules()
+    all_expe_parameters = generate_mascots_schedules()
+    expe_esds_parameter_files = f"/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_parameter_files"
+    os.makedirs(expe_esds_parameter_files, exist_ok=True)
+
+    for title, vals in all_expe_parameters.items():
+        with open(os.path.join(expe_esds_parameter_files, f"{title}.yaml"), "w") as f:
+            yaml.safe_dump(vals, f)
+
