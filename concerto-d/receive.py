@@ -44,7 +44,19 @@ def execute(api: Node):
         interface_name = f"eth0Router"
         # TODO: ad-hoc routeur links
         if node_id != nb_nodes - 1:
-            commsConso = 0
+            results = {
+                f"tot_receive_flat_time": 0,
+                f"tot_no_receive_time": 0,
+                "node_conso": 0,
+                "comms_cons": 0,
+                "tot_msg_received": 0,
+                "tot_msg_responded": 0,
+            }
+            simulation_functions.print_esds_node_results(results, api)
+            results_categ = "receives"
+            with open(f"/home/aomond/reconfiguration-esds/concerto-d-results/results/{results_categ}/{title}/{node_id}.yaml", "w") as f:
+                yaml.safe_dump(results, f)
+            return
 
     api.log(f"Interface: {interface_name}")
     tot_sending_time_flat, tot_no_sending_time_flat = 0, 0
