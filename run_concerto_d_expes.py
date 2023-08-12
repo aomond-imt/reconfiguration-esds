@@ -156,24 +156,24 @@ def main():
     ## Getting sweeped parameters
     # sweeper = simulation_functions.get_simulation_swepped_parameters()
     sweeper = [
-        # {
-        #     "stressConso": 0,
-        #     "idleConso": 1.38,
-        #     "techno": {"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
-        #     "typeSynchro": "pullc"
-        # },
+        {
+            "stressConso": 1.2,
+            "idleConso": 1.38,
+            "techno": {"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
+            "typeSynchro": "pullc"
+        },
         # {
         #     "stressConso": 0,
         #     "idleConso": 1.38,
         #     "techno": {"name": "nbiot", "bandwidth": "200kbps", "commsConso": 0.65},
         #     "typeSynchro": "pullc"
         # },
-        {
-            "stressConso": 0.181,
-            "idleConso": 1.5778,
-            "techno": {"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
-            "typeSynchro": "pullc"
-        },
+        # {
+        #     "stressConso": 0.181,
+        #     "idleConso": 1.5778,
+        #     "techno": {"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
+        #     "typeSynchro": "pullc"
+        # },
     ]
     nb_params_tot = len(sweeper)
     nb_params_done = 0
@@ -261,7 +261,11 @@ def main():
         #     yaml.safe_dump(global_results, f)
         # print("Results dumped")
         print(f"All passed in {sum_expes_duration:.2f}s")
-        # print_results.analyse_energy_results(os.path.join(root, global_results_path))
+        global_results = {}
+        for file in os.listdir(f"/home/aomond/reconfiguration-esds/concerto-d-results/to_analyse_test/"):
+            with open(os.path.join(f"/home/aomond/reconfiguration-esds/concerto-d-results/to_analyse_test/", file)) as f:
+                global_results.update(yaml.safe_load(f))
+        print_results.print_energy_results(global_results)
         nb_params_done += 1
 
 
