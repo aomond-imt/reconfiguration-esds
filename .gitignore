@@ -8,3 +8,4 @@ to_analyse/
 
 concerto-d-results/*
 !expe_esds_parameter_files/
+!tests/
