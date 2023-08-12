@@ -3,7 +3,7 @@ __pycache__/
 
 energy_tests/
 dummy-2-nodes/
-saved_results/
+archived_results/
 to_analyse/
 
 concerto-d-results/*
