@@ -164,14 +164,23 @@ def print_energy_gain(energy_gain):
 
 def compute_energy_gain_by_nb_deps(energy_gains):
     energy_gain_by_nb_deps = {}
-    print()
-    for key, val in itertools.groupby(energy_gains.items(), key=lambda x: "-".join(x[0].split("-")[:-2])):
-        energy_gain_by_nb_deps[key] = {}
-        for scenario, values in val:
-            nb_deps = scenario.split("-")[-2]
-            energy_gain_by_nb_deps[key][nb_deps] = values
+    for key, val in energy_gains.items():
+        scenario = "-".join(key.split("-")[:-2])
+        if scenario not in energy_gain_by_nb_deps.keys():
+            energy_gain_by_nb_deps[scenario] = {}
+        nb_deps = int(key.split("-")[4:-1][0])
+        if nb_deps not in energy_gain_by_nb_deps[scenario]:
+            energy_gain_by_nb_deps[scenario][nb_deps] = val
 
-    return energy_gain_by_nb_deps
+    # for key, val in energy_gain_by_nb_deps.items():
+    #     energy_gain_by_nb_deps[key] = {}
+    #     for scenario, values in val:
+    #         nb_deps = scenario.split("-")[-2]
+    #         energy_gain_by_nb_deps[key][nb_deps] = values
+    sorted_deps = collections.OrderedDict(sorted(energy_gain_by_nb_deps.items()))
+    for key, vals in sorted_deps.items():
+        sorted_deps[key] = collections.OrderedDict(sorted(vals.items()))
+    return sorted_deps
 
 
 def plot_scatter_results(energy_gain_by_nb_deps, param_names):
@@ -187,7 +196,9 @@ def plot_scatter_results(energy_gain_by_nb_deps, param_names):
         'tab:pink',
         'tab:gray',
         'tab:olive',
-        'tab:cyan'
+        'tab:cyan',
+        '#DCDCDC',
+        '#000000',
     ]
 
     for scenario_name, gain_by_nb_deps in energy_gain_by_nb_deps.items():
@@ -198,19 +209,19 @@ def plot_scatter_results(energy_gain_by_nb_deps, param_names):
             gains_energy_list.append(gains["total"]["gain_with_router"])
             gains_time_list.append(gains["total"]["gain_time"])
             sizes.append(int(nb_dep) * 5)
-        scatter = ax.scatter(gains_time_list, gains_energy_list, c=colors[color_num], label=scenario_name, s=sizes)
+        scatter = ax.scatter(gains_time_list, gains_energy_list, c=colors[color_num], label=scenario_name.replace("esds_generated_data-ud0_od0_","").replace("_25", ""), s=sizes)
         handles, labels = scatter.legend_elements(prop="sizes", alpha=0.6, func=lambda x: x//5)
-        legend1 = ax.legend(handles, labels, title="Nb deps", loc="lower left")
+        legend1 = ax.legend(handles, labels, title="Nb deps", loc=(1.04, 0.7))
         ax.add_artist(legend1)
         color_num += 1
 
-    ax.set_xlabel("% Time gain")
-    ax.set_ylabel("% Energy gain")
+    ax.set_xlabel("% Time variation")
+    ax.set_ylabel("% Energy variation")
     ax.legend(loc=(1.04, 0))
     ax.axvline(0, c='black', ls='--')
     ax.axhline(0, c='black', ls='--')
     ax.set_title(param_names)
-    plt.subplots_adjust(right=0.5)
+    plt.subplots_adjust(right=0.75)
     plt.show()
 
 
