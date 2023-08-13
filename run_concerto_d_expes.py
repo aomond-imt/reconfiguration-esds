@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import collections
 import math
 import os,subprocess,time
 import shutil
@@ -15,7 +16,7 @@ ON_POWER = 0.4
 LORA_POWER = 0.16
 
 limit_expes = math.inf
-tests_timeout=6000 # Max duration of a test
+tests_timeout=20000 # Max duration of a test
 
 
 def _assert_value(node_id, key, val, expected_val):
@@ -127,11 +128,29 @@ def _load_energetic_expe_results_from_title(title, idle_results_dir, reconf_resu
     return energetic_results_expe
 
 
+def _group_by_version_concerto_d(parameter_files_list):
+    parameter_files_dict = {}
+    for key in parameter_files_list:
+        version = "async" if "async" in key else "sync"
+        key_without_version = "-".join(key.split(f"-{version}-"))
+        if key_without_version not in parameter_files_dict.keys():
+            parameter_files_dict[key_without_version] = {version: key}
+        else:
+            parameter_files_dict[key_without_version][version] = key
+    ordered_parameter = collections.OrderedDict(sorted(parameter_files_dict.items()))
+    ordered_parameter_list = []
+    for _, vals in ordered_parameter.items():
+        ordered_parameter_list.append(vals["sync"])
+        ordered_parameter_list.append(vals["async"])
+    return ordered_parameter_list
+
+
 def main():
     # Setup variables
     ## Configuration files dirs
     root = "/home/aomond/reconfiguration-esds/concerto-d-results"
-    expe_esds_parameter_files = os.path.join(root, "tests")
+    # expe_esds_parameter_files = os.path.join(root, "tests")
+    expe_esds_parameter_files = os.path.join(root, "expe_esds_parameter_files_to_compute")
     esds_current_parameter_file = os.path.join(root, "current_esds_parameter_file.yaml")
     expe_esds_verification_files = os.path.join(root, "expe_esds_verification_files")
 
@@ -148,20 +167,21 @@ def main():
 
     ## Run all experiments
     # limit_expes = math.inf
-    parameter_files_list = os.listdir(expe_esds_parameter_files)
+    parameter_files_names = os.listdir(expe_esds_parameter_files)
+    parameter_files_list = _group_by_version_concerto_d(parameter_files_names)
     sum_expes_duration = 0
-    nb_expes_tot = min(len(parameter_files_list), limit_expes)
+    nb_expes_tot = min(len(parameter_files_names), limit_expes)
     print(f"Total nb experiments per param: {nb_expes_tot}")
 
     ## Getting sweeped parameters
-    # sweeper = simulation_functions.get_simulation_swepped_parameters()
-    sweeper = [
-        {
-            "stressConso": 1.2,
-            "idleConso": 1.38,
-            "techno": {"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
-            "typeSynchro": "pullc"
-        },
+    sweeper = simulation_functions.get_simulation_swepped_parameters()
+    # sweeper = [
+    #     {
+    #         "stressConso": 1.237,
+    #         "idleConso": 1.38,
+    #         "techno": {"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
+    #         "typeSynchro": "pullc"
+    #     },
         # {
         #     "stressConso": 0,
         #     "idleConso": 1.38,
@@ -174,7 +194,7 @@ def main():
         #     "techno": {"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
         #     "typeSynchro": "pullc"
         # },
-    ]
+    # ]
     nb_params_tot = len(sweeper)
     nb_params_done = 0
     print(f"Tot nb parameters: {nb_params_tot}")
@@ -242,16 +262,16 @@ def main():
                 print("failed :(")
                 print("------------- Test duration expired (timeout="+str(tests_timeout)+"s) -------------")
                 print(err.output,end="")
-                exit(1)
+                # exit(1)
             except subprocess.CalledProcessError as err:
                 print("failed :(")
                 print("------------- Test has a non-zero exit code -------------")
                 print(err.output,end="")
-                exit(2)
+                # exit(2)
             except Exception as err:
                 print("failed :(")
                 traceback.print_exc()
-                exit(3)
+                # exit(3)
             finally:
                 nb_expes_done += 1
 
