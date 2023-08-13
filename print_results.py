@@ -120,7 +120,10 @@ def compute_energy_gain(global_results):
             all_results[key][node_id]["details"] = {}
             for detail_sync, detail_async in zip(node_results_sync["detail"].items(), node_results_async["detail"].items()):
                 name, val_sync = detail_sync
-                _, val_async = detail_async
+                name_a, val_async = detail_async
+                assert name == name_a
+                if name not in tot_detail.keys():
+                    continue
                 gain = val_async - val_sync
                 all_results[key][node_id]["details"][name] = {"gain": round(gain, 2), "sync": val_sync, "async": val_async}
 
