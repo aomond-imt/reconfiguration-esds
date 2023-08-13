@@ -45,7 +45,7 @@ def execute(api: Node):
 
             # Reconf period
             reconf_duration = end - start
-            reconf_duration_ponderee = reconf_duration * nb_processes
+            reconf_duration_ponderee = reconf_duration
             # reconf_cons.set_power(stress_power * cpu_utilization_per_process * nb_processes)
             reconf_cons.set_power(stress_power)
             api.wait(reconf_duration)
