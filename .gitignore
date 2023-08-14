@@ -9,4 +9,5 @@ to_analyse/
 concerto-d-results/*
 !expe_esds_parameter_files/
 !expe_esds_parameter_files_50_uptimes_30_sleepings/
+!expe_esds_parameter_files_60_uptimes_3600_sleeping/
 !tests/
