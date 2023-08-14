@@ -122,7 +122,7 @@ def compute_energy_gain(global_results):
                 name, val_sync = detail_sync
                 name_a, val_async = detail_async
                 assert name == name_a
-                if name not in tot_detail.keys():
+                if name not in ["idles", "reconfs", "sendings", "receives"]:
                     continue
                 gain = val_async - val_sync
                 all_results[key][node_id]["details"][name] = {"gain": round(gain, 2), "sync": val_sync, "async": val_async}
@@ -268,18 +268,23 @@ def plot_bar_results(energy_gain_by_nb_deps, param_names):
         max_bound = 0
         for attribute, measurement in elements.items():
             offset = width * multiplier
-            # max_bound = _plot_tot(attribute, ax, bottom, max_bound, measurement, offset, width, x)
-            max_bound = _plot_detail(attribute, ax, bottom, max_bound, measurement, offset, width, x)
+            max_bound = _plot_tot(attribute, ax, bottom, max_bound, measurement, offset, width, x)
+            # max_bound = _plot_detail(attribute, ax, bottom, max_bound, measurement, offset, width, x)
             multiplier += 1
 
         ax.set_ylabel('Energy (J)')
         ax.set_xlabel('Nb deps')
-        ax.set_title(f'{scenario_name}-{param_names}')
+        title = f'{scenario_name}-{param_names}'
+        ax.set_title(title)
         ax.set_xticks(x + width, gain_by_nb_deps.keys())
         ax.legend(loc='upper left', ncols=3)
         ax.set_ylim(0, max_bound + 100)
 
-        plt.show()
+        # plt.show()
+        dir_to_save = f"/home/aomond/reconfiguration-esds/concerto-d-results/pycharm_plots/tot/{param_names}"
+        # dir_to_save = f"/home/aomond/reconfiguration-esds/concerto-d-results/pycharm_plots/detail/{param_names}"
+        os.makedirs(dir_to_save, exist_ok=True)
+        plt.savefig(f"{dir_to_save}/{scenario_name}.png")
 
 
 def _plot_tot(attribute, ax, bottom, max_bound, measurement, offset, width, x):
@@ -344,21 +349,26 @@ if __name__ == "__main__":
     # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-0-1.38-lora-pullc.yaml"
     # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-0-1.38-nbiot-pullc.yaml"
     # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-1.2-1.38-lora-pullc.yaml"
-    results_dir = f"/home/aomond/reconfiguration-esds/concerto-d-results/to_analyse_test/"
-    param = "0.181-1.5778-lora-pullc"
+    # results_dir = f"/home/aomond/reconfiguration-esds/concerto-d-results/to_analyse_test/"
+    results_dir = f"/home/aomond/reconfiguration-esds/to_analyse/"
+    # param = "0-1.339-lora-pullc"
+    # param = "1.237-1.339-lora-pullc"
+    param = "1.358-1.339-lora-pullc"
+    # param = "0.181-1.5778-lora-pullc"
     global_results = {}
     for file in os.listdir(results_dir):
-        with open(os.path.join(results_dir,file)) as f:
-            global_results.update(yaml.safe_load(f))
+        if param in file:
+            with open(os.path.join(results_dir,file)) as f:
+                global_results.update(yaml.safe_load(f))
 
     # results_dir = "/home/aomond/reconfiguration-esds/saved_results/global_results-1.2-1.38-lora-pullc-7-overlaps.yaml"
     # results_dir = f"/home/aomond/reconfiguration-esds/saved_results/global_results-{param}-7-overlaps.yaml"
 
-    print_energy_results(global_results)
+    # print_energy_results(global_results)
     # analyse_energy_results(global_results)
-    # energy_gains = compute_energy_gain(global_results)
-    # energy_gain_by_nb_deps = compute_energy_gain_by_nb_deps(energy_gains)
+    energy_gains = compute_energy_gain(global_results)
+    energy_gain_by_nb_deps = compute_energy_gain_by_nb_deps(energy_gains)
     # print(json.dumps(energy_gains, indent=4))
     # print_energy_gain(energy_gains)
-    # plot_bar_results(energy_gain_by_nb_deps, param)
+    plot_bar_results(energy_gain_by_nb_deps, param)
     # plot_scatter_results(energy_gain_by_nb_deps, param)
