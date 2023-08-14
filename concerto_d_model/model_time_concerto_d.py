@@ -159,9 +159,10 @@ def generate_mascots_schedules():
         # "ud2_od0_15_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud2_od0_15_25_perc.json")),
         # "ud0_od1_15_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od1_15_25_perc.json")),
         # "ud0_od2_15_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od2_15_25_perc.json")),
-        "ud0_od0_15_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_15_25_perc-dao.json")),
-        "ud0_od0_7_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_7_25_perc-dao.json")),
-        "ud0_od0_30_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_30_25_perc-dao.json")),
+        # "ud0_od0_15_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_15_25_perc-dao.json")),
+        # "ud0_od0_7_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_7_25_perc-dao.json")),
+        # "ud0_od0_30_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_30_25_perc-dao.json")),
+        "uptimes-dao-60-sec": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/uptimes-dao-60-sec.json")),
     }
     # ud1_od0_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud1_od0_15_25_perc.json"))
     # ud2_od0_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud2_od0_15_25_perc.json"))
@@ -224,28 +225,29 @@ def generate_mascots_schedules():
                             #     dct, result_dep = dep.compute_time()
 
                             # TODO: retirer le temps du début sur toute la reconf et pas uniquement ici
-                            offset_start = min(uptime_schedule, key=lambda s: s[0][0] if s[0][0] != -1 else math.inf)[0][0]
-                            m_time = m - offset_start
-                            # print(f"removed {offset_start}")
-                            exp_val = expected[name_uptime][version_concerto_d][reconf_name][trans_times]
-                            delta_s = m_time - exp_val
-                            delta_perc = delta_s*100/exp_val
-                            if trans_times == "T0":
-                                if reconf_name == "deploy":
-                                    expected_reconf_duration = 111.75
-                                else:
-                                    expected_reconf_duration = 73.96 + IMPLEM_OVERHEAD  # Not gonna be correct bc IMPLEM_OVERHEAD is added more than 1 time
-                            else:
-                                if reconf_name == "deploy":
-                                    expected_reconf_duration = 91.23
-                                else:
-                                    expected_reconf_duration = 100.24 + IMPLEM_OVERHEAD  # Not gonna be correct bc IMPLEM_OVERHEAD is added more 1 time
-
-                            result_str = f"max {trans_times} {reconf_name} {version_concerto_d} {name_uptime}: {m_time}s, delta: {round(delta_s, 2)}s - {round(delta_perc, 2)}% ({exp_val}s expe). Sum reconf: {round(sum_reconf_duration, 2)} ({round(expected_reconf_duration, 2)} expected)"
-                            if abs(delta_perc) > 1:
-                                result_str = result_str + "#############################################"
-                            if nb_deps == 5:
-                                results_dict[name_uptime][version_concerto_d][reconf_name][trans_times] = {nb_deps: result_str}
+                            m_time = m
+                            # offset_start = min(uptime_schedule, key=lambda s: s[0][0] if s[0][0] != -1 else math.inf)[0][0]
+                            # m_time = m - offset_start
+                            # # print(f"removed {offset_start}")
+                            # exp_val = expected[name_uptime][version_concerto_d][reconf_name][trans_times]
+                            # delta_s = m_time - exp_val
+                            # delta_perc = delta_s*100/exp_val
+                            # if trans_times == "T0":
+                            #     if reconf_name == "deploy":
+                            #         expected_reconf_duration = 111.75
+                            #     else:
+                            #         expected_reconf_duration = 73.96 + IMPLEM_OVERHEAD  # Not gonna be correct bc IMPLEM_OVERHEAD is added more than 1 time
+                            # else:
+                            #     if reconf_name == "deploy":
+                            #         expected_reconf_duration = 91.23
+                            #     else:
+                            #         expected_reconf_duration = 100.24 + IMPLEM_OVERHEAD  # Not gonna be correct bc IMPLEM_OVERHEAD is added more 1 time
+                            #
+                            # result_str = f"max {trans_times} {reconf_name} {version_concerto_d} {name_uptime}: {m_time}s, delta: {round(delta_s, 2)}s - {round(delta_perc, 2)}% ({exp_val}s expe). Sum reconf: {round(sum_reconf_duration, 2)} ({round(expected_reconf_duration, 2)} expected)"
+                            # if abs(delta_perc) > 1:
+                            #     result_str = result_str + "#############################################"
+                            # if nb_deps == 5:
+                            #     results_dict[name_uptime][version_concerto_d][reconf_name][trans_times] = {nb_deps: result_str}
 
                             # Generate ESDS configuration
                             esds_data = _compute_esds_data_from_results(all_results_esds)
@@ -323,7 +325,7 @@ def generate_mascots_schedules():
                             #     yaml.safe_dump(verification, f)
             i += 1
 
-    print(json.dumps(results_dict, indent=4))
+    # print(json.dumps(results_dict, indent=4))
     return all_expe_parameters
 
 
