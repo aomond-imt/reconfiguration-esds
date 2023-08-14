@@ -218,7 +218,7 @@ def main():
             title = Path(parameter_file).stem
 
             results_names = os.listdir(root)
-            if any(title in result_name for result_name in results_names):
+            if any(title in result_name and joined_params in result_name for result_name in results_names):
                 print("already done, skip")
                 nb_expes_done += 1
                 continue
