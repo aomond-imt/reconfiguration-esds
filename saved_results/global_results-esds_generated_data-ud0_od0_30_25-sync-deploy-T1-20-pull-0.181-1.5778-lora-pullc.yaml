@@ -1,0 +1,271 @@
+esds_generated_data-ud0_od0_30_25-sync-deploy-T1-20-pull:
+  energy:
+    idles:
+      0:
+        comms_cons: 0
+        node_conso: 611.4
+      1:
+        comms_cons: 0
+        node_conso: 473.34
+      2:
+        comms_cons: 0
+        node_conso: 473.34
+      3:
+        comms_cons: 0
+        node_conso: 631.12
+      4:
+        comms_cons: 0
+        node_conso: 552.23
+      5:
+        comms_cons: 0
+        node_conso: 394.45
+      6:
+        comms_cons: 0
+        node_conso: 552.23
+      7:
+        comms_cons: 0
+        node_conso: 552.23
+      8:
+        comms_cons: 0
+        node_conso: 552.23
+      9:
+        comms_cons: 0
+        node_conso: 710.01
+      10:
+        comms_cons: 0
+        node_conso: 552.23
+      11:
+        comms_cons: 0
+        node_conso: 473.34
+      12:
+        comms_cons: 0
+        node_conso: 473.34
+      13:
+        comms_cons: 0
+        node_conso: 552.23
+      14:
+        comms_cons: 0
+        node_conso: 631.12
+      15:
+        comms_cons: 0
+        node_conso: 552.23
+      16:
+        comms_cons: 0
+        node_conso: 552.23
+      17:
+        comms_cons: 0
+        node_conso: 552.23
+      18:
+        comms_cons: 0
+        node_conso: 631.12
+      19:
+        comms_cons: 0
+        node_conso: 552.23
+      20:
+        comms_cons: 0
+        node_conso: 394.45
+      21:
+        comms_cons: 0
+        node_conso: 0.0
+    receives:
+      0:
+        comms_cons: 0.0
+        node_conso: 0
+      1:
+        comms_cons: 2.5
+        node_conso: 0
+      2:
+        comms_cons: 1.77
+        node_conso: 0
+      3:
+        comms_cons: 2.96
+        node_conso: 0
+      4:
+        comms_cons: 1.8
+        node_conso: 0
+      5:
+        comms_cons: 3.01
+        node_conso: 0
+      6:
+        comms_cons: 1.85
+        node_conso: 0
+      7:
+        comms_cons: 1.28
+        node_conso: 0
+      8:
+        comms_cons: 2.54
+        node_conso: 0
+      9:
+        comms_cons: 3.24
+        node_conso: 0
+      10:
+        comms_cons: 3.25
+        node_conso: 0
+      11:
+        comms_cons: 2.22
+        node_conso: 0
+      12:
+        comms_cons: 1.04
+        node_conso: 0
+      13:
+        comms_cons: 3.0
+        node_conso: 0
+      14:
+        comms_cons: 1.94
+        node_conso: 0
+      15:
+        comms_cons: 1.7
+        node_conso: 0
+      16:
+        comms_cons: 2.62
+        node_conso: 0
+      17:
+        comms_cons: 2.93
+        node_conso: 0
+      18:
+        comms_cons: 1.56
+        node_conso: 0
+      19:
+        comms_cons: 2.05
+        node_conso: 0
+      20:
+        comms_cons: 1.16
+        node_conso: 0
+      21:
+        comms_cons: 0.0
+        node_conso: 0
+    reconfs:
+      0:
+        comms_cons: 0
+        node_conso: 0.78
+      1:
+        comms_cons: 0
+        node_conso: 0.2
+      2:
+        comms_cons: 0
+        node_conso: 0.03
+      3:
+        comms_cons: 0
+        node_conso: 0.07
+      4:
+        comms_cons: 0
+        node_conso: 0.11
+      5:
+        comms_cons: 0
+        node_conso: 0.06
+      6:
+        comms_cons: 0
+        node_conso: 0.11
+      7:
+        comms_cons: 0
+        node_conso: 0.06
+      8:
+        comms_cons: 0
+        node_conso: 0.1
+      9:
+        comms_cons: 0
+        node_conso: 0.03
+      10:
+        comms_cons: 0
+        node_conso: 0.23
+      11:
+        comms_cons: 0
+        node_conso: 0.05
+      12:
+        comms_cons: 0
+        node_conso: 0.04
+      13:
+        comms_cons: 0
+        node_conso: 0.05
+      14:
+        comms_cons: 0
+        node_conso: 0.22
+      15:
+        comms_cons: 0
+        node_conso: 0.1
+      16:
+        comms_cons: 0
+        node_conso: 0.04
+      17:
+        comms_cons: 0
+        node_conso: 0.07
+      18:
+        comms_cons: 0
+        node_conso: 0.13
+      19:
+        comms_cons: 0
+        node_conso: 0.08
+      20:
+        comms_cons: 0
+        node_conso: 0.04
+      21:
+        comms_cons: 0
+        node_conso: 0.0
+    sendings:
+      0:
+        comms_cons: 14.28
+        node_conso: 0
+      1:
+        comms_cons: 0.0
+        node_conso: 0
+      2:
+        comms_cons: 0.0
+        node_conso: 0
+      3:
+        comms_cons: 0.1
+        node_conso: 0
+      4:
+        comms_cons: 0.08
+        node_conso: 0
+      5:
+        comms_cons: 0.1
+        node_conso: 0
+      6:
+        comms_cons: 0.0
+        node_conso: 0
+      7:
+        comms_cons: 0.11
+        node_conso: 0
+      8:
+        comms_cons: 0.0
+        node_conso: 0
+      9:
+        comms_cons: 0.0
+        node_conso: 0
+      10:
+        comms_cons: 0.0
+        node_conso: 0
+      11:
+        comms_cons: 0.0
+        node_conso: 0
+      12:
+        comms_cons: 0.0
+        node_conso: 0
+      13:
+        comms_cons: 0.0
+        node_conso: 0
+      14:
+        comms_cons: 0.12
+        node_conso: 0
+      15:
+        comms_cons: 0.0
+        node_conso: 0
+      16:
+        comms_cons: 0.11
+        node_conso: 0
+      17:
+        comms_cons: 0.0
+        node_conso: 0
+      18:
+        comms_cons: 0.0
+        node_conso: 0
+      19:
+        comms_cons: 0.1
+        node_conso: 0
+      20:
+        comms_cons: 0.0
+        node_conso: 0
+      21:
+        comms_cons: 0.0
+        node_conso: 0
+  time: 1652.5

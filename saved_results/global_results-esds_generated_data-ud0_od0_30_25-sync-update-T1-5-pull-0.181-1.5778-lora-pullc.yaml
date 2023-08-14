@@ -1,0 +1,91 @@
+esds_generated_data-ud0_od0_30_25-sync-update-T1-5-pull:
+  energy:
+    idles:
+      0:
+        comms_cons: 0
+        node_conso: 157.78
+      1:
+        comms_cons: 0
+        node_conso: 205.92
+      2:
+        comms_cons: 0
+        node_conso: 205.92
+      3:
+        comms_cons: 0
+        node_conso: 236.67
+      4:
+        comms_cons: 0
+        node_conso: 157.78
+      5:
+        comms_cons: 0
+        node_conso: 157.78
+      6:
+        comms_cons: 0
+        node_conso: 0.0
+    receives:
+      0:
+        comms_cons: 0.04
+        node_conso: 0
+      1:
+        comms_cons: 0.22
+        node_conso: 0
+      2:
+        comms_cons: 0.72
+        node_conso: 0
+      3:
+        comms_cons: 0.6
+        node_conso: 0
+      4:
+        comms_cons: 0.44
+        node_conso: 0
+      5:
+        comms_cons: 1.05
+        node_conso: 0
+      6:
+        comms_cons: 0.0
+        node_conso: 0
+    reconfs:
+      0:
+        comms_cons: 0
+        node_conso: 1.71
+      1:
+        comms_cons: 0
+        node_conso: 0.68
+      2:
+        comms_cons: 0
+        node_conso: 0.84
+      3:
+        comms_cons: 0
+        node_conso: 0.2
+      4:
+        comms_cons: 0
+        node_conso: 0.18
+      5:
+        comms_cons: 0
+        node_conso: 0.13
+      6:
+        comms_cons: 0
+        node_conso: 0.0
+    sendings:
+      0:
+        comms_cons: 2.4
+        node_conso: 0
+      1:
+        comms_cons: 0.46
+        node_conso: 0
+      2:
+        comms_cons: 0.56
+        node_conso: 0
+      3:
+        comms_cons: 0.03
+        node_conso: 0
+      4:
+        comms_cons: 0.03
+        node_conso: 0
+      5:
+        comms_cons: 0.1
+        node_conso: 0
+      6:
+        comms_cons: 0.0
+        node_conso: 0
+  time: 650.51
