@@ -4,6 +4,7 @@ import math
 import os,subprocess,time
 import shutil
 import traceback
+from multiprocessing import Pool
 from pathlib import Path
 
 import yaml
@@ -184,24 +185,22 @@ def main():
         nb_expes_done = 0
         joined_params = simulation_functions.get_params_joined(parameter)
         print(f"{nb_params_done+1}/{nb_params_tot} - {joined_params}")
+        pool = Pool(2)
+        parallel_execs = []
         for parameter_file in parameter_files_list:
             ## Limit number of experiments
             if nb_expes_done >= limit_expes:
                 break
 
-            print(f"    {nb_expes_done + 1}/{nb_expes_tot} - {parameter_file} => ", end="")
-
-            ## Designate parameter file and create result dir
-            current_test_path=os.path.join(expe_esds_parameter_files,parameter_file)
-            shutil.rmtree(esds_current_parameter_file, ignore_errors=True)
-            shutil.copy(current_test_path, esds_current_parameter_file)
             title = Path(parameter_file).stem
-
             results_names = os.listdir(root)
             if any(title in result_name and joined_params in result_name for result_name in results_names):
                 print("already done, skip")
                 nb_expes_done += 1
                 continue
+
+            ## Designate parameter file and create result dir
+            current_test_path=os.path.join(expe_esds_parameter_files,parameter_file)
 
             os.makedirs(os.path.join(idle_results_dir, title), exist_ok=True)
             os.makedirs(os.path.join(reconf_results_dir, title), exist_ok=True)
@@ -219,32 +218,14 @@ def main():
                 yaml.safe_dump(data, f, sort_keys=False)
 
             try:
-                ## Launch experiment
-                start_at=time.time()
-                # print(f"Starting experiment, platform_path_copy: {platform_path_copy}")
-                out=subprocess.check_output(["esds", "run", platform_path_copy],stderr=subprocess.STDOUT,timeout=tests_timeout,encoding="utf-8")
-                # out = subprocess.Popen(["esds", "run", platform_path_copy], stderr=subprocess.STDOUT, encoding="utf-8")
-                # out.wait()
-                if "AssertionError" in out:
-                    for line in out.split("\n"):
-                        if line.startswith("AssertionError"):
-                            print(line)
-                end_at=time.time()
-
-                ## Run verification scripts
-                with open(current_test_path) as f:
-                    esds_parameters = yaml.safe_load(f)
-                _esds_results_verification(esds_parameters, expe_esds_verification_files, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir, title, parameter["stressConso"], parameter["idleConso"])
-                expe_duration = end_at - start_at
-                print("passed (%0.1fs)" % (expe_duration))
-                sum_expes_duration += expe_duration
-
-                ## Aggregate to global results
-                result = {title: {"energy": _load_energetic_expe_results_from_title(title, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir), "time": esds_parameters["max_execution_duration"]}}
-                global_results.update(result)
-                global_results_path = f"global_results-{title}-{joined_params}.yaml"
-                with open(os.path.join(root, global_results_path), "w") as f:
-                    yaml.safe_dump(result, f)
+                exec_esds = pool.apply_async(
+                    _execute_esds_simulation,
+                    args=(current_test_path, expe_esds_verification_files, global_results,
+                    idle_results_dir, joined_params, parameter, platform_path_copy,
+                    receive_results_dir, reconf_results_dir, root, sends_results_dir,
+                    sum_expes_duration, title)
+                )
+                parallel_execs.append(exec_esds)
 
             except subprocess.TimeoutExpired as err:
                 print("failed :(")
@@ -275,6 +256,46 @@ def main():
         #         global_results.update(yaml.safe_load(f))
         # print_results.print_energy_results(global_results)
         nb_params_done += 1
+
+        for running_exec in parallel_execs:
+            running_exec.get()
+
+
+
+def _execute_esds_simulation(current_test_path, expe_esds_verification_files, global_results, idle_results_dir,
+                             joined_params, parameter, platform_path_copy, receive_results_dir, reconf_results_dir,
+                             root, sends_results_dir, sum_expes_duration, title):
+    ## Launch experiment
+    start_at = time.time()
+    print(f"Starting {title}")
+    # print(f"Starting experiment, platform_path_copy: {platform_path_copy}")
+    out = subprocess.check_output(["esds", "run", platform_path_copy], stderr=subprocess.STDOUT, timeout=tests_timeout,
+                                  encoding="utf-8")
+    # out = subprocess.Popen(["esds", "run", platform_path_copy], stderr=subprocess.STDOUT, encoding="utf-8")
+    # out.wait()
+    if "AssertionError" in out:
+        for line in out.split("\n"):
+            if line.startswith("AssertionError"):
+                print(line)
+    end_at = time.time()
+    print(f"Finished {title}")
+    ## Run verification scripts
+    with open(current_test_path) as f:
+        esds_parameters = yaml.safe_load(f)
+    _esds_results_verification(esds_parameters, expe_esds_verification_files, idle_results_dir, reconf_results_dir,
+                               sends_results_dir, receive_results_dir, title, parameter["stressConso"],
+                               parameter["idleConso"])
+    expe_duration = end_at - start_at
+    print(f"{title} passed (%0.1fs)" % (expe_duration))
+    sum_expes_duration += expe_duration
+    ## Aggregate to global results
+    result = {title: {"energy": _load_energetic_expe_results_from_title(title, idle_results_dir, reconf_results_dir,
+                                                                        sends_results_dir, receive_results_dir),
+                      "time": esds_parameters["max_execution_duration"]}}
+    global_results.update(result)
+    global_results_path = f"global_results-{title}-{joined_params}.yaml"
+    with open(os.path.join(root, global_results_path), "w") as f:
+        yaml.safe_dump(result, f)
 
 
 if __name__ == '__main__':
