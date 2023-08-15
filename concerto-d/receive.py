@@ -54,7 +54,7 @@ def execute(api: Node):
             }
             simulation_functions.print_esds_node_results(results, api)
             results_categ = "receives"
-            with open(f"/home/aomond/reconfiguration-esds/concerto-d-results/results/{results_categ}/{title}/{node_id}.yaml", "w") as f:
+            with open(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/results/{results_categ}/{title}/{node_id}.yaml", "w") as f:
                 yaml.safe_dump(results, f)
             return
 
@@ -114,6 +114,6 @@ def execute(api: Node):
     }
     simulation_functions.print_esds_node_results(results, api)
     results_categ = "receives"
-    with open(f"/home/aomond/reconfiguration-esds/concerto-d-results/results/{results_categ}/{title}/{node_id}.yaml", "w") as f:
+    with open(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/results/{results_categ}/{title}/{node_id}.yaml", "w") as f:
         yaml.safe_dump(results, f)
 

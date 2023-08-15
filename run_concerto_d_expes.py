@@ -148,7 +148,7 @@ def _group_by_version_concerto_d(parameter_files_list):
 def main():
     # Setup variables
     ## Configuration files dirs
-    root = "/home/aomond/reconfiguration-esds/concerto-d-results"
+    root = f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results"
     # expe_esds_parameter_files = os.path.join(root, "tests")
     expe_esds_parameter_files = os.path.join(root, "expe_esds_parameter_files_to_compute")
     esds_current_parameter_file = os.path.join(root, "current_esds_parameter_file.yaml")
@@ -282,8 +282,8 @@ def main():
         # print("Results dumped")
         print(f"All passed in {sum_expes_duration:.2f}s")
         global_results = {}
-        for file in os.listdir(f"/home/aomond/reconfiguration-esds/concerto-d-results/to_analyse_test/"):
-            with open(os.path.join(f"/home/aomond/reconfiguration-esds/concerto-d-results/to_analyse_test/", file)) as f:
+        for file in os.listdir(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/to_analyse_test/"):
+            with open(os.path.join(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/to_analyse_test/", file)) as f:
                 global_results.update(yaml.safe_load(f))
         print_results.print_energy_results(global_results)
         nb_params_done += 1
