@@ -280,12 +280,12 @@ def main():
         # with open(os.path.join(root, global_results_path), "w") as f:
         #     yaml.safe_dump(global_results, f)
         # print("Results dumped")
-        print(f"All passed in {sum_expes_duration:.2f}s")
-        global_results = {}
-        for file in os.listdir(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/to_analyse_test/"):
-            with open(os.path.join(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/to_analyse_test/", file)) as f:
-                global_results.update(yaml.safe_load(f))
-        print_results.print_energy_results(global_results)
+        # print(f"All passed in {sum_expes_duration:.2f}s")
+        # global_results = {}
+        # for file in os.listdir(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/to_analyse_test/"):
+        #     with open(os.path.join(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/to_analyse_test/", file)) as f:
+        #         global_results.update(yaml.safe_load(f))
+        # print_results.print_energy_results(global_results)
         nb_params_done += 1
 
 
