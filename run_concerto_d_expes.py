@@ -131,6 +131,8 @@ def _load_energetic_expe_results_from_title(title, idle_results_dir, reconf_resu
 def _group_by_version_concerto_d(parameter_files_list):
     parameter_files_dict = {}
     for key in parameter_files_list:
+        if not key.startswith("esds_generated_data"):
+            continue
         version = "async" if "async" in key else "sync"
         key_without_version = "-".join(key.split(f"-{version}-"))
         if key_without_version not in parameter_files_dict.keys():
