@@ -4,7 +4,7 @@ import math
 import os,subprocess,time
 import shutil
 import traceback
-from multiprocessing import Pool
+from multiprocessing import Pool, cpu_count
 from pathlib import Path
 
 import yaml
@@ -185,7 +185,7 @@ def main():
         nb_expes_done = 0
         joined_params = simulation_functions.get_params_joined(parameter)
         print(f"{nb_params_done+1}/{nb_params_tot} - {joined_params}")
-        pool = Pool(2)
+        pool = Pool(cpu_count() - math.ceil(cpu_count()*0.2))
         parallel_execs = []
         for parameter_file in parameter_files_list:
             ## Limit number of experiments
