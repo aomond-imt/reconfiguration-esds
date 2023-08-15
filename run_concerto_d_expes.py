@@ -185,7 +185,7 @@ def main():
         nb_expes_done = 0
         joined_params = simulation_functions.get_params_joined(parameter)
         print(f"{nb_params_done+1}/{nb_params_tot} - {joined_params}")
-        pool = Pool(cpu_count() - math.ceil(cpu_count()*0.2))
+        pool = Pool(math.ceil(cpu_count() / 2))
         parallel_execs = []
         for parameter_file in parameter_files_list:
             ## Limit number of experiments
