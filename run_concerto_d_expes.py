@@ -146,12 +146,12 @@ def _group_by_version_concerto_d(parameter_files_list):
     return ordered_parameter_list
 
 
-def main():
+def main(simu_to_launch_dir="expe_esds_parameter_files_to_compute"):
     # Setup variables
     ## Configuration files dirs
     root = f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results"
     # expe_esds_parameter_files = os.path.join(root, "tests")
-    expe_esds_parameter_files = os.path.join(root, "expe_esds_parameter_files_to_compute")
+    expe_esds_parameter_files = os.path.join(root, simu_to_launch_dir)
     esds_current_parameter_file = os.path.join(root, "current_esds_parameter_file.yaml")
     expe_esds_verification_files = os.path.join(root, "expe_esds_verification_files")
 
@@ -299,4 +299,8 @@ def _execute_esds_simulation(current_test_path, expe_esds_verification_files, gl
 
 
 if __name__ == '__main__':
-    main()
+    import sys
+    simu_to_launch_dir = ""
+    if len(sys.argv) > 1:
+        simu_to_launch_dir = sys.argv[1]
+    main(simu_to_launch_dir)
