@@ -175,26 +175,6 @@ def main():
 
     ## Getting sweeped parameters
     sweeper = simulation_functions.get_simulation_swepped_parameters()
-    # sweeper = [
-    #     {
-    #         "stressConso": 1.237,
-    #         "idleConso": 1.38,
-    #         "techno": {"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
-    #         "typeSynchro": "pullc"
-    #     },
-        # {
-        #     "stressConso": 0,
-        #     "idleConso": 1.38,
-        #     "techno": {"name": "nbiot", "bandwidth": "200kbps", "commsConso": 0.65},
-        #     "typeSynchro": "pullc"
-        # },
-        # {
-        #     "stressConso": 0.181,
-        #     "idleConso": 1.5778,
-        #     "techno": {"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
-        #     "typeSynchro": "pullc"
-        # },
-    # ]
     nb_params_tot = len(sweeper)
     nb_params_done = 0
     print(f"Tot nb parameters: {nb_params_tot}")
@@ -229,13 +209,21 @@ def main():
             os.makedirs(os.path.join(receive_results_dir, title), exist_ok=True)
 
             platform_path = os.path.abspath(f"concerto-d/platform-{joined_params}.yaml")
+            platform_path_copy = os.path.abspath(f"concerto-d/platform-{joined_params}-{title}.yaml")
+            shutil.copy(platform_path, platform_path_copy)
+
+            with open(platform_path_copy) as f:
+                data = yaml.safe_load(f)
+            with open(platform_path_copy, "w") as f:
+                data["nodes"]["arguments"]["all"]["expe_config_file"] = current_test_path
+                yaml.safe_dump(data, f, sort_keys=False)
 
             try:
                 ## Launch experiment
                 start_at=time.time()
-                # print(f"Starting experiment, platform_path: {platform_path}")
-                out=subprocess.check_output(["esds", "run", platform_path],stderr=subprocess.STDOUT,timeout=tests_timeout,encoding="utf-8")
-                # out = subprocess.Popen(["esds", "run", platform_path], stderr=subprocess.STDOUT, encoding="utf-8")
+                # print(f"Starting experiment, platform_path_copy: {platform_path_copy}")
+                out=subprocess.check_output(["esds", "run", platform_path_copy],stderr=subprocess.STDOUT,timeout=tests_timeout,encoding="utf-8")
+                # out = subprocess.Popen(["esds", "run", platform_path_copy], stderr=subprocess.STDOUT, encoding="utf-8")
                 # out.wait()
                 if "AssertionError" in out:
                     for line in out.split("\n"):

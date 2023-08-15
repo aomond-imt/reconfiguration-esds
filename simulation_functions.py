@@ -8,8 +8,14 @@ NB_POLL_PER_SEC = 10
 def get_simulation_swepped_parameters():
     from execo_engine import sweep
 
+    # parameters = {
+    #     "stressConso": [0, 1.237, 1.358],  # 1.339-1.339, 2.576-1.339, 2.697-1.339
+    #     "idleConso": [1.339],
+    #     "techno": [{"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16}],
+    #     "typeSynchro": ["pullc"]
+    # }
     parameters = {
-        "stressConso": [0, 1.237, 1.358],  # 1.339-1.339, 2.576-1.339, 2.697-1.339
+        "stressConso": [1.237],  # 1.339-1.339, 2.576-1.339, 2.697-1.339
         "idleConso": [1.339],
         "techno": [{"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16}],
         "typeSynchro": ["pullc"]

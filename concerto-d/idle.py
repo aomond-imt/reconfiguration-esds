@@ -21,13 +21,14 @@ def execute(api: Node):
         # Check if nb_deps is crossed
         nb_nodes = expe_config["nb_nodes"]
         if node_id >= nb_nodes:
+            print("dismmissing")
             return
 
         title = expe_config["title"]
         node_uptimes = expe_config["uptimes_periods_per_node"][node_id]
         max_execution_duration = expe_config["max_execution_duration"]
 
-
+    print("got here")
     tot_uptime, tot_sleeping_time = 0, 0
     idle_cons = PowerStates(api, 0)
     idle_cons.set_power(0)
