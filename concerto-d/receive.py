@@ -38,25 +38,11 @@ def execute(api: Node):
 
     # Version concerto_d parameters
     commsConso = api.args["commsConso"]
-    if "async" not in title:
+    version = "async" if "async" in title else "sync"
+    if version == "sync":
         interface_name = f"eth0"
     else:
         interface_name = f"eth0Router"
-        # TODO: ad-hoc routeur links
-        if node_id != nb_nodes - 1:
-            results = {
-                f"tot_receive_flat_time": 0,
-                f"tot_no_receive_time": 0,
-                "node_conso": 0,
-                "comms_cons": 0,
-                "tot_msg_received": 0,
-                "tot_msg_responded": 0,
-            }
-            simulation_functions.print_esds_node_results(results, api)
-            results_categ = "receives"
-            with open(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/results/{results_categ}/{title}/{node_id}.yaml", "w") as f:
-                yaml.safe_dump(results, f)
-            return
 
     api.log(f"Interface: {interface_name}")
     tot_sending_time_flat, tot_no_sending_time_flat = 0, 0
@@ -83,7 +69,7 @@ def execute(api: Node):
                     tot_msg_received[data_to_send] = 1
                 else:
                     tot_msg_received[data_to_send] += 1
-                if receiver_id == node_id or _is_router(node_id, nb_nodes):
+                if (version == "sync" and receiver_id == node_id) or (version == "async" and _is_router(node_id, nb_nodes)):
                     api.log(f"Sending response to {sender_id}")
                     # Send response
                     start_send = api.read("clock")
