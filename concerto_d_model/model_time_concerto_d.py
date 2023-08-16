@@ -163,6 +163,8 @@ def generate_mascots_schedules():
         # "ud0_od0_7_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_7_25_perc-dao.json")),
         # "ud0_od0_30_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_30_25_perc-dao.json")),
         "uptimes-dao-60-sec": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/uptimes-dao-60-sec.json")),
+        "uptimes-dao-120-sec": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/uptimes-dao-120-sec.json")),
+        "uptimes-dao-180-sec": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/uptimes-dao-180-sec.json")),
     }
     # ud1_od0_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud1_od0_15_25_perc.json"))
     # ud2_od0_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud2_od0_15_25_perc.json"))
