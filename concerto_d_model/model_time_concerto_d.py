@@ -104,7 +104,7 @@ def _get_update_parallel_use_case_model(tts, nb_deps):
     for dep_num in range(nb_deps):
         update_in_suspend = DependencyComputeModel("use", dep_num+1, None, [], [[0]])
         update_in_suspends.append(update_in_suspend)
-        update_services.append(DependencyComputeModel("provide", dep_num+1, None, [[update_in_suspend]], [[tts[f"dep{dep_num}"]["t_du"] + tts[f"dep{dep_num}"]["t_dr"] + IMPLEM_OVERHEAD]]))
+        update_services.append(DependencyComputeModel("provide", dep_num+1, None, [[update_in_suspend]], [[tts[f"dep{dep_num}"]["t_du"] + tts[f"dep{dep_num}"]["t_dr"]]]))
         update_in_suspends_names.append(f"update_in_suspend_{dep_num}")
         update_services_names.append(f"update_service_{dep_num}")
 
@@ -553,7 +553,7 @@ def _compute_sending_periods_per_node(esds_data):
 
 if __name__ == "__main__":
     all_expe_parameters = generate_mascots_schedules()
-    expe_esds_parameter_files = f"/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_parameter_files"
+    expe_esds_parameter_files = f"/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_parameter_files_dao"
     os.makedirs(expe_esds_parameter_files, exist_ok=True)
 
     for title, vals in all_expe_parameters.items():
