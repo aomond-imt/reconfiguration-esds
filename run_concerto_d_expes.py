@@ -301,6 +301,8 @@ def _execute_esds_simulation(current_test_path, expe_esds_verification_files, gl
 if __name__ == '__main__':
     import sys
     simu_to_launch_dir = ""
+    print(sys.argv)
     if len(sys.argv) > 1:
-        simu_to_launch_dir = sys.argv[1]
-    main(simu_to_launch_dir)
+        main(sys.argv[1])
+    else:
+        main()
