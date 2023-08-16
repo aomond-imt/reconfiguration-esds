@@ -22,7 +22,7 @@ tests_timeout=20000 # Max duration of a test
 
 def _assert_value(node_id, key, val, expected_val):
     try:
-        assert round(val, 2) == round(expected_val, 2)
+        assert abs(val - expected_val) <= 0.01
     except AssertionError as e:
         print(f"node_id: {node_id} - key: {key} - val: {val} - expected: {expected_val}")
         raise e
