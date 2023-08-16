@@ -217,32 +217,14 @@ def main(simu_to_launch_dir="expe_esds_parameter_files_to_compute"):
                 data["nodes"]["arguments"]["all"]["expe_config_file"] = current_test_path
                 yaml.safe_dump(data, f, sort_keys=False)
 
-            try:
-                exec_esds = pool.apply_async(
-                    _execute_esds_simulation,
-                    args=(current_test_path, expe_esds_verification_files, global_results,
-                    idle_results_dir, joined_params, parameter, platform_path_copy,
-                    receive_results_dir, reconf_results_dir, root, sends_results_dir,
-                    sum_expes_duration, title)
-                )
-                parallel_execs.append(exec_esds)
-
-            except subprocess.TimeoutExpired as err:
-                print("failed :(")
-                print("------------- Test duration expired (timeout="+str(tests_timeout)+"s) -------------")
-                print(err.output,end="")
-                # exit(1)
-            except subprocess.CalledProcessError as err:
-                print("failed :(")
-                print("------------- Test has a non-zero exit code -------------")
-                print(err.output,end="")
-                # exit(2)
-            except Exception as err:
-                print("failed :(")
-                traceback.print_exc()
-                # exit(3)
-            finally:
-                nb_expes_done += 1
+            exec_esds = pool.apply_async(
+                _execute_esds_simulation,
+                args=(current_test_path, expe_esds_verification_files, global_results,
+                      idle_results_dir, joined_params, parameter, platform_path_copy,
+                      receive_results_dir, reconf_results_dir, root, sends_results_dir,
+                      sum_expes_duration, title)
+            )
+            parallel_execs.append(exec_esds)
 
         # print("Dump results")
         # global_results_path = f"global_results-{joined_params}.yaml"
@@ -255,11 +237,28 @@ def main(simu_to_launch_dir="expe_esds_parameter_files_to_compute"):
         #     with open(os.path.join(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/to_analyse_test/", file)) as f:
         #         global_results.update(yaml.safe_load(f))
         # print_results.print_energy_results(global_results)
-        nb_params_done += 1
 
         for running_exec in parallel_execs:
-            running_exec.get()
-
+            try:
+                running_exec.get()
+            except subprocess.TimeoutExpired as err:
+                print("failed :(")
+                print("------------- Test duration expired (timeout=" + str(tests_timeout) + "s) -------------")
+                print(err.output, end="")
+                # exit(1)
+            except subprocess.CalledProcessError as err:
+                print("failed :(")
+                print("------------- Test has a non-zero exit code -------------")
+                print(err.output, end="")
+                # exit(2)
+            except Exception as err:
+                print("failed :(")
+                traceback.print_exc()
+                # exit(3)
+            finally:
+                print(f"Expe done: {nb_expes_done + 1}/{nb_expes_tot}")
+                nb_expes_done += 1
+        nb_params_done += 1
 
 
 def _execute_esds_simulation(current_test_path, expe_esds_verification_files, global_results, idle_results_dir,
