@@ -1,14 +1,14 @@
 from typing import List
 
 
-def get_next_overlap(time_start: float, num_node_a: int, num_node_b: int, nodes_schedule: List, version: str, duration: float = 60):
+def get_next_overlap(time_start: float, num_node_a: int, num_node_b: int, nodes_schedule: List, version: str):
     schedule_a = nodes_schedule[num_node_a]
     schedule_b = nodes_schedule[num_node_b]
     offset_polling = 0.5  # Worst case for contact between nodes due to wait between 2 pings
 
     if version == "sync":
         for item_a, item_b in zip(schedule_a, schedule_b):
-            uptime_a, _ = item_a
+            uptime_a, duration = item_a
             uptime_b, _ = item_b
 
             if uptime_a == -1 or uptime_b == -1:
@@ -21,11 +21,11 @@ def get_next_overlap(time_start: float, num_node_a: int, num_node_b: int, nodes_
     return None
 
 
-def get_next_uptime(time_start: float, num_node: int, nodes_schedule: List, duration: float = 60):
+def get_next_uptime(time_start: float, num_node: int, nodes_schedule: List):
     schedule_node = nodes_schedule[num_node]
 
     uptime_num = 0
-    for uptime, _ in schedule_node:
+    for uptime, duration in schedule_node:
         if uptime == -1:
             uptime_num += 1
             continue
@@ -44,8 +44,9 @@ class DependencyComputeModel:
         self.lp_list = lp_list
         self.nodes_schedules = nodes_schedules
 
-    def _compute_time_lp_end(self, all_trans: List[float], next_uptime, uptime_num, duration: float = 60):
-        time_until_sleep = self.nodes_schedules[self.node_id][uptime_num][0] + duration
+    def _compute_time_lp_end(self, all_trans: List[float], next_uptime, uptime_num):
+        current_uptime, duration = self.nodes_schedules[self.node_id][uptime_num]
+        time_until_sleep = current_uptime + duration
         result = {}
         start = next_uptime
         current_time = next_uptime

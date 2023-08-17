@@ -255,7 +255,8 @@ def generate_mascots_schedules():
                             esds_data = _compute_esds_data_from_results(all_results_esds)
 
                             ## Uptime periods
-                            uptimes_periods_per_node = _compute_uptimes_periods_per_node(uptime_schedule, m_time)
+                            duration = uptime_schedule[0][0][1]
+                            uptimes_periods_per_node = _compute_uptimes_periods_per_node(uptime_schedule, m_time, duration)
                             router_key = nb_deps+1
 
                             ## Reconf periods
@@ -427,24 +428,24 @@ def test_compute_sending_periods_during_uptime_per_node():
     }
 
 
-def _compute_uptimes_periods_per_node(uptime_schedule, m_time: float):
+def _compute_uptimes_periods_per_node(uptime_schedule, m_time: float, duration: int):
     uptimes_periods_per_node = {node_id: [] for node_id in range(len(uptime_schedule))}
     for node_id, node_schedule in enumerate(uptime_schedule):
         for uptime, _ in node_schedule:
             if uptime != -1 and uptime < m_time:
-                uptime_end = min(uptime + 60, m_time)  # TODO magic value
+                uptime_end = min(uptime + duration, m_time)  # TODO magic value
                 uptimes_periods_per_node[node_id].append([uptime, uptime_end])
-                if uptime + 60 >= m_time:
+                if uptime + duration >= m_time:
                     break
 
     return uptimes_periods_per_node
 
 
-def _compute_sending_periods_per_connected_node(node_id, sending_periods, uptime_schedule):
+def _compute_sending_periods_per_connected_node(node_id, sending_periods, uptime_schedule, duration: int):
     sending_periods_per_connected_node = {}
     for uptime, _ in uptime_schedule[node_id]:
         if uptime != -1:
-            uptime_end = uptime + 60  # TODO magic value
+            uptime_end = uptime + duration  # TODO magic value
             for start_send, end_send, count_sends in sending_periods:
                 if count_sends != {} and start_send < uptime_end and end_send >= uptime:
                     for conn_id, count in count_sends.items():
