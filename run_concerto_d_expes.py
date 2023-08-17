@@ -164,7 +164,7 @@ def main(simu_to_launch_dir="expe_esds_parameter_files_to_compute"):
 
     # Start experiments
     ## Clean previous results dirs
-    shutil.rmtree(results_dir, ignore_errors=True)
+    # shutil.rmtree(results_dir, ignore_errors=True)
 
     ## Run all experiments
     # limit_expes = math.inf
