@@ -301,7 +301,7 @@ def _execute_esds_simulation(parameter_files_list, expe_esds_parameter_files, ex
         global_results_path = f"global_results-{title}-{joined_params}.yaml"
         with open(os.path.join(root, global_results_path), "w") as f:
             yaml.safe_dump(result, f)
-        sweeper.done(parameter)
+        sweeper.done(parameter_file)
         parameter_file = sweeper.get_next()
 
 
