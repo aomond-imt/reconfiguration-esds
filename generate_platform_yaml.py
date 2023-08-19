@@ -7,11 +7,11 @@ TEMPLATE_FILE = "platform.yaml.j2"
 template = templateEnv.get_template(TEMPLATE_FILE)
 nb_deps = 30
 
-sweeper = simulation_functions.get_simulation_swepped_parameters()
+sweeps = simulation_functions.get_simulation_swepped_parameters()
 nodes_per_batch = nb_deps+2
 nodes_count = nodes_per_batch * 4
 
-for parameter in sweeper:
+for parameter in sweeps:
     (
         stressConso,
         idleConso,
