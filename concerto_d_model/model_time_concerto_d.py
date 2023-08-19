@@ -177,7 +177,7 @@ def generate_mascots_schedules():
 
     all_expe_parameters = {}
     # for nb_deps in [1, 2, 3, 4, 5]:
-    for nb_deps in [5, 10, 20, 30]:
+    for nb_deps in [1, 2, 3, 4, 5, 10, 15, 20, 25, 30]:
         i = 0
         print(f"Generating for nb_deps: {nb_deps}...")
         # for uptime_schedule in [ud0_od0_15_25, ud1_od0_15_25, ud2_od0_15_25, ud0_od1_15_25, ud0_od2_15_25, ud0_od0_7_25, ud0_od0_30_25]:
