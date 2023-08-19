@@ -36,10 +36,7 @@ def execute(api: Node):
         max_execution_duration = expe_config["max_execution_duration"]
 
     # Version concerto_d parameters
-    if "async" not in title:
-        interface_name = f"eth0"
-    else:
-        interface_name = f"eth0Router"
+    interface_name = "eth0"
     commsConso = api.args["commsConso"]
     api.log(f"Interface: {interface_name}")
     tot_sending_time_flat, tot_no_sending_time_flat = 0, 0

@@ -42,7 +42,6 @@ nodes:
     }
 
 interfaces:
-  # Synchronous
   eth0:
     type: "wireless"
     links:
@@ -51,16 +50,4 @@ interfaces:
       {% endfor %}
     txperfs:
       - all {{ bandwidth }} 0s  # Perf de chaque noeud sur cette interface
-    nodes: {{ communicating_nodes }}
-
-  # Asynchronous
-  eth0Router:
-    type: "wireless"
-    links:
-      {# TODO: ad-hoc routeur links #}
-      {% for link in links_eth0Router -%}
-        {{ link }}  # Allsource bandwidth latency allreceive
-      {% endfor %}
-    txperfs:
-      - all {{ bandwidth }} 0s all
     nodes: {{ communicating_nodes }}
