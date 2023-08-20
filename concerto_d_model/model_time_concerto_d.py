@@ -281,7 +281,7 @@ def generate_mascots_schedules():
                             title = f"esds_generated_data-{name_uptime}-{version_concerto_d}-{reconf_name}-{trans_times}-{nb_deps}-{type_synchro}"
                             expe_parameters = {
                                 "title": title,
-                                "nb_nodes": nb_deps + 2,
+                                "nb_nodes": nb_deps + 1,
                                 "uptimes_periods_per_node": uptimes_periods_per_node,
                                 "reconf_periods_per_node": merged_reconf_periods_per_node,
                                 "sending_periods_per_node": sending_periods_during_uptime_per_node,

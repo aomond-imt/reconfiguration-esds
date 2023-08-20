@@ -1,5 +1,5 @@
 max_execution_duration: 6095.69
-nb_nodes: 27
+nb_nodes: 26
 reconf_periods_per_node:
   0:
   - - 1876.99
