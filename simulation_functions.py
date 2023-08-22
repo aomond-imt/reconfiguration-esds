@@ -11,7 +11,8 @@ def get_simulation_swepped_parameters():
     parameters = {
         "stressConso": [0, 1.237, 1.358],  # 1.339-1.339, 2.576-1.339, 2.697-1.339
         "idleConso": [1.339],
-        "techno": [{"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16}],
+        "techno": [{"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
+                   {"name": "nbiot", "bandwidth": "200kbps", "commsConso": 0.65}],
         "typeSynchro": ["pullc"]
     }
     sweeper = sweep(parameters)
