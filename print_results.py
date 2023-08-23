@@ -95,7 +95,7 @@ def compute_energy_gain(global_results):
     all_results = {}
     for key, vals in group_by_version_concerto_d.items():
         if "async" not in vals.keys() or "sync" not in vals.keys():
-            print("Async or sync missing, skip")
+            print(f"{key}: Async or sync missing, skip")
             continue
         router_id = max(vals["async"]["energy"].keys())
         assert router_id == max(vals["sync"]["energy"].keys())
@@ -172,7 +172,7 @@ def compute_energy_gain_by_nb_deps(energy_gains):
         scenario = "-".join(key.split("-")[:-2])
         if scenario not in energy_gain_by_nb_deps.keys():
             energy_gain_by_nb_deps[scenario] = {}
-        nb_deps = int(key.split("-")[4:-1][0])
+        nb_deps = int(key.split("-")[7:-1][0])
         if nb_deps not in energy_gain_by_nb_deps[scenario]:
             energy_gain_by_nb_deps[scenario][nb_deps] = val
 
@@ -241,6 +241,7 @@ def plot_bar_results(energy_gain_by_nb_deps, param_names):
                 "detail_ons_reconfs": [el["total"]["detail_ons_sync"]["reconfs"] for el in gain_by_nb_deps.values()],
                 "detail_ons_sendings": [el["total"]["detail_ons_sync"]["sendings"] for el in gain_by_nb_deps.values()],
                 "detail_ons_receives": [el["total"]["detail_ons_sync"]["receives"] for el in gain_by_nb_deps.values()],
+                "time_sync": [el["total"]["time_sync"] for el in gain_by_nb_deps.values()],
             },
             "async": {
                 "ons": [el["total"]["async_no_router"] for el in gain_by_nb_deps.values()],
@@ -253,6 +254,7 @@ def plot_bar_results(energy_gain_by_nb_deps, param_names):
                 "detail_router_reconfs": [el["total"]["detail_router"]["reconfs"] for el in gain_by_nb_deps.values()],
                 "detail_router_sendings": [el["total"]["detail_router"]["sendings"] for el in gain_by_nb_deps.values()],
                 "detail_router_receives": [el["total"]["detail_router"]["receives"] for el in gain_by_nb_deps.values()],
+                "time_async": [el["total"]["time_async"] for el in gain_by_nb_deps.values()],
             },
         }
         # print(json.dumps(elements, indent=2))
@@ -268,8 +270,9 @@ def plot_bar_results(energy_gain_by_nb_deps, param_names):
         max_bound = 0
         for attribute, measurement in elements.items():
             offset = width * multiplier
-            max_bound = _plot_tot(attribute, ax, bottom, max_bound, measurement, offset, width, x)
-            # max_bound = _plot_detail(attribute, ax, bottom, max_bound, measurement, offset, width, x)
+            # max_bound = _plot_tot(attribute, ax, bottom, max_bound, measurement, offset, width, x)
+            max_bound = _plot_detail(attribute, ax, bottom, max_bound, measurement, offset, width, x)
+            # max_bound = _plot_tot_time(attribute, ax, bottom, max_bound, measurement, offset, width, x)
             multiplier += 1
 
         ax.set_ylabel('Energy (J)')
@@ -296,10 +299,24 @@ def _plot_tot(attribute, ax, bottom, max_bound, measurement, offset, width, x):
     elif attribute == "async":
         rects = ax.bar(x + offset, measurement["ons"], width, bottom=bottom[attribute], label="async (ons)")
         bottom[attribute] = bottom[attribute] + measurement["ons"]
-        ax.bar_label(rects, padding=3)
+        # ax.bar_label(rects, padding=3)
         rects = ax.bar(x + offset, measurement["router"], width, bottom=bottom[attribute], label="async (router)")
         bottom[attribute] = bottom[attribute] + measurement["router"]
         ax.bar_label(rects, padding=3)
+        max_bound = max(max_bound, max(bottom[attribute]))
+    return max_bound
+
+
+def _plot_tot_time(attribute, ax, bottom, max_bound, measurement, offset, width, x):
+    if attribute == "sync":
+        rects = ax.bar(x + offset, measurement["time_sync"], width, bottom=bottom[attribute], label=attribute)
+        bottom[attribute] = bottom[attribute] + measurement["time_sync"]
+        ax.bar_label(rects, padding=3, fmt=lambda val: f"{round(val/3600, 2)} ({round(val/3600/24, 2)}jours)s")
+        max_bound = max(max_bound, max(bottom[attribute]))
+    elif attribute == "async":
+        rects = ax.bar(x + offset, measurement["time_async"], width, bottom=bottom[attribute], label="async (ons)")
+        bottom[attribute] = bottom[attribute] + measurement["time_async"]
+        ax.bar_label(rects, padding=3, fmt=lambda val: f"{round(val/3600, 2)} ({round(val/3600/24, 2)}jours)s")
         max_bound = max(max_bound, max(bottom[attribute]))
     return max_bound
 
