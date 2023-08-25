@@ -229,6 +229,14 @@ def plot_scatter_results(energy_gain_by_nb_deps, param_names):
     plt.show()
 
 
+def plot_surface_results(energy_gain_by_nb_deps, param_names):
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+    for i in range(3):
+        ax.bar([1, 2, 3, 4, 5], [4*i, 5*i + 3, 6*i], zs=[10+i], zdir="y", color=["r", "g", "b"])
+    plt.show()
+
+
 def plot_bar_results(energy_gain_by_nb_deps, param_names):
     for scenario_name, gain_by_nb_deps in energy_gain_by_nb_deps.items():
         # scenario_name = 'esds_generated_data-ud0_od0_30_25-deploy-T0'
@@ -281,13 +289,14 @@ def plot_bar_results(energy_gain_by_nb_deps, param_names):
         ax.set_title(title)
         ax.set_xticks(x + width, gain_by_nb_deps.keys())
         ax.legend(loc='upper left', ncols=3)
-        ax.set_ylim(0, max_bound + 100)
+        # ax.set_ylim(0, max_bound + 100)
+        ax.set_ylim(0, max_bound * 1.1)
 
-        # plt.show()
-        dir_to_save = f"/home/aomond/reconfiguration-esds/concerto-d-results/pycharm_plots/tot/{param_names}"
-        # dir_to_save = f"/home/aomond/reconfiguration-esds/concerto-d-results/pycharm_plots/detail/{param_names}"
-        os.makedirs(dir_to_save, exist_ok=True)
-        plt.savefig(f"{dir_to_save}/{scenario_name}.png")
+        plt.show()
+        # dir_to_save = f"/home/aomond/reconfiguration-esds/concerto-d-results/pycharm_plots/detail_update/{param_names}"
+        # # dir_to_save = f"/home/aomond/reconfiguration-esds/concerto-d-results/pycharm_plots/detail/{param_names}"
+        # os.makedirs(dir_to_save, exist_ok=True)
+        # plt.savefig(f"{dir_to_save}/{scenario_name}.png")
 
 
 def _plot_tot(attribute, ax, bottom, max_bound, measurement, offset, width, x):
@@ -311,12 +320,14 @@ def _plot_tot_time(attribute, ax, bottom, max_bound, measurement, offset, width,
     if attribute == "sync":
         rects = ax.bar(x + offset, measurement["time_sync"], width, bottom=bottom[attribute], label=attribute)
         bottom[attribute] = bottom[attribute] + measurement["time_sync"]
-        ax.bar_label(rects, padding=3, fmt=lambda val: f"{round(val/3600, 2)} ({round(val/3600/24, 2)}jours)s")
+        # ax.bar_label(rects, padding=3, fmt=lambda val: f"{round(val/3600, 2)} ({round(val/3600/24, 2)}jours)s")
+        ax.bar_label(rects, padding=3, fmt=lambda val: f"{round(val/3600/24, 2)}j")
         max_bound = max(max_bound, max(bottom[attribute]))
     elif attribute == "async":
         rects = ax.bar(x + offset, measurement["time_async"], width, bottom=bottom[attribute], label="async (ons)")
         bottom[attribute] = bottom[attribute] + measurement["time_async"]
-        ax.bar_label(rects, padding=3, fmt=lambda val: f"{round(val/3600, 2)} ({round(val/3600/24, 2)}jours)s")
+        # ax.bar_label(rects, padding=3, fmt=lambda val: f"{round(val/3600, 2)} ({round(val/3600/24, 2)}jours)s")
+        ax.bar_label(rects, padding=3, fmt=lambda val: f"{round(val/3600/24, 2)}j")
         max_bound = max(max_bound, max(bottom[attribute]))
     return max_bound
 
@@ -326,27 +337,30 @@ def _plot_detail(attribute, ax, bottom, max_bound, measurement, offset, width, x
         # rects = ax.bar(x + offset, measurement["detail_ons_idles"], width, bottom=bottom[attribute], label="sync ons (idles)")
         # bottom[attribute] = bottom[attribute] + measurement["detail_ons_idles"]
         rects = ax.bar(x + offset, measurement["detail_ons_reconfs"], width, bottom=bottom[attribute], label="sync ons (reconfs)")
-        # ax.bar_label(rects, padding=3)
         bottom[attribute] = bottom[attribute] + measurement["detail_ons_reconfs"]
+        ax.bar_label(rects, padding=3)
         rects = ax.bar(x + offset, measurement["detail_ons_sendings"], width, bottom=bottom[attribute], label="sync ons (requests)")
-        # ax.bar_label(rects, padding=3)
         bottom[attribute] = bottom[attribute] + measurement["detail_ons_sendings"]
+        # ax.bar_label(rects, padding=3)
         rects = ax.bar(x + offset, measurement["detail_ons_receives"], width, bottom=bottom[attribute], label="sync ons (responses)")
         bottom[attribute] = bottom[attribute] + measurement["detail_ons_receives"]
         ax.bar_label(rects, padding=3)
         max_bound = max(max_bound, max(bottom[attribute]))
     elif attribute == "async":
+        # rects = ax.bar(x + offset, measurement["detail_ons_idles"], width, bottom=bottom[attribute], label="async ons (idles)")
+        # bottom[attribute] = bottom[attribute] + measurement["detail_ons_idles"]
+        # ax.bar_label(rects, padding=3)
         rects = ax.bar(x + offset, measurement["detail_ons_reconfs"], width, bottom=bottom[attribute], label="async ons (reconfs)")
         bottom[attribute] = bottom[attribute] + measurement["detail_ons_reconfs"]
-        # ax.bar_label(rects, padding=3)
+        ax.bar_label(rects, padding=3)
         rects = ax.bar(x + offset, measurement["detail_ons_sendings"], width, bottom=bottom[attribute], label="async ons (requests)")
         bottom[attribute] = bottom[attribute] + measurement["detail_ons_sendings"]
         # ax.bar_label(rects, padding=3)
         rects = ax.bar(x + offset, measurement["detail_ons_receives"], width, bottom=bottom[attribute], label="async ons (responses)")
         bottom[attribute] = bottom[attribute] + measurement["detail_ons_receives"]
         # ax.bar_label(rects, padding=3)
-        rects = ax.bar(x + offset, measurement["detail_router_idles"], width, bottom=bottom[attribute], label="async router (idles)")
-        bottom[attribute] = bottom[attribute] + measurement["detail_router_idles"]
+        # rects = ax.bar(x + offset, measurement["detail_router_idles"], width, bottom=bottom[attribute], label="async router (idles)")
+        # bottom[attribute] = bottom[attribute] + measurement["detail_router_idles"]
         # ax.bar_label(rects, padding=3)
         rects = ax.bar(x + offset, measurement["detail_router_sendings"], width, bottom=bottom[attribute], label="async router (requests)")
         bottom[attribute] = bottom[attribute] + measurement["detail_router_sendings"]
@@ -367,25 +381,30 @@ if __name__ == "__main__":
     # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-0-1.38-nbiot-pullc.yaml"
     # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-1.2-1.38-lora-pullc.yaml"
     # results_dir = f"/home/aomond/reconfiguration-esds/concerto-d-results/to_analyse_test/"
-    results_dir = f"/home/aomond/reconfiguration-esds/to_analyse/"
+    results_dir = "/home/aomond/reconfiguration-esds/to_analyse/"
     # param = "0-1.339-lora-pullc"
     # param = "1.237-1.339-lora-pullc"
-    param = "1.358-1.339-lora-pullc"
+    # param = "1.358-1.339-lora-pullc"
     # param = "0.181-1.5778-lora-pullc"
-    global_results = {}
-    for file in os.listdir(results_dir):
-        if param in file:
-            with open(os.path.join(results_dir,file)) as f:
-                global_results.update(yaml.safe_load(f))
+    params_list = ["0-1.339-lora-pullc"]
+    # params_list = ["0-1.339-lora-pullc", "1.237-1.339-lora-pullc", "1.358-1.339-lora-pullc"]
+    # params_list = ["0-1.339-lora-pullc", "0-1.339-nbiot-pullc", "1.237-1.339-lora-pullc", "1.237-1.339-nbiot-pullc"]
+    for param in params_list:
+        global_results = {}
+        for file in os.listdir(results_dir):
+            if param in file and "T1" in file and "deploy" in file:
+                with open(os.path.join(results_dir,file)) as f:
+                    global_results.update(yaml.safe_load(f))
 
-    # results_dir = "/home/aomond/reconfiguration-esds/saved_results/global_results-1.2-1.38-lora-pullc-7-overlaps.yaml"
-    # results_dir = f"/home/aomond/reconfiguration-esds/saved_results/global_results-{param}-7-overlaps.yaml"
+        # results_dir = "/home/aomond/reconfiguration-esds/saved_results/global_results-1.2-1.38-lora-pullc-7-overlaps.yaml"
+        # results_dir = f"/home/aomond/reconfiguration-esds/saved_results/global_results-{param}-7-overlaps.yaml"
 
-    # print_energy_results(global_results)
-    # analyse_energy_results(global_results)
-    energy_gains = compute_energy_gain(global_results)
-    energy_gain_by_nb_deps = compute_energy_gain_by_nb_deps(energy_gains)
-    # print(json.dumps(energy_gains, indent=4))
-    # print_energy_gain(energy_gains)
-    plot_bar_results(energy_gain_by_nb_deps, param)
-    # plot_scatter_results(energy_gain_by_nb_deps, param)
+        # print_energy_results(global_results)
+        # analyse_energy_results(global_results)
+        energy_gains = compute_energy_gain(global_results)
+        energy_gain_by_nb_deps = compute_energy_gain_by_nb_deps(energy_gains)
+        # print(json.dumps(energy_gains, indent=4))
+        # print_energy_gain(energy_gains)
+        plot_bar_results(energy_gain_by_nb_deps, param)
+        # plot_scatter_results(energy_gain_by_nb_deps, param)
+        # plot_surface_results(None, None)
