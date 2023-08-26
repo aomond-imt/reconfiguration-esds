@@ -4,7 +4,7 @@ from typing import List
 def get_next_overlap(time_start: float, num_node_a: int, num_node_b: int, nodes_schedule: List, version: str):
     schedule_a = nodes_schedule[num_node_a]
     schedule_b = nodes_schedule[num_node_b]
-    offset_polling = 0.5  # Worst case for contact between nodes due to wait between 2 pings
+    offset_polling = 2.85  # Worst case for contact between nodes due to wait between 2 pings
 
     if version == "sync":
         for item_a, item_b in zip(schedule_a, schedule_b):

@@ -15,7 +15,7 @@ sys.path.insert(1, f"{current_dir_name}/..")
 
 LORA_POWER = 0.16
 LONGER_POWER = 0.16
-FREQUENCE_POLLING = 0.5
+FREQUENCE_POLLING = 1
 
 
 def execute(api: Node):
