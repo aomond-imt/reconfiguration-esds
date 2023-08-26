@@ -18,9 +18,6 @@ receive_periods_per_node:
   - - 20212.731
     - 20213.23
     - *id001
-  - - 20213.23
-    - 20231.44
-    - {}
   1:
   - - 3064.77
     - 3184.77
@@ -63,9 +60,6 @@ reconf_periods_per_node:
   2: []
 sending_periods_per_node:
   0:
-  - - 1879.28
-    - 1884.03
-    - {}
   - - 1884.03
     - 1996.989
     - &id003
@@ -105,9 +99,6 @@ sending_periods_per_node:
   - - 20129.552
     - 20213.23
     - *id004
-  - - 20213.23
-    - 20231.44
-    - {}
   2: []
 title: esds_generated_data-uptimes-dao-120-sec-sync-update-T1-1-pull
 uptimes_periods_per_node:

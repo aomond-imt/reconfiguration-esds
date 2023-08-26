@@ -229,9 +229,6 @@ receive_periods_per_node:
   - - 289223.715
     - 289224.22
     - *id001
-  - - 289224.22
-    - 289241.08
-    - {}
   2: []
 reconf_periods_per_node:
   0:
@@ -483,13 +480,7 @@ sending_periods_per_node:
   - - 289209.319
     - 289224.22
     - *id002
-  - - 289224.22
-    - 289241.08
-    - {}
-  1:
-  - - 3069.76
-    - 3086.45
-    - {}
+  1: []
   2: []
 title: esds_generated_data-uptimes-dao-60-sec-sync-deploy-T1-1-pull
 uptimes_periods_per_node:

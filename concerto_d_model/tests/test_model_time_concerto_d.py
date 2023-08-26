@@ -5,7 +5,7 @@ from concerto_d_model.dependency_compute_model import DependencyComputeModel
 from concerto_d_model.model_time_concerto_d import _compute_receive_periods_from_sending_periods, \
     count_active_intervals, count_active_intervals_sending, _compute_reconf_periods_per_node, \
     _compute_sending_periods_per_node, _get_deploy_parallel_use_case_model, compute_all_time_parameters_esds, \
-    _get_update_parallel_use_case_model
+    _get_update_parallel_use_case_model, _compute_uptimes_periods_per_node, compute_esds_periods
 
 
 def test_compute_uses_overlaps_with_provide():
@@ -463,6 +463,27 @@ class TestComputeAllTimeParametersEsds:
         assert m == m_time == 8103.5
         assert uptime_schedule == node_schedules
 
+        # Test uptimes generated
+        expe_parameters, title = compute_esds_periods(all_time_parameters_esds, m, m_time, "test", 5, "test", tts, "pull", uptime_schedule, "sync")
+        duration = uptime_schedule[0][0][1]
+        assert expe_parameters["uptimes_periods_per_node"] == {
+            0: [[1100, 1100 + 60], [2100, 2100 + 60], [3100, 3100 + 60], [4100, 4100 + 60], [5100, 5100 + 60], [6100, 6100 + 60], [7100, 7100 + 60], [8100, 8103.5]],
+            1: [[1200, 1200 + 60], [2150, 2150 + 60], [3200, 3200 + 60], [4200, 4200 + 60], [5200, 5200 + 60], [6200, 6200 + 60], [7150, 7150 + 60]],
+            2: [[1300, 1300 + 60], [2300, 2300 + 60], [3300, 3300 + 60], [4300, 4300 + 60], [5080, 5080 + 60], [6300, 6300 + 60], [7080, 7080 + 60]],
+            3: [[1400, 1400 + 60], [2400, 2400 + 60], [3400, 3400 + 60], [4400, 4400 + 60], [5130, 5130 + 60], [6400, 6400 + 60], [7200, 7200 + 60], [8103, 8103.5]],
+            4: [[1500, 1500 + 60], [2500, 2500 + 60], [3500, 3500 + 60], [4500, 4500 + 60], [5500, 5500 + 60], [6100, 6100 + 60], [7500, 7500 + 60], [8102, 8103.5]],
+            5: [[1600, 1600 + 60], [2600, 2600 + 60], [3600, 3600 + 60], [4600, 4600 + 60], [5600, 5600 + 60], [6100.5, 6100.5 + 60], [7600, 7600 + 60], [8101, 8103.5]],
+            6: []
+        }
+        assert expe_parameters["reconf_periods_per_node"] == {
+            0: [[1100, 1130, 1], [1130, 2150.5, 0], [2150.5, 2180.5, 1], [2180.5, 5100.5, 0], [5100.5, 5130.5, 1], [5130.5, 5160.5, 1], [5160.5, 6100.5, 0], [6100.5, 6101, 1], [6101, 6130.5, 2], [6130.5, 6131, 1], [6131, 6161, 1]],
+            1: [[1200, 1230, 1], [1230, 1260, 1]],
+            2: [[1300, 1330, 1], [1330, 1360, 1]],
+            3: [[1400, 1430, 1], [1430, 1460, 1]],
+            4: [[1500, 1530, 1], [1530, 1560, 1]],
+            5: [[1600, 1630, 1], [1630, 1660, 1]],
+            6: []
+        }
 
     def test_update_5_deps(self):
         tts = {

@@ -227,61 +227,10 @@ def generate_mascots_schedules():
                             # if nb_deps == 5:
                             #     results_dict[name_uptime][version_concerto_d][reconf_name][trans_times] = {nb_deps: result_str}
 
-                            # Generate ESDS configuration
-                            esds_data = _compute_esds_data_from_results(all_results_esds)
-
-                            ## Uptime periods
-                            duration = uptime_schedule[0][0][1]
-                            uptimes_periods_per_node = _compute_uptimes_periods_per_node(uptime_schedule, m_time, duration)
-                            router_key = nb_deps+1
-
-                            ## Reconf periods
-                            reconf_periods_per_node = _compute_reconf_periods_per_node(esds_data)
-                            merged_reconf_periods_per_node = {node_id: count_active_intervals(interval_list) for node_id, interval_list in reconf_periods_per_node.items()}
-
-                            ## Requests periods
-                            sending_periods_per_node = _compute_sending_periods_per_node(esds_data)
-                            merged_sending_periods_per_node = {node_id: count_active_intervals_sending(interval_list) for node_id, interval_list in sending_periods_per_node.items()}
-                            sending_periods_during_uptime_per_node = _compute_sending_periods_during_uptime_per_node(uptimes_periods_per_node, merged_sending_periods_per_node)
-
-                            ## Responses periods
-                            receive_periods_per_node = _compute_receive_periods_from_sending_periods(sending_periods_per_node)
-                            merged_receive_periods_per_node = {node_id: count_active_intervals_sending(interval_list) for node_id, interval_list in receive_periods_per_node.items()}
-                            receive_periods_during_uptime_per_node = _compute_sending_periods_during_uptime_per_node(uptimes_periods_per_node, merged_receive_periods_per_node)
-                            # overlaps_periods_per_dep = _compute_uses_overlaps_with_provide(uptimes_periods_per_node)
-                            # receive_periods_during_uptime_per_node = _compute_sending_periods_during_uptime_per_node(overlaps_periods_per_dep, merged_receive_periods_per_node)
-
-                            ## Router periods
-                            if version_concerto_d == "async":
-                                ### Uptimes
-                                router_uptimes_periods = _compute_router_uptimes_periods(uptimes_periods_per_node)
-                                uptimes_periods_per_node[router_key] = router_uptimes_periods
-
-                                ### Receive
-                                all_receive_periods = []
-                                for receive_periods in receive_periods_per_node.values():
-                                    all_receive_periods.extend(receive_periods)
-                                router_receive_periods = {router_key: count_active_intervals_sending(all_receive_periods)}
-                                router_receive_periods_during_uptime = _compute_sending_periods_during_uptime_per_node(uptimes_periods_per_node, router_receive_periods)
-                                receive_periods_during_uptime_per_node.update(router_receive_periods_during_uptime)
-                            else:
-                                uptimes_periods_per_node[router_key] = []
-                                receive_periods_during_uptime_per_node[router_key] = []
-
-                            merged_reconf_periods_per_node[router_key] = []
-                            sending_periods_during_uptime_per_node[router_key] = []
-
-                            # Expe parameters file
-                            title = f"esds_generated_data-{name_uptime}-{version_concerto_d}-{reconf_name}-{trans_times}-{nb_deps}-{type_synchro}"
-                            expe_parameters = {
-                                "title": title,
-                                "nb_nodes": nb_deps + 2,
-                                "uptimes_periods_per_node": uptimes_periods_per_node,
-                                "reconf_periods_per_node": merged_reconf_periods_per_node,
-                                "sending_periods_per_node": sending_periods_during_uptime_per_node,
-                                "receive_periods_per_node": receive_periods_during_uptime_per_node,
-                                "max_execution_duration": m
-                            }
+                            expe_parameters, title = compute_esds_periods(all_results_esds, m, m_time, name_uptime,
+                                                                          nb_deps, reconf_name, trans_times,
+                                                                          type_synchro, uptime_schedule,
+                                                                          version_concerto_d)
 
                             all_expe_parameters[title] = expe_parameters
 
@@ -306,6 +255,68 @@ def generate_mascots_schedules():
 
     # print(json.dumps(results_dict, indent=4))
     return all_expe_parameters
+
+
+def compute_esds_periods(all_results_esds, m, m_time, name_uptime, nb_deps, reconf_name, trans_times, type_synchro,
+                         uptime_schedule, version_concerto_d):
+    # Generate ESDS configuration
+    esds_data = _compute_esds_data_from_results(all_results_esds)
+
+    ## Uptime periods
+    duration = uptime_schedule[0][0][1]
+    uptimes_periods_per_node = _compute_uptimes_periods_per_node(uptime_schedule, m_time, duration)
+    router_key = nb_deps + 1
+
+    ## Reconf periods
+    reconf_periods_per_node = _compute_reconf_periods_per_node(esds_data)
+    merged_reconf_periods_per_node = {node_id: count_active_intervals(interval_list) for node_id, interval_list in
+                                      reconf_periods_per_node.items()}
+
+    ## Requests periods
+    sending_periods_per_node = _compute_sending_periods_per_node(esds_data)
+    merged_sending_periods_per_node = {node_id: count_active_intervals_sending(interval_list) for node_id, interval_list
+                                       in sending_periods_per_node.items()}
+    sending_periods_during_uptime_per_node = _compute_sending_periods_during_uptime_per_node(uptimes_periods_per_node,
+                                                                                             merged_sending_periods_per_node)
+    ## Responses periods
+    receive_periods_per_node = _compute_receive_periods_from_sending_periods(sending_periods_per_node)
+    merged_receive_periods_per_node = {node_id: count_active_intervals_sending(interval_list) for node_id, interval_list
+                                       in receive_periods_per_node.items()}
+    receive_periods_during_uptime_per_node = _compute_sending_periods_during_uptime_per_node(uptimes_periods_per_node,
+                                                                                             merged_receive_periods_per_node)
+    # overlaps_periods_per_dep = _compute_uses_overlaps_with_provide(uptimes_periods_per_node)
+    # receive_periods_during_uptime_per_node = _compute_sending_periods_during_uptime_per_node(overlaps_periods_per_dep, merged_receive_periods_per_node)
+    ## Router periods
+    if version_concerto_d == "async":
+        ### Uptimes
+        router_uptimes_periods = _compute_router_uptimes_periods(uptimes_periods_per_node)
+        uptimes_periods_per_node[router_key] = router_uptimes_periods
+
+        ### Receive
+        all_receive_periods = []
+        for receive_periods in receive_periods_per_node.values():
+            all_receive_periods.extend(receive_periods)
+        router_receive_periods = {router_key: count_active_intervals_sending(all_receive_periods)}
+        router_receive_periods_during_uptime = _compute_sending_periods_during_uptime_per_node(uptimes_periods_per_node,
+                                                                                               router_receive_periods)
+        receive_periods_during_uptime_per_node.update(router_receive_periods_during_uptime)
+    else:
+        uptimes_periods_per_node[router_key] = []
+        receive_periods_during_uptime_per_node[router_key] = []
+    merged_reconf_periods_per_node[router_key] = []
+    sending_periods_during_uptime_per_node[router_key] = []
+    # Expe parameters file
+    title = f"esds_generated_data-{name_uptime}-{version_concerto_d}-{reconf_name}-{trans_times}-{nb_deps}-{type_synchro}"
+    expe_parameters = {
+        "title": title,
+        "nb_nodes": nb_deps + 2,
+        "uptimes_periods_per_node": uptimes_periods_per_node,
+        "reconf_periods_per_node": merged_reconf_periods_per_node,
+        "sending_periods_per_node": sending_periods_during_uptime_per_node,
+        "receive_periods_per_node": receive_periods_during_uptime_per_node,
+        "max_execution_duration": m
+    }
+    return expe_parameters, title
 
 
 def compute_all_time_parameters_esds(list_deps, name_deps, nb_deps, type_synchro, uptime_schedule_nodes, version_concerto_d):
@@ -392,9 +403,10 @@ def _compute_sending_periods_during_uptime_per_node(uptimes_nodes, sending_perio
     result = {node_id: [] for node_id in sending_periods.keys()}
     for node_id, periods in sending_periods.items():
         for start_period, end_period, send_nodes in periods:
-            for start_uptime, end_uptime in uptimes_nodes[node_id]:
-                if start_period < end_uptime and end_period > start_uptime:
-                    result[node_id].append([max(start_uptime, start_period), min(end_period, end_uptime), send_nodes])
+            if send_nodes != {}:
+                for start_uptime, end_uptime in uptimes_nodes[node_id]:
+                    if start_period < end_uptime and end_period > start_uptime:
+                        result[node_id].append([max(start_uptime, start_period), min(end_period, end_uptime), send_nodes])
     return result
 
 
