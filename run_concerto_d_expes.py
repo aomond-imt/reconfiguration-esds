@@ -123,7 +123,7 @@ def _load_energetic_expe_results_from_title(title, idle_results_dir, reconf_resu
         node_id = int(Path(node_idle_file).stem)
         energetic_results_expe["idles"][node_id] = {"node_conso": results_idle["node_conso"], "comms_cons": results_idle["comms_cons"]}
         energetic_results_expe["reconfs"][node_id] = {"node_conso": results_reconf["node_conso"], "comms_cons": results_reconf["comms_cons"]}
-        energetic_results_expe["sendings"][node_id] = {"node_conso": results_send["node_conso"], "comms_cons": results_send["comms_cons"], "tot_msg_sent": results_send["tot_msg_sent"], "tot_wait_polling": results_send["tot_wait_polling"]}
+        energetic_results_expe["sendings"][node_id] = {"node_conso": results_send["node_conso"], "comms_cons": results_send["comms_cons"], "tot_msg_sent": results_send["tot_msg_sent"], "tot_ack_received": results_send["tot_ack_received"], "tot_wait_polling": results_send["tot_wait_polling"]}
         energetic_results_expe["receives"][node_id] = {"node_conso": results_receive["node_conso"], "comms_cons": results_receive["comms_cons"], "tot_msg_received": results_receive["tot_msg_received"], "tot_msg_responded": results_receive["tot_msg_responded"]}
 
     return energetic_results_expe
@@ -226,18 +226,6 @@ def main(simu_to_launch_dir="expe_esds_parameter_files_to_compute"):
             )
             parallel_execs.append(exec_esds)
 
-        # print("Dump results")
-        # global_results_path = f"global_results-{joined_params}.yaml"
-        # with open(os.path.join(root, global_results_path), "w") as f:
-        #     yaml.safe_dump(global_results, f)
-        # print("Results dumped")
-        # print(f"All passed in {sum_expes_duration:.2f}s")
-        # global_results = {}
-        # for file in os.listdir(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/to_analyse_test/"):
-        #     with open(os.path.join(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/to_analyse_test/", file)) as f:
-        #         global_results.update(yaml.safe_load(f))
-        # print_results.print_energy_results(global_results)
-
         for running_exec in parallel_execs:
             try:
                 running_exec.get()
@@ -259,6 +247,18 @@ def main(simu_to_launch_dir="expe_esds_parameter_files_to_compute"):
                 print(f"Expe done: {nb_expes_done + 1}/{nb_expes_tot}")
                 nb_expes_done += 1
         nb_params_done += 1
+
+        # print("Dump results")
+        # global_results_path = f"global_results-{joined_params}.yaml"
+        # with open(os.path.join(root, global_results_path), "w") as f:
+        #     yaml.safe_dump(global_results, f)
+        # print("Results dumped")
+        # print(f"All passed in {sum_expes_duration:.2f}s")
+        # global_results = {}
+        # for file in os.listdir(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/to_analyse_test/"):
+        #     with open(os.path.join(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/to_analyse_test/", file)) as f:
+        #         global_results.update(yaml.safe_load(f))
+        # print_results.print_energy_results(global_results)
 
 
 def _execute_esds_simulation(current_test_path, expe_esds_verification_files, global_results, idle_results_dir,

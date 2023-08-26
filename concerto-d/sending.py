@@ -43,7 +43,7 @@ def execute(api: Node):
     commsConso = api.args["commsConso"]
     api.log(f"Interface: {interface_name}")
     tot_sending_time_flat, tot_no_sending_time_flat = 0, 0
-    tot_msg_sent, tot_wait_polling = {}, {}
+    tot_msg_sent, tot_ack_received, tot_wait_polling = {}, {}, {}
     sending_cons = PowerStatesComms(api)
     sending_cons.set_power(interface_name, 0, commsConso, commsConso)
 
@@ -75,11 +75,20 @@ def execute(api: Node):
                             end_period = end - api.read("clock")
                             data_to_send = size * count
                             api.sendt(interface_name, (node_id, sender_id, data_to_send), data_to_send, sender_id, timeout=end_period)
-                            # Save wait_polling
+                            # Save nb msg sent
                             if data_to_send not in tot_msg_sent.keys():
                                 tot_msg_sent[data_to_send] = 1
                             else:
                                 tot_msg_sent[data_to_send] += 1
+
+                            code, data = api.receivet(interface_name, timeout=end_period)
+                            api.log(f"Receive ack: {data}")
+                            if data is not None:
+                                if data_to_send not in tot_ack_received.keys():
+                                    tot_ack_received[data_to_send] = 1
+                                else:
+                                    tot_ack_received[data_to_send] += 1
+
                     if api.read("clock") < end:
                         wait_polling = min(FREQUENCE_POLLING, end - api.read("clock"))
                         api.wait(wait_polling)
@@ -108,6 +117,7 @@ def execute(api: Node):
         "node_conso": 0,
         "comms_cons": float(round(sending_cons_energy, 2)),
         "tot_msg_sent": tot_msg_sent,
+        "tot_ack_received": tot_ack_received,
         "tot_wait_polling": tot_wait_polling
     }
     simulation_functions.print_esds_node_results(results, api)

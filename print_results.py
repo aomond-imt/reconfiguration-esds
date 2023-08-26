@@ -28,6 +28,7 @@ def _gather_results(global_results):
                     tot += s[name]
             s.update({
                 "tot_msg_sent": energy_results["sendings"][node_id]["tot_msg_sent"],
+                "tot_ack_received": energy_results["sendings"][node_id]["tot_ack_received"],
                 "tot_wait_polling": energy_results["sendings"][node_id]["tot_wait_polling"],
                 "tot_msg_received": energy_results["receives"][node_id]["tot_msg_received"],
                 "tot_msg_responded": energy_results["receives"][node_id]["tot_msg_responded"]
