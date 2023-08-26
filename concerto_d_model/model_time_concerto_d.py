@@ -190,44 +190,20 @@ def generate_mascots_schedules():
                             with open(f"/home/aomond/concerto-d-projects/experiment_files/parameters/transitions_times/transitions_times-1-30-deps12-{trans_times[1:]}.json") as f:
                                 tts = json.load(f)["transitions_times"]
 
-                            uptime_schedule = uptime_schedule_nodes[:nb_deps+1]
-
                             # print(name_uptime, version_concerto_d, reconf_name, trans_times)
                             if reconf_name == "deploy":
                                 list_deps, name_deps = _get_deploy_parallel_use_case_model(tts, nb_deps)
                             else:
                                 list_deps, name_deps = _get_update_parallel_use_case_model(tts, nb_deps)
 
-                            for dep in list_deps:
-                                dep.nodes_schedules = uptime_schedule
-
-                            m = 0
-                            j = 0
-
-                            # Create result dict for 1 server and 5 deps
-                            all_results_esds = []
-                            sum_reconf_duration = 0
-                            for dep in list_deps:
-                                dct, result_dep = dep.compute_time(version_concerto_d, type_synchro)
-                                # print(dep.node_id, name_deps[j], dct, result_dep)
-                                connected_node_id = dep.connected_dep.node_id if dep.type_dep in ["provide", "use"] else None
-                                all_results_esds.append({"node_id": dep.node_id, "connected_node_id": connected_node_id, "name_dep": name_deps[j], "type_dep": dep.type_dep, "dct": dct, "trans_times": result_dep})
-                                if dct > m:
-                                    m = dct
-
-                                for res in result_dep:
-                                    for val in res.values():
-                                        start, end = val["start"], val["end"]
-                                        sum_reconf_duration += end - start
-
-                                # print(name_deps[j], dct, result_dep)
-                                j += 1
-                            # for dep in [self.in_config0, self.in_config1, self.in_config2, self.in_config3, self.in_config4,
-                            #             self.in_service0, self.in_service1, self.in_service2, self.in_service3, self.in_service4]:
-                            #     dct, result_dep = dep.compute_time()
-
-                            # TODO: retirer le temps du début sur toute la reconf et pas uniquement ici
-                            m_time = m
+                            all_results_esds, m, m_time, uptime_schedule = compute_all_time_parameters_esds(
+                                list_deps,
+                                name_deps,
+                                nb_deps,
+                                type_synchro,
+                                uptime_schedule_nodes,
+                                version_concerto_d
+                            )
                             # offset_start = min(uptime_schedule, key=lambda s: s[0][0] if s[0][0] != -1 else math.inf)[0][0]
                             # m_time = m - offset_start
                             # # print(f"removed {offset_start}")
@@ -330,6 +306,36 @@ def generate_mascots_schedules():
 
     # print(json.dumps(results_dict, indent=4))
     return all_expe_parameters
+
+
+def compute_all_time_parameters_esds(list_deps, name_deps, nb_deps, type_synchro, uptime_schedule_nodes, version_concerto_d):
+    uptime_schedule = uptime_schedule_nodes[:nb_deps + 1]
+    for dep in list_deps:
+        dep.nodes_schedules = uptime_schedule
+    m = 0
+    j = 0
+    # Create result dict for 1 server and 5 deps
+    all_results_esds = []
+    sum_reconf_duration = 0
+    for dep in list_deps:
+        dct, result_dep = dep.compute_time(version_concerto_d, type_synchro)
+        # print(dep.node_id, name_deps[j], dct, result_dep)
+        connected_node_id = dep.connected_dep.node_id if dep.type_dep in ["provide", "use"] else None
+        all_results_esds.append(
+            {"node_id": dep.node_id, "connected_node_id": connected_node_id, "name_dep": name_deps[j],
+             "type_dep": dep.type_dep, "dct": dct, "trans_times": result_dep})
+        if dct > m:
+            m = dct
+
+        for res in result_dep:
+            for val in res.values():
+                start, end = val["start"], val["end"]
+                sum_reconf_duration += end - start
+
+        # print(name_deps[j], dct, result_dep)
+        j += 1
+    m_time = m
+    return all_results_esds, m, m_time, uptime_schedule
 
 
 def _compute_uses_overlaps_with_provide(uptimes_periods_per_node):

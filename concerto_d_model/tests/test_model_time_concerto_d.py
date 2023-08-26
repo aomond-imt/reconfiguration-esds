@@ -1,9 +1,11 @@
 import json
 
 from concerto_d_model import model_time_concerto_d
+from concerto_d_model.dependency_compute_model import DependencyComputeModel
 from concerto_d_model.model_time_concerto_d import _compute_receive_periods_from_sending_periods, \
     count_active_intervals, count_active_intervals_sending, _compute_reconf_periods_per_node, \
-    _compute_sending_periods_per_node, _get_deploy_parallel_use_case_model
+    _compute_sending_periods_per_node, _get_deploy_parallel_use_case_model, compute_all_time_parameters_esds, \
+    _get_update_parallel_use_case_model
 
 
 def test_compute_uses_overlaps_with_provide():
@@ -198,3 +200,335 @@ class TestSyntheticUseCase:
         assert in_service2.compute_time(version_concerto_d) == (34.59, [{0: {"start": 34.59, "end": 34.59}}])
         assert in_service3.compute_time(version_concerto_d) == (34.59, [{0: {"start": 34.59, "end": 34.59}}])
         assert in_service4.compute_time(version_concerto_d) == (34.59, [{0: {"start": 34.59, "end": 34.59}}])
+
+
+class TestComputeAllTimeParametersEsds:
+    def test_bsn_avant(self):
+        node_schedules = [
+            [[0, 50]],
+            [[30, 50]]
+        ]
+        use_0 = DependencyComputeModel("use", 0, None, [], [[15]], node_schedules)
+        provide_0 = DependencyComputeModel("provide", 1, use_0, [], [[10]], node_schedules)
+        use_0.connected_dep = provide_0
+        list_deps = [
+            use_0,
+            provide_0
+        ]
+        all_time_parameters_esds, m, m_time, uptime_schedule = model_time_concerto_d.compute_all_time_parameters_esds(
+            list_deps,
+            ["use_0", "provide_0"],
+            1,
+            "pull",
+            node_schedules,
+            "sync"
+        )
+        assert all_time_parameters_esds == [
+            {"node_id": 0, "connected_node_id": 1, "name_dep": "use_0", "type_dep": "use", "dct": 40, "trans_times": [{0: {"start": 0, "end": 15}}]},
+            {"node_id": 1, "connected_node_id": 0, "name_dep": "provide_0", "type_dep": "provide", "dct": 40, "trans_times": [{0: {"start": 30, "end": 40}}]},
+        ]
+        assert m == m_time == 40
+        assert uptime_schedule == node_schedules
+
+    def test_bsn_apres(self):
+        node_schedules = [
+            [[2.52, 60]],
+            [[29.34, 60]]
+        ]
+        use_0 = DependencyComputeModel("use", 0, None, [], [[45.12]], node_schedules)
+        provide_0 = DependencyComputeModel("provide", 1, use_0, [], [[24.13]], node_schedules)
+        use_0.connected_dep = provide_0
+        list_deps = [
+            use_0,
+            provide_0
+        ]
+        all_time_parameters_esds, m, m_time, uptime_schedule = model_time_concerto_d.compute_all_time_parameters_esds(
+            list_deps,
+            ["use_0", "provide_0"],
+            1,
+            "pull",
+            node_schedules,
+            "sync"
+        )
+        assert all_time_parameters_esds == [
+            {"node_id": 0, "connected_node_id": 1, "name_dep": "use_0", "type_dep": "use", "dct": 53.47, "trans_times": [{0: {"start": 2.52, "end": 47.64}}]},
+            {"node_id": 1, "connected_node_id": 0, "name_dep": "provide_0", "type_dep": "provide", "dct": 53.47, "trans_times": [{0: {"start": 29.34, "end": 53.47}}]},
+        ]
+        assert m == m_time == 53.47
+        assert uptime_schedule == node_schedules
+
+    def test_bsn_next(self):
+        node_schedules = [
+            [[2.52, 60], [2120, 60]],
+            [[29.34, 60], [2100, 60]]
+        ]
+        use_0 = DependencyComputeModel("use", 0, None, [], [[65]], node_schedules)
+        provide_0 = DependencyComputeModel("provide", 1, use_0, [], [[10]], node_schedules)
+        use_0.connected_dep = provide_0
+        list_deps = [
+            use_0,
+            provide_0
+        ]
+        all_time_parameters_esds, m, m_time, uptime_schedule = model_time_concerto_d.compute_all_time_parameters_esds(
+            list_deps,
+            ["use_0", "provide_0"],
+            1,
+            "pull",
+            node_schedules,
+            "sync"
+        )
+        assert all_time_parameters_esds == [
+            {"node_id": 0, "connected_node_id": 1, "name_dep": "use_0", "type_dep": "use", "dct": 2120.5, "trans_times": [{0: {"start": 2.52, "end": 67.52}}]},
+            {"node_id": 1, "connected_node_id": 0, "name_dep": "provide_0", "type_dep": "provide", "dct": 39.34, "trans_times": [{0: {"start": 29.34, "end": 39.34}}]},
+        ]
+        assert m == m_time == 2120.5
+        assert uptime_schedule == node_schedules
+
+    def test_provide_avant(self):
+        node_schedules = [
+            [[23, 60], [2120, 60]],
+            [[10, 60], [2100, 60]]
+        ]
+        use_0 = DependencyComputeModel("use", 0, None, [], [[20]], node_schedules)
+        provide_0 = DependencyComputeModel("provide", 1, use_0, [], [[6]], node_schedules)
+        use_0.connected_dep = provide_0
+        list_deps = [
+            use_0,
+            provide_0
+        ]
+        all_time_parameters_esds, m, m_time, uptime_schedule = model_time_concerto_d.compute_all_time_parameters_esds(
+            list_deps,
+            ["use_0", "provide_0"],
+            1,
+            "pull",
+            node_schedules,
+            "sync"
+        )
+        assert all_time_parameters_esds == [
+            {"node_id": 0, "connected_node_id": 1, "name_dep": "use_0", "type_dep": "use", "dct": 43, "trans_times": [{0: {"start": 23, "end": 43}}]},
+            {"node_id": 1, "connected_node_id": 0, "name_dep": "provide_0", "type_dep": "provide", "dct": 16, "trans_times": [{0: {"start": 10, "end": 16}}]},
+        ]
+        assert m == m_time == 43
+        assert uptime_schedule == node_schedules
+
+    def test_provide_next(self):
+        node_schedules = [
+            [[23, 60], [2120, 60]],
+            [[10, 60], [2100, 60]]
+        ]
+        use_0 = DependencyComputeModel("use", 0, None, [], [[21]], node_schedules)
+        provide_0 = DependencyComputeModel("provide", 1, use_0, [], [[62]], node_schedules)
+        use_0.connected_dep = provide_0
+        list_deps = [
+            use_0,
+            provide_0
+        ]
+        all_time_parameters_esds, m, m_time, uptime_schedule = model_time_concerto_d.compute_all_time_parameters_esds(
+            list_deps,
+            ["use_0", "provide_0"],
+            1,
+            "pull",
+            node_schedules,
+            "sync"
+        )
+        assert all_time_parameters_esds == [
+            {"node_id": 0, "connected_node_id": 1, "name_dep": "use_0", "type_dep": "use", "dct": 2120.5, "trans_times": [{0: {"start": 23, "end": 44}}]},
+            {"node_id": 1, "connected_node_id": 0, "name_dep": "provide_0", "type_dep": "provide", "dct": 72, "trans_times": [{0: {"start": 10, "end": 72}}]},
+        ]
+        assert m == m_time == 2120.5
+        assert uptime_schedule == node_schedules
+
+    def test_provide_pdt(self):
+        node_schedules = [
+            [[23, 60], [2120, 60]],
+            [[10, 60], [2100, 60]]
+        ]
+        use_0 = DependencyComputeModel("use", 0, None, [], [[21]], node_schedules)
+        provide_0 = DependencyComputeModel("provide", 1, use_0, [], [[32, 5]], node_schedules)
+        use_0.connected_dep = provide_0
+        list_deps = [
+            use_0,
+            provide_0
+        ]
+        all_time_parameters_esds, m, m_time, uptime_schedule = model_time_concerto_d.compute_all_time_parameters_esds(
+            list_deps,
+            ["use_0", "provide_0"],
+            1,
+            "pull",
+            node_schedules,
+            "sync"
+        )
+        assert all_time_parameters_esds == [
+            {"node_id": 0, "connected_node_id": 1, "name_dep": "use_0", "type_dep": "use", "dct": 47, "trans_times": [{0: {"start": 23, "end": 44}}]},
+            {"node_id": 1, "connected_node_id": 0, "name_dep": "provide_0", "type_dep": "provide", "dct": 47, "trans_times": [{0: {"start": 10, "end": 47}}]},
+        ]
+        assert m == m_time == 47
+        assert uptime_schedule == node_schedules
+
+    def test_provide_overflow(self):
+        node_schedules = [
+            [[50, 60], [2120, 60], [4312, 60]],
+            [[40, 60], [2100, 60], [4321, 60]]
+        ]
+        use_0 = DependencyComputeModel("use", 0, None, [], [[40, 30, 20]], node_schedules)
+        use_1 = DependencyComputeModel("use", 0, None, [[use_0]], [[23]], node_schedules)
+        provide_0 = DependencyComputeModel("provide", 1, use_0, [], [[10, 10, 55, 62]], node_schedules)
+        provide_1 = DependencyComputeModel("provide", 1, use_1, [[provide_0]], [[12]], node_schedules)
+        use_0.connected_dep = provide_0
+        use_1.connected_dep = provide_1
+        list_deps = [
+            use_0,
+            use_1,
+            provide_0,
+            provide_1
+        ]
+        all_time_parameters_esds, m, m_time, uptime_schedule = model_time_concerto_d.compute_all_time_parameters_esds(
+            list_deps,
+            ["use_0", "use_1", "provide_0", "provide_1"],
+            1,
+            "pull",
+            node_schedules,
+            "sync"
+        )
+        assert all_time_parameters_esds == [
+            {"node_id": 0, "connected_node_id": 1, "name_dep": "use_0", "type_dep": "use", "dct": 4321.5, "trans_times": [{0: {"start": 50, "end": 120}, 1: {"start": 2120, "end": 2140}}]},
+            {"node_id": 0, "connected_node_id": 1, "name_dep": "use_1", "type_dep": "use", "dct": 4344.5, "trans_times": [{2: {"start": 4321.5, "end": 4344.5}}]},
+            {"node_id": 1, "connected_node_id": 0, "name_dep": "provide_0", "type_dep": "provide", "dct": 2162, "trans_times": [{0: {"start": 40, "end": 115}, 1: {"start": 2100, "end": 2162}}]},
+            {"node_id": 1, "connected_node_id": 0, "name_dep": "provide_1", "type_dep": "provide", "dct": 4333, "trans_times": [{2: {"start": 4321, "end": 4333}}]},
+        ]
+        assert m == m_time == 4344.5
+        assert uptime_schedule == node_schedules
+
+    def test_deploy_5_deps(self):
+        tts = {
+            "server": {
+                "t_sa": 30,
+                "t_sc": [
+                    30, 30, 30, 30, 30
+                ],
+                "t_sr": 30,
+                "t_ss": 30,
+                "t_sp": 30
+            },
+            "dep0": {"t_di": 30, "t_dr": 30, "t_du": 30},
+            "dep1": {"t_di": 30, "t_dr": 30, "t_du": 30},
+            "dep2": {"t_di": 30, "t_dr": 30, "t_du": 30},
+            "dep3": {"t_di": 30, "t_dr": 30, "t_du": 30},
+            "dep4": {"t_di": 30, "t_dr": 30, "t_du": 30}
+        }
+        nb_deps = 5
+        node_schedules = [
+            [(1100, 60), (2100, 60), (3100, 60), (4100, 60), (5100, 60), (6100, 60), (7100, 60), (8100, 60), (9100, 60), (10100, 60), (11150, 60), (12100, 60)],
+            [(1200, 60), (2150, 60), (3200, 60), (4200, 60), (5200, 60), (6200, 60), (7150, 60), (8200, 60), (9200, 60), (10200, 60), (11120, 60), (12200, 60)],
+            [(1300, 60), (2300, 60), (3300, 60), (4300, 60), (5080, 60), (6300, 60), (7080, 60), (8300, 60), (9300, 60), (10300, 60), (11130, 60), (12300, 60)],
+            [(1400, 60), (2400, 60), (3400, 60), (4400, 60), (5130, 60), (6400, 60), (7200, 60), (8103, 60), (9400, 60), (10400, 60), (11400, 60), (12400, 60)],
+            [(1500, 60), (2500, 60), (3500, 60), (4500, 60), (5500, 60), (6100, 60), (7500, 60), (8102, 60), (9500, 60), (10500, 60), (11500, 60), (12500, 60)],
+            [(1600, 60), (2600, 60), (3600, 60), (4600, 60), (5600, 60), (6100.5, 60), (7600, 60), (8101, 60), (9600, 60), (10600, 60), (11600, 60), (12600, 60)]
+        ]
+        list_deps, name_deps = _get_deploy_parallel_use_case_model(tts, nb_deps)
+
+        all_time_parameters_esds, m, m_time, uptime_schedule = model_time_concerto_d.compute_all_time_parameters_esds(
+            list_deps,
+            name_deps,
+            5,
+            "pull",
+            node_schedules,
+            "sync"
+        )
+        assert all_time_parameters_esds == [
+            {'node_id': 1, 'connected_node_id': 0, 'name_dep': 'config0', 'type_dep': 'provide', 'dct': 1230, 'trans_times': [{0: {'start': 1200, 'end': 1230}}]},
+            {'node_id': 2, 'connected_node_id': 0, 'name_dep': 'config1', 'type_dep': 'provide', 'dct': 1330, 'trans_times': [{0: {'start': 1300, 'end': 1330}}]},
+            {'node_id': 3, 'connected_node_id': 0, 'name_dep': 'config2', 'type_dep': 'provide', 'dct': 1430, 'trans_times': [{0: {'start': 1400, 'end': 1430}}]},
+            {'node_id': 4, 'connected_node_id': 0, 'name_dep': 'config3', 'type_dep': 'provide', 'dct': 1530, 'trans_times': [{0: {'start': 1500, 'end': 1530}}]},
+            {'node_id': 5, 'connected_node_id': 0, 'name_dep': 'config4', 'type_dep': 'provide', 'dct': 1630, 'trans_times': [{0: {'start': 1600, 'end': 1630}}]},
+            {'node_id': 1, 'connected_node_id': 0, 'name_dep': 'service0', 'type_dep': 'provide', 'dct': 1260, 'trans_times': [{0: {'start': 1230, 'end': 1260}}]},
+            {'node_id': 2, 'connected_node_id': 0, 'name_dep': 'service1', 'type_dep': 'provide', 'dct': 1360, 'trans_times': [{0: {'start': 1330, 'end': 1360}}]},
+            {'node_id': 3, 'connected_node_id': 0, 'name_dep': 'service2', 'type_dep': 'provide', 'dct': 1460, 'trans_times': [{0: {'start': 1430, 'end': 1460}}]},
+            {'node_id': 4, 'connected_node_id': 0, 'name_dep': 'service3', 'type_dep': 'provide', 'dct': 1560, 'trans_times': [{0: {'start': 1530, 'end': 1560}}]},
+            {'node_id': 5, 'connected_node_id': 0, 'name_dep': 'service4', 'type_dep': 'provide', 'dct': 1660, 'trans_times': [{0: {'start': 1630, 'end': 1660}}]},
+            {'node_id': 0, 'connected_node_id': None, 'name_dep': 'in_intermediate', 'type_dep': 'intermediate', 'dct': 1130, 'trans_times': [{0: {'start': 1100, 'end': 1130}}]},
+            {'node_id': 0, 'connected_node_id': 1, 'name_dep': 'in_config0', 'type_dep': 'use', 'dct': 2150.5, 'trans_times': [{0: {'start': 1130, 'end': 1130}}]},
+            {'node_id': 0, 'connected_node_id': 2, 'name_dep': 'in_config1', 'type_dep': 'use', 'dct': 5100.5, 'trans_times': [{0: {'start': 1130, 'end': 1130}}]},
+            {'node_id': 0, 'connected_node_id': 3, 'name_dep': 'in_config2', 'type_dep': 'use', 'dct': 5130.5, 'trans_times': [{0: {'start': 1130, 'end': 1130}}]},
+            {'node_id': 0, 'connected_node_id': 4, 'name_dep': 'in_config3', 'type_dep': 'use', 'dct': 6100.5, 'trans_times': [{0: {'start': 1130, 'end': 1130}}]},
+            {'node_id': 0, 'connected_node_id': 5, 'name_dep': 'in_config4', 'type_dep': 'use', 'dct': 6101,   'trans_times': [{0: {'start': 1130, 'end': 1130}}]},
+            {'node_id': 0, 'connected_node_id': None, 'name_dep': 'in_intermediate0', 'type_dep': 'intermediate', 'dct': 6131, 'trans_times': [{1: {'start': 2150.5, 'end': 2180.5}}, {4: {'start': 5100.5, 'end': 5130.5}}, {4: {'start': 5130.5, 'end': 5160.5}}, {5: {'start': 6100.5, 'end': 6130.5}}, {5: {'start': 6101, 'end': 6131}}]},
+            {'node_id': 0, 'connected_node_id': None, 'name_dep': 'in_intermediate1', 'type_dep': 'intermediate', 'dct': 6161, 'trans_times': [{5: {'start': 6131, 'end': 6161}}]},
+            {'node_id': 0, 'connected_node_id': 1, 'name_dep': 'in_service0', 'type_dep': 'use', 'dct': 7150.5, 'trans_times': [{6: {'start': 7100, 'end': 7100}}]},
+            {'node_id': 0, 'connected_node_id': 2, 'name_dep': 'in_service1', 'type_dep': 'use', 'dct': 7100.5, 'trans_times': [{6: {'start': 7100, 'end': 7100}}]},
+            {'node_id': 0, 'connected_node_id': 3, 'name_dep': 'in_service2', 'type_dep': 'use', 'dct': 8103.5, 'trans_times': [{6: {'start': 7100, 'end': 7100}}]},
+            {'node_id': 0, 'connected_node_id': 4, 'name_dep': 'in_service3', 'type_dep': 'use', 'dct': 8102.5, 'trans_times': [{6: {'start': 7100, 'end': 7100}}]},
+            {'node_id': 0, 'connected_node_id': 5, 'name_dep': 'in_service4', 'type_dep': 'use', 'dct': 8101.5, 'trans_times': [{6: {'start': 7100, 'end': 7100}}]},
+        ]
+        assert m == m_time == 8103.5
+        assert uptime_schedule == node_schedules
+
+
+    def test_update_5_deps(self):
+        tts = {
+            "server": {
+                "t_sa": 30,
+                "t_sc": [
+                    30, 30, 30, 30, 30
+                ],
+                "t_sr": 30,
+                "t_ss": [
+                    30, 30, 30, 30, 30
+                ],
+                "t_sp": [
+                    30, 30, 30, 30, 30
+                ]
+            },
+            "dep0": {"t_di": 30, "t_dr": 5, "t_du": 2},
+            "dep1": {"t_di": 30, "t_dr": 30, "t_du": 30},
+            "dep2": {"t_di": 30, "t_dr": 30, "t_du": 30},
+            "dep3": {"t_di": 30, "t_dr": 30, "t_du": 30},
+            "dep4": {"t_di": 30, "t_dr": 30, "t_du": 30}
+        }
+        nb_deps = 5
+        node_schedules = [
+            [(1100, 60), (2100, 60), (3100, 60), (4100, 60), (5100, 60), (6100, 60), (7100, 60), (8100, 60), (9100, 60), (10100, 60), (11150, 60), (12100, 60)],
+            [(1200, 60), (2150, 60), (3200, 60), (4200, 60), (5200, 60), (6200, 60), (7150, 60), (8200, 60), (9200, 60), (10200, 60), (11120, 60), (12200, 60)],
+            [(1300, 60), (2300, 60), (3300, 60), (4300, 60), (5080, 60), (6300, 60), (7080, 60), (8300, 60), (9300, 60), (10300, 60), (11130, 60), (12300, 60)],
+            [(1400, 60), (2400, 60), (3400, 60), (4400, 60), (5130, 60), (6400, 60), (7200, 60), (8103, 60), (9400, 60), (10400, 60), (11400, 60), (12400, 60)],
+            [(1500, 60), (2500, 60), (3500, 60), (4500, 60), (5500, 60), (6100, 60), (7500, 60), (8102, 60), (9500, 60), (10500, 60), (11500, 60), (12500, 60)],
+            [(1600, 60), (2600, 60), (3600, 60), (4600, 60), (5600, 60), (6100.5, 60), (7600, 60), (8101, 60), (9600, 60), (10600, 60), (11600, 60), (12600, 60)]
+        ]
+        list_deps, name_deps = _get_update_parallel_use_case_model(tts, nb_deps)
+
+        all_time_parameters_esds, m, m_time, uptime_schedule = model_time_concerto_d.compute_all_time_parameters_esds(
+            list_deps,
+            name_deps,
+            5,
+            "pull",
+            node_schedules,
+            "sync"
+        )
+        assert all_time_parameters_esds == [
+            {'node_id': 1, 'connected_node_id': 0, 'name_dep': 'update_in_suspend_0', 'type_dep': 'use', 'dct': 2150.5, 'trans_times': [{0: {'start': 1200, 'end': 1200}}]},
+            {'node_id': 2, 'connected_node_id': 0, 'name_dep': 'update_in_suspend_1', 'type_dep': 'use', 'dct': 5100.5, 'trans_times': [{0: {'start': 1300, 'end': 1300}}]},
+            {'node_id': 3, 'connected_node_id': 0, 'name_dep': 'update_in_suspend_2', 'type_dep': 'use', 'dct': 5130.5, 'trans_times': [{0: {'start': 1400, 'end': 1400}}]},
+            {'node_id': 4, 'connected_node_id': 0, 'name_dep': 'update_in_suspend_3', 'type_dep': 'use', 'dct': 6100.5, 'trans_times': [{0: {'start': 1500, 'end': 1500}}]},
+            {'node_id': 5, 'connected_node_id': 0, 'name_dep': 'update_in_suspend_4', 'type_dep': 'use', 'dct': 6101.0, 'trans_times': [{0: {'start': 1600, 'end': 1600}}]},
+            {'node_id': 1, 'connected_node_id': 0, 'name_dep': 'update_service_0', 'type_dep': 'provide', 'dct': 2157.5, 'trans_times': [{1: {'start': 2150.5, 'end': 2157.5}}]},
+            {'node_id': 2, 'connected_node_id': 0, 'name_dep': 'update_service_1', 'type_dep': 'provide', 'dct': 5160.5, 'trans_times': [{4: {'start': 5100.5, 'end': 5160.5}}]},
+            {'node_id': 3, 'connected_node_id': 0, 'name_dep': 'update_service_2', 'type_dep': 'provide', 'dct': 5190.5, 'trans_times': [{4: {'start': 5130.5, 'end': 5190.5}}]},
+            {'node_id': 4, 'connected_node_id': 0, 'name_dep': 'update_service_3', 'type_dep': 'provide', 'dct': 6160.5, 'trans_times': [{5: {'start': 6100.5, 'end': 6160.5}}]},
+            {'node_id': 5, 'connected_node_id': 0, 'name_dep': 'update_service_4', 'type_dep': 'provide', 'dct': 6161.0, 'trans_times': [{5: {'start': 6101.0, 'end': 6161.0}}]},
+            {'node_id': 0, 'connected_node_id': 1, 'name_dep': 'update_out_suspend_0', 'type_dep': 'provide', 'dct': 1130, 'trans_times': [{0: {'start': 1100, 'end': 1130}}]},
+            {'node_id': 0, 'connected_node_id': 2, 'name_dep': 'update_out_suspend_1', 'type_dep': 'provide', 'dct': 1130, 'trans_times': [{0: {'start': 1100, 'end': 1130}}]},
+            {'node_id': 0, 'connected_node_id': 3, 'name_dep': 'update_out_suspend_2', 'type_dep': 'provide', 'dct': 1130, 'trans_times': [{0: {'start': 1100, 'end': 1130}}]},
+            {'node_id': 0, 'connected_node_id': 4, 'name_dep': 'update_out_suspend_3', 'type_dep': 'provide', 'dct': 1130, 'trans_times': [{0: {'start': 1100, 'end': 1130}}]},
+            {'node_id': 0, 'connected_node_id': 5, 'name_dep': 'update_out_suspend_4', 'type_dep': 'provide', 'dct': 1130, 'trans_times': [{0: {'start': 1100, 'end': 1130}}]},
+            {'node_id': 0, 'connected_node_id': None, 'name_dep': 'intermediate_configured', 'type_dep': 'intermediate', 'dct': 1160, 'trans_times': [{0: {'start': 1130, 'end': 1160}}, {0: {'start': 1130, 'end': 1160}}, {0: {'start': 1130, 'end': 1160}}, {0: {'start': 1130, 'end': 1160}}, {0: {'start': 1130, 'end': 1160}}]},
+            {'node_id': 0, 'connected_node_id': 1, 'name_dep': 'update_in_configured_0', 'type_dep': 'use', 'dct': 2157.5, 'trans_times': [{0: {'start': 1160, 'end': 1160}, 1: {'start': 2100, 'end': 2100}}]},
+            {'node_id': 0, 'connected_node_id': 2, 'name_dep': 'update_in_configured_1', 'type_dep': 'use', 'dct': 7100.5, 'trans_times': [{0: {'start': 1160, 'end': 1160}, 1: {'start': 2100, 'end': 2100}}]},
+            {'node_id': 0, 'connected_node_id': 3, 'name_dep': 'update_in_configured_2', 'type_dep': 'use', 'dct': 8103.5, 'trans_times': [{0: {'start': 1160, 'end': 1160}, 1: {'start': 2100, 'end': 2100}}]},
+            {'node_id': 0, 'connected_node_id': 4, 'name_dep': 'update_in_configured_3', 'type_dep': 'use', 'dct': 8102.5, 'trans_times': [{0: {'start': 1160, 'end': 1160}, 1: {'start': 2100, 'end': 2100}}]},
+            {'node_id': 0, 'connected_node_id': 5, 'name_dep': 'update_in_configured_4', 'type_dep': 'use', 'dct': 8101.5, 'trans_times': [{0: {'start': 1160, 'end': 1160}, 1: {'start': 2100, 'end': 2100}}]},
+            {'node_id': 0, 'connected_node_id': None, 'name_dep': 'wait_all_true', 'type_dep': 'intermediate', 'dct': 8103.5, 'trans_times': [{1: {'start': 2157.5, 'end': 2157.5}}, {6: {'start': 7100.5, 'end': 7100.5}}, {7: {'start': 8103.5, 'end': 8103.5}}, {7: {'start': 8102.5, 'end': 8102.5}}, {7: {'start': 8101.5, 'end': 8101.5}}]},
+            {'node_id': 0, 'connected_node_id': None, 'name_dep': 'update_service', 'type_dep': 'intermediate', 'dct': 8133.5, 'trans_times': [{7: {'start': 8103.5, 'end': 8133.5}}]},
+        ]
+        assert m == m_time == 8133.5
+        assert uptime_schedule == node_schedules
+
