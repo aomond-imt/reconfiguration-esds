@@ -13,10 +13,6 @@ sys.path.insert(1, f"{current_dir_name}/..")
 import simulation_functions
 
 
-def _is_router(node_id, nb_nodes):
-    return node_id == nb_nodes-1
-
-
 def execute(api: Node):
     node_id = api.node_id % api.args["nodes_per_batch"]
 
@@ -69,7 +65,7 @@ def execute(api: Node):
                     tot_msg_received[data_to_send] = 1
                 else:
                     tot_msg_received[data_to_send] += 1
-                if (version == "sync" and receiver_id == node_id) or (version == "async" and _is_router(node_id, nb_nodes)):
+                if (version == "sync" and receiver_id == node_id) or (version == "async" and simulation_functions.is_router(node_id, nb_nodes)):
                     api.log(f"Sending response to {sender_id}")
                     # Send response
                     start_send = api.read("clock")

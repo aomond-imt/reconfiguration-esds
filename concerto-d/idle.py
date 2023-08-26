@@ -32,7 +32,10 @@ def execute(api: Node):
     tot_uptime, tot_sleeping_time = 0, 0
     idle_cons = PowerStates(api, 0)
     idle_cons.set_power(0)
-    idle_power = api.args["idleConso"]
+    if not simulation_functions.is_router(node_id, nb_nodes):
+        idle_power = api.args["idleConso"]
+    else:
+        idle_power = api.args["idleConso"] + api.args["stressConso"]
 
     api.turn_off()
     for start, end in node_uptimes:
@@ -56,6 +59,7 @@ def execute(api: Node):
     tot_sleeping_time += remaining_sleeping_duration
 
     results = {
+        "is_router": simulation_functions.is_router(node_id, nb_nodes),
         "tot_uptime": tot_uptime,
         "tot_sleeping_time": tot_sleeping_time,
         "node_conso": round(idle_cons.energy, 2),

@@ -24,7 +24,7 @@ def _assert_value(node_id, key, val, expected_val):
     try:
         assert abs(val - expected_val) <= 0.01
     except AssertionError as e:
-        print(f"node_id: {node_id} - key: {key} - val: {val} - expected: {expected_val}")
+        print(f"Assertion error: node_id: {node_id} - key: {key} - val: {val} - expected: {expected_val}")
         raise e
 
 
@@ -47,6 +47,7 @@ def _esds_results_verification(esds_parameters, expe_esds_verification_files, id
     list_files_reconfs = sorted(os.listdir(reconfs_results), key=lambda f_name: int(Path(f_name).stem))
     list_files_sends = sorted(os.listdir(sends_results), key=lambda f_name: int(Path(f_name).stem))
     list_files_receives = sorted(os.listdir(receive_results), key=lambda f_name: int(Path(f_name).stem))
+
     for node_idle_file, node_reconf_file, node_send_file, node_receive_file in zip(list_files_idles, list_files_reconfs, list_files_sends, list_files_receives):
         with open(os.path.join(idle_results, node_idle_file)) as f:
             results_idle = yaml.safe_load(f)
@@ -67,7 +68,11 @@ def _esds_results_verification(esds_parameters, expe_esds_verification_files, id
         expected_no_uptime = max_exec_duration - expected_uptime
         _assert_value(node_id, "tot_uptime", results_idle["tot_uptime"], expected_uptime)
         _assert_value(node_id, "tot_sleeping_time", results_idle["tot_sleeping_time"], expected_no_uptime)
-        _assert_value(node_id, "node_conso", results_idle["node_conso"], expected_uptime*idleConso)  # TODO magic value
+        if results_idle["is_router"]:
+            expected_idle_conso = expected_uptime*(idleConso+stressConso)
+        else:
+            expected_idle_conso = expected_uptime*idleConso
+        _assert_value(node_id, "node_conso", results_idle["node_conso"], expected_idle_conso)
 
         # Verification reconfs
         node_reconfs = esds_parameters["reconf_periods_per_node"][node_id]
@@ -278,6 +283,7 @@ def _execute_esds_simulation(current_test_path, expe_esds_verification_files, gl
                 print(line)
     end_at = time.time()
     print(f"Finished {title}")
+
     ## Run verification scripts
     with open(current_test_path) as f:
         esds_parameters = yaml.safe_load(f)
@@ -287,6 +293,7 @@ def _execute_esds_simulation(current_test_path, expe_esds_verification_files, gl
     expe_duration = end_at - start_at
     print(f"{title} passed (%0.1fs)" % (expe_duration))
     sum_expes_duration += expe_duration
+
     ## Aggregate to global results
     result = {title: {"energy": _load_energetic_expe_results_from_title(title, idle_results_dir, reconf_results_dir,
                                                                         sends_results_dir, receive_results_dir),

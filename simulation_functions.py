@@ -8,19 +8,19 @@ NB_POLL_PER_SEC = 10
 def get_simulation_swepped_parameters():
     from execo_engine import sweep
 
-    parameters = {
-        "stressConso": [0, 1.237, 1.358],  # 1.339-1.339, 2.576-1.339, 2.697-1.339
-        "idleConso": [1.339],
-        "techno": [{"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
-                   {"name": "nbiot", "bandwidth": "200kbps", "commsConso": 0.65}],
-        "typeSynchro": ["pullc"]
-    }
     # parameters = {
-    #     "stressConso": [1.358],  # 1.339-1.339, 2.576-1.339, 2.697-1.339
+    #     "stressConso": [0, 1.237, 1.358],  # 1.339-1.339, 2.576-1.339, 2.697-1.339
     #     "idleConso": [1.339],
-    #     "techno": [{"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16}],
+    #     "techno": [{"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16},
+    #                {"name": "nbiot", "bandwidth": "200kbps", "commsConso": 0.65}],
     #     "typeSynchro": ["pullc"]
     # }
+    parameters = {
+        "stressConso": [1.358],  # 1.339-1.339, 2.576-1.339, 2.697-1.339
+        "idleConso": [1.339],
+        "techno": [{"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16}],
+        "typeSynchro": ["pullc"]
+    }
     sweeper = sweep(parameters)
     return sweeper
 
@@ -38,6 +38,10 @@ def get_params_joined(parameter):
         parameter["typeSynchro"]
     )
     return f"{stressConso}-{idleConso}-{nameTechno}-{typeSynchro}"
+
+
+def is_router(node_id, nb_nodes):
+    return node_id == nb_nodes-1
 
 
 def print_esds_node_results(results, api):
