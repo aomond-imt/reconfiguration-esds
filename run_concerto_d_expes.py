@@ -152,14 +152,14 @@ def _group_by_version_concerto_d(parameter_files_list):
     return ordered_parameter_list
 
 
-def main(simu_to_launch_dir="expe_esds_parameter_files_to_compute"):
-    for num_run in range(1):
+def main(simu_to_launch_dir="expe_esds_parameter_files_dao"):
+    for num_run in range(5):
         # Setup variables
         ## Configuration files dirs
         root = f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/{num_run}"
         os.makedirs(root, exist_ok=True)
         # expe_esds_parameter_files = os.path.join(root, "tests")
-        expe_esds_parameter_files = f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/{simu_to_launch_dir}"
+        expe_esds_parameter_files = os.path.join(root, simu_to_launch_dir)
         esds_current_parameter_file = os.path.join(root, "current_esds_parameter_file.yaml")
         expe_esds_verification_files = os.path.join(root, "expe_esds_verification_files")
 
@@ -274,7 +274,7 @@ def _execute_esds_simulation(sweeps, expe_esds_parameter_files, expe_esds_verifi
             os.makedirs(os.path.join(receive_results_dir, execution_dir), exist_ok=True)
 
             platform_path = os.path.abspath(f"concerto-d/platform-{joined_params}.yaml")
-            platform_path_copy = os.path.abspath(f"concerto-d/platform-{joined_params}-{title}.yaml")
+            platform_path_copy = os.path.abspath(f"concerto-d/platform-{joined_params}-{title}-{num_run}.yaml")
             shutil.copy(platform_path, platform_path_copy)
 
             with open(platform_path_copy) as f:
