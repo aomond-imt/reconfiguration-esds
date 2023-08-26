@@ -124,6 +124,7 @@ def execute(api: Node):
     }
     simulation_functions.print_esds_node_results(results, api)
     execution_dir = f"{title}-{api.args['stressConso']}-{api.args['idleConso']}-{api.args['nameTechno']}-{api.args['typeSynchro']}"
-    with open(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/results/sends/{execution_dir}/{node_id}.yaml",
+    num_run = api.args["num_run"]
+    with open(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/{num_run}/results/sends/{execution_dir}/{node_id}.yaml",
               "w") as f:
         yaml.safe_dump(results, f)
