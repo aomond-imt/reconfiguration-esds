@@ -28,7 +28,7 @@ def _assert_value(node_id, key, val, expected_val):
         raise e
 
 
-def _esds_results_verification(esds_parameters, expe_esds_verification_files, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir, title, stressConso, idleConso):
+def _esds_results_verification(esds_parameters, expe_esds_verification_files, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir, execution_dir, stressConso, idleConso):
     # Retrieve verification file for the given configuration file
     # verification = None
     # for verif_file in os.listdir(expe_esds_verification_files):
@@ -38,10 +38,10 @@ def _esds_results_verification(esds_parameters, expe_esds_verification_files, id
     #             verification = yaml.safe_load(f)
 
     # Retrieve results files for reconfs, sends and receives
-    idle_results = os.path.join(idle_results_dir, title)
-    reconfs_results = os.path.join(reconf_results_dir, title)
-    sends_results = os.path.join(sends_results_dir, title)
-    receive_results = os.path.join(receive_results_dir, title)
+    idle_results = os.path.join(idle_results_dir, execution_dir)
+    reconfs_results = os.path.join(reconf_results_dir, execution_dir)
+    sends_results = os.path.join(sends_results_dir, execution_dir)
+    receive_results = os.path.join(receive_results_dir, execution_dir)
 
     list_files_idles = sorted(os.listdir(idle_results), key=lambda f_name: int(Path(f_name).stem))
     list_files_reconfs = sorted(os.listdir(reconfs_results), key=lambda f_name: int(Path(f_name).stem))
@@ -103,12 +103,12 @@ def _esds_results_verification(esds_parameters, expe_esds_verification_files, id
         # _assert_value(node_id, "tot_no_receive_time", results_receive["tot_no_receive_time"], expected_no_receive_time)
 
 
-def _load_energetic_expe_results_from_title(title, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir):
+def _load_energetic_expe_results_from_title(execution_dir, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir):
     # Retrieve results files for reconfs, sends and receives
-    idle_results = os.path.join(idle_results_dir, title)
-    reconfs_results = os.path.join(reconf_results_dir, title)
-    sends_results = os.path.join(sends_results_dir, title)
-    receive_results = os.path.join(receive_results_dir, title)
+    idle_results = os.path.join(idle_results_dir, execution_dir)
+    reconfs_results = os.path.join(reconf_results_dir, execution_dir)
+    sends_results = os.path.join(sends_results_dir, execution_dir)
+    receive_results = os.path.join(receive_results_dir, execution_dir)
 
     list_files_idles = sorted(os.listdir(idle_results), key=lambda f_name: int(Path(f_name).stem))
     list_files_reconfs = sorted(os.listdir(reconfs_results), key=lambda f_name: int(Path(f_name).stem))
@@ -152,84 +152,86 @@ def _group_by_version_concerto_d(parameter_files_list):
 
 
 def main(simu_to_launch_dir="expe_esds_parameter_files_to_compute"):
-    # Setup variables
-    ## Configuration files dirs
-    root = f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results"
-    # expe_esds_parameter_files = os.path.join(root, "tests")
-    expe_esds_parameter_files = os.path.join(root, simu_to_launch_dir)
-    esds_current_parameter_file = os.path.join(root, "current_esds_parameter_file.yaml")
-    expe_esds_verification_files = os.path.join(root, "expe_esds_verification_files")
+    for num_run in range(1):
+        # Setup variables
+        ## Configuration files dirs
+        root = f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/{num_run}"
+        os.makedirs(root, exist_ok=True)
+        # expe_esds_parameter_files = os.path.join(root, "tests")
+        expe_esds_parameter_files = f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/{simu_to_launch_dir}"
+        esds_current_parameter_file = os.path.join(root, "current_esds_parameter_file.yaml")
+        expe_esds_verification_files = os.path.join(root, "expe_esds_verification_files")
 
-    ## Results dirs
-    results_dir = os.path.join(root, "results")
-    idle_results_dir = os.path.join(results_dir, "idles")
-    reconf_results_dir = os.path.join(results_dir, "reconfs")
-    sends_results_dir = os.path.join(results_dir, "sends")
-    receive_results_dir = os.path.join(results_dir, "receives")
+        ## Results dirs
+        results_dir = os.path.join(root, "results")
+        idle_results_dir = os.path.join(results_dir, "idles")
+        reconf_results_dir = os.path.join(results_dir, "reconfs")
+        sends_results_dir = os.path.join(results_dir, "sends")
+        receive_results_dir = os.path.join(results_dir, "receives")
 
-    # Start experiments
-    ## Clean previous results dirs
-    # shutil.rmtree(results_dir, ignore_errors=True)
+        # Start experiments
+        ## Clean previous results dirs
+        shutil.rmtree(results_dir, ignore_errors=True)
 
-    ## Run all experiments
-    # limit_expes = math.inf
-    parameter_files_names = [f for f in os.listdir(expe_esds_parameter_files) if f.startswith("esds_generated_data")]
-    parameter_files_list = _group_by_version_concerto_d(parameter_files_names)
-    sum_expes_duration = 0
-    nb_expes_tot = min(len(parameter_files_names), limit_expes)
-    print(f"Total nb experiments per param: {nb_expes_tot}")
+        ## Run all experiments
+        # limit_expes = math.inf
+        parameter_files_names = [f for f in os.listdir(expe_esds_parameter_files) if f.startswith("esds_generated_data")]
+        parameter_files_list = _group_by_version_concerto_d(parameter_files_names)
+        sum_expes_duration = 0
+        nb_expes_tot = min(len(parameter_files_names), limit_expes)
+        print(f"Total nb experiments per param: {nb_expes_tot}")
 
-    ## Getting sweeped parameters
-    sweeper = simulation_functions.get_simulation_swepped_parameters()
-    nb_params_tot = len(sweeper)
-    nb_params_done = 0
-    print(f"Tot nb parameters: {nb_params_tot}")
-
-    for parameter in sweeper:
-        global_results = {}
-        nb_expes_done = 0
-        joined_params = simulation_functions.get_params_joined(parameter)
-        print(f"{nb_params_done+1}/{nb_params_tot} - {joined_params}")
-        pool = Pool(math.ceil(cpu_count() / 2))
+        ## Getting sweeped parameters
+        sweeper = simulation_functions.get_simulation_swepped_parameters()
+        nb_params_tot = len(sweeper)
+        nb_params_done = 0
+        print(f"Tot nb parameters: {nb_params_tot}")
         parallel_execs = []
-        for parameter_file in parameter_files_list:
-            ## Limit number of experiments
-            if nb_expes_done >= limit_expes:
-                break
+        nb_expes_done = 0
+        for parameter in sweeper:
+            global_results = {}
+            joined_params = simulation_functions.get_params_joined(parameter)
+            print(f"{nb_params_done+1}/{nb_params_tot} - {joined_params}")
+            pool = Pool(math.ceil(cpu_count() * 0.9))
 
-            title = Path(parameter_file).stem
-            results_names = os.listdir(root)
-            if any(title in result_name and joined_params in result_name for result_name in results_names):
-                print("already done, skip")
-                nb_expes_done += 1
-                continue
+            for parameter_file in parameter_files_list:
+                ## Limit number of experiments
+                if nb_expes_done >= limit_expes:
+                    break
 
-            ## Designate parameter file and create result dir
-            current_test_path=os.path.join(expe_esds_parameter_files,parameter_file)
+                title = Path(parameter_file).stem
+                results_names = os.listdir(root)
+                if any(title in result_name and joined_params in result_name for result_name in results_names):
+                    print("already done, skip")
+                    nb_expes_done += 1
+                    continue
 
-            os.makedirs(os.path.join(idle_results_dir, title), exist_ok=True)
-            os.makedirs(os.path.join(reconf_results_dir, title), exist_ok=True)
-            os.makedirs(os.path.join(sends_results_dir, title), exist_ok=True)
-            os.makedirs(os.path.join(receive_results_dir, title), exist_ok=True)
+                ## Designate parameter file and create result dir
+                current_test_path=os.path.join(expe_esds_parameter_files,parameter_file)
+                execution_dir = f"{title}-{joined_params}"
+                os.makedirs(os.path.join(idle_results_dir, execution_dir), exist_ok=True)
+                os.makedirs(os.path.join(reconf_results_dir, execution_dir), exist_ok=True)
+                os.makedirs(os.path.join(sends_results_dir, execution_dir), exist_ok=True)
+                os.makedirs(os.path.join(receive_results_dir, execution_dir), exist_ok=True)
 
-            platform_path = os.path.abspath(f"concerto-d/platform-{joined_params}.yaml")
-            platform_path_copy = os.path.abspath(f"concerto-d/platform-{joined_params}-{title}.yaml")
-            shutil.copy(platform_path, platform_path_copy)
+                platform_path = os.path.abspath(f"concerto-d/platform-{joined_params}.yaml")
+                platform_path_copy = os.path.abspath(f"concerto-d/platform-{joined_params}-{title}.yaml")
+                shutil.copy(platform_path, platform_path_copy)
 
-            with open(platform_path_copy) as f:
-                data = yaml.safe_load(f)
-            with open(platform_path_copy, "w") as f:
-                data["nodes"]["arguments"]["all"]["expe_config_file"] = current_test_path
-                yaml.safe_dump(data, f, sort_keys=False)
+                with open(platform_path_copy) as f:
+                    data = yaml.safe_load(f)
+                with open(platform_path_copy, "w") as f:
+                    data["nodes"]["arguments"]["all"]["expe_config_file"] = current_test_path
+                    yaml.safe_dump(data, f, sort_keys=False)
 
-            exec_esds = pool.apply_async(
-                _execute_esds_simulation,
-                args=(current_test_path, expe_esds_verification_files, global_results,
-                      idle_results_dir, joined_params, parameter, platform_path_copy,
-                      receive_results_dir, reconf_results_dir, root, sends_results_dir,
-                      sum_expes_duration, title)
-            )
-            parallel_execs.append(exec_esds)
+                exec_esds = pool.apply_async(
+                    _execute_esds_simulation,
+                    args=(current_test_path, expe_esds_verification_files, global_results,
+                          idle_results_dir, joined_params, parameter, platform_path_copy,
+                          receive_results_dir, reconf_results_dir, root, sends_results_dir,
+                          sum_expes_duration, title, execution_dir)
+                )
+                parallel_execs.append(exec_esds)
 
         for running_exec in parallel_execs:
             try:
@@ -253,22 +255,22 @@ def main(simu_to_launch_dir="expe_esds_parameter_files_to_compute"):
                 nb_expes_done += 1
         nb_params_done += 1
 
-        print("Dump results")
-        global_results_path = f"global_results-{joined_params}.yaml"
-        with open(os.path.join(root, global_results_path), "w") as f:
-            yaml.safe_dump(global_results, f)
-        print("Results dumped")
-        print(f"All passed in {sum_expes_duration:.2f}s")
-        global_results = {}
-        for file in os.listdir(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/to_analyse_test/"):
-            with open(os.path.join(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/to_analyse_test/", file)) as f:
-                global_results.update(yaml.safe_load(f))
-        print_results.print_energy_results(global_results)
+        # print("Dump results")
+        # global_results_path = f"global_results-{joined_params}.yaml"
+        # with open(os.path.join(root, global_results_path), "w") as f:
+        #     yaml.safe_dump(global_results, f)
+        # print("Results dumped")
+        # print(f"All passed in {sum_expes_duration:.2f}s")
+        # global_results = {}
+        # for file in os.listdir(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/to_analyse_test/"):
+        #     with open(os.path.join(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/to_analyse_test/", file)) as f:
+        #         global_results.update(yaml.safe_load(f))
+        # print_results.print_energy_results(global_results)
 
 
 def _execute_esds_simulation(current_test_path, expe_esds_verification_files, global_results, idle_results_dir,
                              joined_params, parameter, platform_path_copy, receive_results_dir, reconf_results_dir,
-                             root, sends_results_dir, sum_expes_duration, title):
+                             root, sends_results_dir, sum_expes_duration, title, execution_dir):
     ## Launch experiment
     start_at = time.time()
     print(f"Starting {title}")
@@ -288,19 +290,19 @@ def _execute_esds_simulation(current_test_path, expe_esds_verification_files, gl
     with open(current_test_path) as f:
         esds_parameters = yaml.safe_load(f)
     _esds_results_verification(esds_parameters, expe_esds_verification_files, idle_results_dir, reconf_results_dir,
-                               sends_results_dir, receive_results_dir, title, parameter["stressConso"],
+                               sends_results_dir, receive_results_dir, execution_dir, parameter["stressConso"],
                                parameter["idleConso"])
     expe_duration = end_at - start_at
     print(f"{title} passed (%0.1fs)" % (expe_duration))
     sum_expes_duration += expe_duration
 
     ## Aggregate to global results
-    result = {title: {"energy": _load_energetic_expe_results_from_title(title, idle_results_dir, reconf_results_dir,
+    result = {title: {"energy": _load_energetic_expe_results_from_title(execution_dir, idle_results_dir, reconf_results_dir,
                                                                         sends_results_dir, receive_results_dir),
                       "time": esds_parameters["max_execution_duration"]}}
     global_results.update(result)
     global_results_path = f"global_results-{title}-{joined_params}.yaml"
-    with open(os.path.join(root, f"to_analyse_test/{global_results_path}"), "w") as f:
+    with open(os.path.join(root, global_results_path), "w") as f:
         yaml.safe_dump(result, f)
 
 
