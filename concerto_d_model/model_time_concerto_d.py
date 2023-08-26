@@ -145,14 +145,14 @@ def _get_update_parallel_use_case_model(tts, nb_deps):
     )
 
 
-def generate_mascots_schedules():
+def generate_mascots_schedules(num_draw):
     print()
     print()
-    dir_name = os.path.dirname(os.path.realpath(__file__))
-    with open(f"{dir_name}/mascots_2023/mascots_expected.json") as f:
-        expected = json.load(f)
-    with open(f"{dir_name}/mascots_2023/mascots_struct.json") as f:
-        results_dict = json.load(f)
+    # dir_name = os.path.dirname(os.path.realpath(__file__))
+    # with open(f"{dir_name}/mascots_2023/mascots_expected.json") as f:
+    #     expected = json.load(f)
+    # with open(f"{dir_name}/mascots_2023/mascots_struct.json") as f:
+    #     results_dict = json.load(f)
 
     uptimes_schedules = {
         # "ud1_od0_15_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud1_od0_15_25_perc.json")),
@@ -162,9 +162,9 @@ def generate_mascots_schedules():
         # "ud0_od0_15_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_15_25_perc-dao.json")),
         # "ud0_od0_7_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_7_25_perc-dao.json")),
         # "ud0_od0_30_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_30_25_perc-dao.json")),
-        "uptimes-dao-60-sec": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/uptimes-dao-60-sec.json")),
-        "uptimes-dao-120-sec": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/uptimes-dao-120-sec.json")),
-        "uptimes-dao-180-sec": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/uptimes-dao-180-sec.json")),
+        "uptimes-dao-60-sec": json.load(open(f"/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/{num_draw}/uptimes-dao-60-sec.json")),
+        "uptimes-dao-120-sec": json.load(open(f"/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/{num_draw}/uptimes-dao-120-sec.json")),
+        "uptimes-dao-180-sec": json.load(open(f"/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/{num_draw}/uptimes-dao-180-sec.json")),
     }
     # ud1_od0_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud1_od0_15_25_perc.json"))
     # ud2_od0_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud2_od0_15_25_perc.json"))
@@ -185,7 +185,7 @@ def generate_mascots_schedules():
         for name_uptime, uptime_schedule_nodes in uptimes_schedules.items():
             for version_concerto_d in ["sync", "async"]:
                 for reconf_name in ["deploy", "update"]:
-                    for trans_times in ["T0", "T1"]:
+                    for trans_times in ["T1"]:
                         for type_synchro in ["pull"]:
                             with open(f"/home/aomond/concerto-d-projects/experiment_files/parameters/transitions_times/transitions_times-1-30-deps12-{trans_times[1:]}.json") as f:
                                 tts = json.load(f)["transitions_times"]
@@ -252,7 +252,6 @@ def generate_mascots_schedules():
                             # with open(os.path.join(expe_esds_verification_files, f"{title}.yaml"), "w") as f:
                             #     yaml.safe_dump(verification, f)
             i += 1
-
     # print(json.dumps(results_dict, indent=4))
     return all_expe_parameters
 
@@ -573,11 +572,12 @@ def _compute_sending_periods_per_node(esds_data):
 
 
 if __name__ == "__main__":
-    all_expe_parameters = generate_mascots_schedules()
-    expe_esds_parameter_files = f"/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_parameter_files_dao"
-    os.makedirs(expe_esds_parameter_files, exist_ok=True)
+    for num_draw in range(5):
+        all_expe_parameters = generate_mascots_schedules(num_draw)
+        expe_esds_parameter_files = f"/home/aomond/reconfiguration-esds/concerto-d-results/{num_draw}/expe_esds_parameter_files_dao"
+        os.makedirs(expe_esds_parameter_files, exist_ok=True)
 
-    for title, vals in all_expe_parameters.items():
-        with open(os.path.join(expe_esds_parameter_files, f"{title}.yaml"), "w") as f:
-            yaml.safe_dump(vals, f)
+        for title, vals in all_expe_parameters.items():
+            with open(os.path.join(expe_esds_parameter_files, f"{title}.yaml"), "w") as f:
+                yaml.safe_dump(vals, f)
 
