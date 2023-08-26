@@ -48,6 +48,8 @@ def execute(api: Node):
     sending_cons.set_power(interface_name, 0, commsConso, commsConso)
 
     size = 257
+    name_techno = api.args["nameTechno"]
+    bandwidth = 6250 if name_techno == "lora" else 25000  # lora or nbiot
     api.turn_off()
     for up_start, up_end in node_uptimes:
         # Sleeping period (no receive)
@@ -81,7 +83,7 @@ def execute(api: Node):
                             else:
                                 tot_msg_sent[data_to_send] += 1
 
-                            code, data = api.receivet(interface_name, timeout=end_period)
+                            code, data = api.receivet(interface_name, timeout=min(end_period, size/bandwidth))
                             api.log(f"Receive ack: {data}")
                             if data is not None:
                                 if data_to_send not in tot_ack_received.keys():

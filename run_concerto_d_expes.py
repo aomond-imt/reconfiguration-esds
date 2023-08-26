@@ -248,17 +248,17 @@ def main(simu_to_launch_dir="expe_esds_parameter_files_to_compute"):
                 nb_expes_done += 1
         nb_params_done += 1
 
-        # print("Dump results")
-        # global_results_path = f"global_results-{joined_params}.yaml"
-        # with open(os.path.join(root, global_results_path), "w") as f:
-        #     yaml.safe_dump(global_results, f)
-        # print("Results dumped")
-        # print(f"All passed in {sum_expes_duration:.2f}s")
-        # global_results = {}
-        # for file in os.listdir(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/to_analyse_test/"):
-        #     with open(os.path.join(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/to_analyse_test/", file)) as f:
-        #         global_results.update(yaml.safe_load(f))
-        # print_results.print_energy_results(global_results)
+        print("Dump results")
+        global_results_path = f"global_results-{joined_params}.yaml"
+        with open(os.path.join(root, global_results_path), "w") as f:
+            yaml.safe_dump(global_results, f)
+        print("Results dumped")
+        print(f"All passed in {sum_expes_duration:.2f}s")
+        global_results = {}
+        for file in os.listdir(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/to_analyse_test/"):
+            with open(os.path.join(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/to_analyse_test/", file)) as f:
+                global_results.update(yaml.safe_load(f))
+        print_results.print_energy_results(global_results)
 
 
 def _execute_esds_simulation(current_test_path, expe_esds_verification_files, global_results, idle_results_dir,
@@ -293,7 +293,7 @@ def _execute_esds_simulation(current_test_path, expe_esds_verification_files, gl
                       "time": esds_parameters["max_execution_duration"]}}
     global_results.update(result)
     global_results_path = f"global_results-{title}-{joined_params}.yaml"
-    with open(os.path.join(root, global_results_path), "w") as f:
+    with open(os.path.join(root, f"to_analyse_test/{global_results_path}"), "w") as f:
         yaml.safe_dump(result, f)
 
 

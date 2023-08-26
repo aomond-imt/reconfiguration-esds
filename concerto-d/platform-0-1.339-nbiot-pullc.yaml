@@ -284,6 +284,8 @@ nodes:
       idleConso: 1.339,
       commsConso: 0.65,
       typeSynchro: pullc,
+      bandwidth: 200kbps,
+      nameTechno: nbiot,
       nodes_per_batch: 32
     }
 

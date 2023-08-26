@@ -284,6 +284,8 @@ nodes:
       idleConso: 1.339,
       commsConso: 0.16,
       typeSynchro: pullc,
+      bandwidth: 50kbps,
+      nameTechno: lora,
       nodes_per_batch: 32
     }
 

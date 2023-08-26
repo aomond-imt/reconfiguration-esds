@@ -1,4 +1,4 @@
-max_execution_duration: 10
+max_execution_duration: 40
 nb_nodes: 5
 reconf_periods_per_node:
   0:
@@ -20,6 +20,9 @@ sending_periods_per_node:
   - - 0
     - 10
     - 1: 1
+  - - 20
+    - 40
+    - 1: 1
   1: []
   2:
   - - 0
@@ -32,9 +35,13 @@ uptimes_periods_per_node:
   0:
   - - 0
     - 10
+  - - 20
+    - 40
   1:
   - - 0
     - 7
+  - - 38
+    - 40
   2:
   - - 0
     - 10
@@ -44,3 +51,5 @@ uptimes_periods_per_node:
   4:
   - - 0
     - 10
+  - - 20
+    - 40

@@ -54,6 +54,7 @@ for parameter in sweeps:
         stressConso=stressConso,
         idleConso=idleConso,
         bandwidth=bandwidth,
+        nameTechno=nameTechno,
         commsConso=commsConso,
         typeSynchro=typeSynchro,
         links_eth0=links_eth0,
