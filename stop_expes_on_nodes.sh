@@ -21,4 +21,5 @@ for (( i=0; i<${hosts_length}; i++ ));
 do
   echo "killing tmux session on host ${hosts[$i]}"
   ssh ${hosts[$i]} "tmux kill-session -t $i"
+  ssh ${hosts[$i]} "kill $(ps -aux | grep esds)"
 done
