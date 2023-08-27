@@ -201,7 +201,7 @@ def main(simu_to_launch_dir="expe_esds_parameter_files_dao"):
                 sweeps.append((parameter_tuple, parameter_file))
 
         global_results = {}
-        nb_cores = math.ceil(cpu_count() * 0.9)
+        nb_cores = math.ceil(cpu_count() * 0.5)
         pool = Pool(nb_cores)
         for _ in range(nb_cores):
             exec_esds = pool.apply_async(
