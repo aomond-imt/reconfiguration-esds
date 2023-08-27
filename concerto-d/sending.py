@@ -74,22 +74,22 @@ def execute(api: Node):
                 while api.read("clock") < end:
                     for sender_id, count in node_send.items():
                         if api.read("clock") < end:
-                            end_period = end - api.read("clock")
                             data_to_send = size * count
-                            api.sendt(interface_name, (node_id, sender_id, data_to_send), data_to_send, sender_id, timeout=end_period)
+                            api.sendt(interface_name, (node_id, sender_id, data_to_send), data_to_send, sender_id, timeout=end - api.read("clock"))
                             # Save nb msg sent
                             if data_to_send not in tot_msg_sent.keys():
                                 tot_msg_sent[data_to_send] = 1
                             else:
                                 tot_msg_sent[data_to_send] += 1
 
-                            code, data = api.receivet(interface_name, timeout=min(end_period, size/bandwidth))
-                            api.log(f"Receive ack: {data}")
-                            if data is not None:
-                                if data_to_send not in tot_ack_received.keys():
-                                    tot_ack_received[data_to_send] = 1
-                                else:
-                                    tot_ack_received[data_to_send] += 1
+                            api.wait(min(end - api.read("clock"), size/bandwidth))
+                            # code, data = api.receivet(interface_name, timeout=min(end - api.read("clock"), (size/bandwidth)+0.0001))  # Put a little overhead for float operations precision
+                            # api.log(f"Receive ack: {data}")
+                            # if data is not None:
+                            #     if data_to_send not in tot_ack_received.keys():
+                            #         tot_ack_received[data_to_send] = 1
+                            #     else:
+                            #         tot_ack_received[data_to_send] += 1
 
                     if api.read("clock") < end:
                         wait_polling = min(FREQUENCE_POLLING, end - api.read("clock"))
