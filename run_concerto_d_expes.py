@@ -153,6 +153,48 @@ def _group_by_version_concerto_d(parameter_files_list):
 
 
 def main(simu_to_launch_dir="expe_esds_parameter_files_dao"):
+    parallel_execs = []
+    nb_cores = math.ceil(cpu_count() * 0.9)
+    pool = Pool(nb_cores)
+    for _ in range(nb_cores):
+        exec_esds = pool.apply_async(
+            _execute_esds_simulation,
+            args=(simu_to_launch_dir,)
+        )
+        parallel_execs.append(exec_esds)
+
+    for running_exec in parallel_execs:
+        try:
+            running_exec.get()
+        except subprocess.TimeoutExpired as err:
+            print("failed :(")
+            print("------------- Test duration expired (timeout=" + str(tests_timeout) + "s) -------------")
+            print(err.output, end="")
+            # exit(1)
+        except subprocess.CalledProcessError as err:
+            print("failed :(")
+            print("------------- Test has a non-zero exit code -------------")
+            print(err.output, end="")
+            # exit(2)
+        except Exception as err:
+            print("failed :(")
+            traceback.print_exc()
+            # exit(3)
+
+        # print("Dump results")
+        # global_results_path = f"global_results-{joined_params}.yaml"
+        # with open(os.path.join(root, global_results_path), "w") as f:
+        #     yaml.safe_dump(global_results, f)
+        # print("Results dumped")
+        # print(f"All passed in {sum_expes_duration:.2f}s")
+        # global_results = {}
+        # for file in os.listdir(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/to_analyse_test/"):
+        #     with open(os.path.join(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/to_analyse_test/", file)) as f:
+        #         global_results.update(yaml.safe_load(f))
+        # print_results.print_energy_results(global_results)
+
+
+def _execute_esds_simulation(simu_to_launch_dir):
     for num_run in range(5):
         # Setup variables
         ## Configuration files dirs
@@ -180,17 +222,12 @@ def main(simu_to_launch_dir="expe_esds_parameter_files_dao"):
         parameter_files_list = _group_by_version_concerto_d(parameter_files_names)
         sum_expes_duration = 0
         nb_expes_tot = min(len(parameter_files_names), limit_expes)
-        print(f"Total nb experiments per param: {nb_expes_tot}")
 
         os.makedirs(os.path.join(root, "logs"), exist_ok=True)
 
         ## Getting sweeped parameters
         all_params = simulation_functions.get_simulation_swepped_parameters()
         nb_params_tot = len(all_params)
-        nb_params_done = 0
-        print(f"Tot nb parameters: {nb_params_tot}")
-        parallel_execs = []
-        nb_expes_done = 0
         sweeps = []
         for parameter in all_params:
             for parameter_file in parameter_files_list:
@@ -202,132 +239,83 @@ def main(simu_to_launch_dir="expe_esds_parameter_files_dao"):
                 )
                 sweeps.append((parameter_tuple, parameter_file))
 
-        global_results = {}
-        nb_cores = math.ceil(cpu_count() * 0.9)
-        pool = Pool(nb_cores)
-        for _ in range(nb_cores):
-            exec_esds = pool.apply_async(
-                _execute_esds_simulation,
-                args=(sweeps, expe_esds_parameter_files, expe_esds_verification_files, global_results,
-                      idle_results_dir, receive_results_dir, reconf_results_dir, root, sends_results_dir,
-                      sum_expes_duration, num_run)
-            )
-            parallel_execs.append(exec_esds)
-
-        for running_exec in parallel_execs:
+        sweeper = ParamSweeper(
+            persistence_dir=os.path.join(root, "sweeper"), sweeps=sweeps, save_sweeps=True
+        )
+        next_sweep = sweeper.get_next()
+        while next_sweep is not None:
             try:
-                running_exec.get()
-            except subprocess.TimeoutExpired as err:
-                print("failed :(")
-                print("------------- Test duration expired (timeout=" + str(tests_timeout) + "s) -------------")
-                print(err.output, end="")
-                # exit(1)
-            except subprocess.CalledProcessError as err:
-                print("failed :(")
-                print("------------- Test has a non-zero exit code -------------")
-                print(err.output, end="")
-                # exit(2)
+                parameter_tuple, parameter_file = next_sweep
+                parameter = {
+                    "stressConso": parameter_tuple[0],
+                    "idleConso": parameter_tuple[1],
+                    "techno": {"name": parameter_tuple[2][0], "bandwidth": parameter_tuple[2][1], "commsConso": parameter_tuple[2][2]},
+                    "typeSynchro": parameter_tuple[3]
+                }
+                joined_params = simulation_functions.get_params_joined(parameter)
+                title = Path(parameter_file).stem
+
+                ## Designate parameter file and create result dir
+                current_test_path=os.path.join(expe_esds_parameter_files,parameter_file)
+                execution_dir = f"{title}-{joined_params}"
+                os.makedirs(os.path.join(idle_results_dir, execution_dir), exist_ok=True)
+                os.makedirs(os.path.join(reconf_results_dir, execution_dir), exist_ok=True)
+                os.makedirs(os.path.join(sends_results_dir, execution_dir), exist_ok=True)
+                os.makedirs(os.path.join(receive_results_dir, execution_dir), exist_ok=True)
+
+                platform_path = os.path.abspath(f"concerto-d/platform-{joined_params}.yaml")
+                platform_path_copy = os.path.abspath(f"concerto-d/platform-{joined_params}-{title}-{num_run}.yaml")
+                shutil.copy(platform_path, platform_path_copy)
+
+                with open(platform_path_copy) as f:
+                    data = yaml.safe_load(f)
+                with open(platform_path_copy, "w") as f:
+                    data["nodes"]["arguments"]["all"]["expe_config_file"] = current_test_path
+                    data["nodes"]["arguments"]["all"]["num_run"] = num_run
+                    yaml.safe_dump(data, f, sort_keys=False)
+
+                ## Launch experiment
+                start_at = time.time()
+                print(f"Starting {execution_dir}")
+                # print(f"Starting experiment, platform_path_copy: {platform_path_copy}")
+                # with open(os.path.join(root, f"logs/{execution_dir}-log.txt"), "w") as f:
+                #     subprocess.run(["esds", "run", platform_path_copy], stdout=f, timeout=tests_timeout, encoding="utf-8")
+                out = subprocess.check_output(["esds", "run", platform_path_copy], stderr=subprocess.STDOUT, timeout=tests_timeout, encoding="utf-8")
+                # out = subprocess.Popen(["esds", "run", platform_path_copy], stderr=subprocess.STDOUT, encoding="utf-8")
+                # out.wait()
+                # if "AssertionError" in out:
+                #     for line in out.split("\n"):
+                #         if line.startswith("AssertionError"):
+                #             print(line)
+                end_at = time.time()
+                print(f"Finished {title}")
+
+                ## Run verification scripts
+                with open(current_test_path) as f:
+                    esds_parameters = yaml.safe_load(f)
+                _esds_results_verification(esds_parameters, expe_esds_verification_files, idle_results_dir, reconf_results_dir,
+                                           sends_results_dir, receive_results_dir, execution_dir, parameter["stressConso"],
+                                           parameter["idleConso"])
+                expe_duration = end_at - start_at
+                print(f"{title} passed (%0.1fs)" % (expe_duration))
+                sum_expes_duration += expe_duration
+
+                ## Aggregate to global results
+                result = {title: {"energy": _load_energetic_expe_results_from_title(execution_dir, idle_results_dir, reconf_results_dir,
+                                                                                    sends_results_dir, receive_results_dir),
+                                  "time": esds_parameters["max_execution_duration"]}}
+                global_results_path = f"global_results-{title}-{joined_params}.yaml"
+                with open(os.path.join(root, global_results_path), "w") as f:
+                    yaml.safe_dump(result, f)
+                sweeper.done(next_sweep)
+                next_sweep = sweeper.get_next()
             except Exception as err:
-                print("failed :(")
+                print(f"FAILED {next_sweep}")
                 traceback.print_exc()
-                # exit(3)
+                sweeper.skip(next_sweep)
             finally:
-                print(f"Expe done: {nb_expes_done + 1}/{nb_expes_tot}")
-                nb_expes_done += 1
-        nb_params_done += 1
-
-        # print("Dump results")
-        # global_results_path = f"global_results-{joined_params}.yaml"
-        # with open(os.path.join(root, global_results_path), "w") as f:
-        #     yaml.safe_dump(global_results, f)
-        # print("Results dumped")
-        # print(f"All passed in {sum_expes_duration:.2f}s")
-        # global_results = {}
-        # for file in os.listdir(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/to_analyse_test/"):
-        #     with open(os.path.join(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/to_analyse_test/", file)) as f:
-        #         global_results.update(yaml.safe_load(f))
-        # print_results.print_energy_results(global_results)
-
-
-def _execute_esds_simulation(sweeps, expe_esds_parameter_files, expe_esds_verification_files, global_results, idle_results_dir,
-                             receive_results_dir, reconf_results_dir, root, sends_results_dir, sum_expes_duration, num_run):
-    sweeper = ParamSweeper(
-        persistence_dir=os.path.join(root, "sweeper"), sweeps=sweeps, save_sweeps=True
-    )
-    next_sweep = sweeper.get_next()
-    while next_sweep is not None:
-        try:
-            parameter_tuple, parameter_file = next_sweep
-            parameter = {
-                "stressConso": parameter_tuple[0],
-                "idleConso": parameter_tuple[1],
-                "techno": {"name": parameter_tuple[2][0], "bandwidth": parameter_tuple[2][1], "commsConso": parameter_tuple[2][2]},
-                "typeSynchro": parameter_tuple[3]
-            }
-            joined_params = simulation_functions.get_params_joined(parameter)
-            title = Path(parameter_file).stem
-
-            ## Designate parameter file and create result dir
-            current_test_path=os.path.join(expe_esds_parameter_files,parameter_file)
-            execution_dir = f"{title}-{joined_params}"
-            os.makedirs(os.path.join(idle_results_dir, execution_dir), exist_ok=True)
-            os.makedirs(os.path.join(reconf_results_dir, execution_dir), exist_ok=True)
-            os.makedirs(os.path.join(sends_results_dir, execution_dir), exist_ok=True)
-            os.makedirs(os.path.join(receive_results_dir, execution_dir), exist_ok=True)
-
-            platform_path = os.path.abspath(f"concerto-d/platform-{joined_params}.yaml")
-            platform_path_copy = os.path.abspath(f"concerto-d/platform-{joined_params}-{title}-{num_run}.yaml")
-            shutil.copy(platform_path, platform_path_copy)
-
-            with open(platform_path_copy) as f:
-                data = yaml.safe_load(f)
-            with open(platform_path_copy, "w") as f:
-                data["nodes"]["arguments"]["all"]["expe_config_file"] = current_test_path
-                data["nodes"]["arguments"]["all"]["num_run"] = num_run
-                yaml.safe_dump(data, f, sort_keys=False)
-
-            ## Launch experiment
-            start_at = time.time()
-            print(f"Starting {execution_dir}")
-            # print(f"Starting experiment, platform_path_copy: {platform_path_copy}")
-            # with open(os.path.join(root, f"logs/{execution_dir}-log.txt"), "w") as f:
-            #     subprocess.run(["esds", "run", platform_path_copy], stdout=f, timeout=tests_timeout, encoding="utf-8")
-            out = subprocess.check_output(["esds", "run", platform_path_copy], stderr=subprocess.STDOUT, timeout=tests_timeout, encoding="utf-8")
-            # out = subprocess.Popen(["esds", "run", platform_path_copy], stderr=subprocess.STDOUT, encoding="utf-8")
-            # out.wait()
-            # if "AssertionError" in out:
-            #     for line in out.split("\n"):
-            #         if line.startswith("AssertionError"):
-            #             print(line)
-            end_at = time.time()
-            print(f"Finished {title}")
-
-            ## Run verification scripts
-            with open(current_test_path) as f:
-                esds_parameters = yaml.safe_load(f)
-            _esds_results_verification(esds_parameters, expe_esds_verification_files, idle_results_dir, reconf_results_dir,
-                                       sends_results_dir, receive_results_dir, execution_dir, parameter["stressConso"],
-                                       parameter["idleConso"])
-            expe_duration = end_at - start_at
-            print(f"{title} passed (%0.1fs)" % (expe_duration))
-            sum_expes_duration += expe_duration
-
-            ## Aggregate to global results
-            result = {title: {"energy": _load_energetic_expe_results_from_title(execution_dir, idle_results_dir, reconf_results_dir,
-                                                                                sends_results_dir, receive_results_dir),
-                              "time": esds_parameters["max_execution_duration"]}}
-            global_results.update(result)
-            global_results_path = f"global_results-{title}-{joined_params}.yaml"
-            with open(os.path.join(root, global_results_path), "w") as f:
-                yaml.safe_dump(result, f)
-            sweeper.done(next_sweep)
-            next_sweep = sweeper.get_next()
-        except Exception as err:
-            print(f"FAILED {next_sweep}")
-            traceback.print_exc()
-            sweeper.skip(next_sweep)
-        finally:
-            next_sweep = sweeper.get_next()
+                next_sweep = sweeper.get_next()
+                print(f"Getting next sweeps: {next_sweep}")
 
 
 if __name__ == '__main__':
