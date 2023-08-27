@@ -1,4 +1,4 @@
-max_execution_duration: 40
+max_execution_duration: 100
 nb_nodes: 5
 reconf_periods_per_node:
   0:
@@ -21,13 +21,14 @@ sending_periods_per_node:
     - 10
     - 1: 1
   - - 20
-    - 40
+    - 100
     - 1: 1
   1: []
   2:
   - - 0
     - 9.8
     - 1: 1
+#  2: []
   3: []
   4: []
 title: esds_generated_data-test-sync-
@@ -36,12 +37,12 @@ uptimes_periods_per_node:
   - - 0
     - 10
   - - 20
-    - 40
+    - 100
   1:
   - - 0
     - 7
   - - 38
-    - 40
+    - 100
   2:
   - - 0
     - 10
