@@ -182,6 +182,8 @@ def main(simu_to_launch_dir="expe_esds_parameter_files_dao"):
         nb_expes_tot = min(len(parameter_files_names), limit_expes)
         print(f"Total nb experiments per param: {nb_expes_tot}")
 
+        os.makedirs(os.path.join(root, "logs"), exist_ok=True)
+
         ## Getting sweeped parameters
         all_params = simulation_functions.get_simulation_swepped_parameters()
         nb_params_tot = len(all_params)
@@ -288,14 +290,14 @@ def _execute_esds_simulation(sweeps, expe_esds_parameter_files, expe_esds_verifi
             start_at = time.time()
             print(f"Starting {execution_dir}")
             # print(f"Starting experiment, platform_path_copy: {platform_path_copy}")
-            out = subprocess.check_output(["esds", "run", platform_path_copy], stderr=subprocess.STDOUT, timeout=tests_timeout,
-                                          encoding="utf-8")
+            with open(os.path.join(root, f"logs/{execution_dir}-log.txt"), "w") as f:
+                subprocess.run(["esds", "run", platform_path_copy], stdout=f, timeout=tests_timeout, encoding="utf-8")
             # out = subprocess.Popen(["esds", "run", platform_path_copy], stderr=subprocess.STDOUT, encoding="utf-8")
             # out.wait()
-            if "AssertionError" in out:
-                for line in out.split("\n"):
-                    if line.startswith("AssertionError"):
-                        print(line)
+            # if "AssertionError" in out:
+            #     for line in out.split("\n"):
+            #         if line.startswith("AssertionError"):
+            #             print(line)
             end_at = time.time()
             print(f"Finished {title}")
 
