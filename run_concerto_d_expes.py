@@ -290,8 +290,9 @@ def _execute_esds_simulation(sweeps, expe_esds_parameter_files, expe_esds_verifi
             start_at = time.time()
             print(f"Starting {execution_dir}")
             # print(f"Starting experiment, platform_path_copy: {platform_path_copy}")
-            with open(os.path.join(root, f"logs/{execution_dir}-log.txt"), "w") as f:
-                subprocess.run(["esds", "run", platform_path_copy], stdout=f, timeout=tests_timeout, encoding="utf-8")
+            # with open(os.path.join(root, f"logs/{execution_dir}-log.txt"), "w") as f:
+            #     subprocess.run(["esds", "run", platform_path_copy], stdout=f, timeout=tests_timeout, encoding="utf-8")
+            out = subprocess.check_output(["esds", "run", platform_path_copy], stderr=subprocess.STDOUT, timeout=tests_timeout, encoding="utf-8")
             # out = subprocess.Popen(["esds", "run", platform_path_copy], stderr=subprocess.STDOUT, encoding="utf-8")
             # out.wait()
             # if "AssertionError" in out:
