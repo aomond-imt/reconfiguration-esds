@@ -55,6 +55,8 @@ def execute(api: Node):
     for up_start, up_end in node_uptimes:
         # Sleeping period (no receive)
         wait_before_start = up_start - api.read("clock")
+        if abs(wait_before_start) <= 0.0001:
+            wait_before_start = 0
         api.log(f"Waiting {wait_before_start} before starting")
         api.wait(wait_before_start)
 
@@ -65,6 +67,8 @@ def execute(api: Node):
             if node_send != {} and up_start <= start and end <= up_end:
                 # No sending period
                 no_sending_period = start - api.read("clock")
+                if abs(no_sending_period) <= 0.0001:
+                    no_sending_period = 0
                 api.log(f"Wait {no_sending_period} until next period")
                 api.wait(no_sending_period)
                 tot_no_sending_time_flat += no_sending_period
@@ -96,6 +100,8 @@ def execute(api: Node):
 
                     if api.read("clock") < end:
                         wait_polling = min(FREQUENCE_POLLING, end - api.read("clock"))
+                        if abs(wait_polling) <= 0.0001:
+                            wait_polling = 0
                         api.wait(wait_polling)
                         # Save wait_polling
                         if wait_polling not in tot_wait_polling.keys():

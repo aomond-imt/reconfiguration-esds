@@ -51,6 +51,8 @@ def execute(api: Node):
     for up_start, up_end in node_uptimes:
         # Sleeping period (no receive)
         wait_before_start = up_start - api.read("clock")
+        if abs(wait_before_start) <= 0.0001:
+            wait_before_start = 0
         api.log(f"Waiting {wait_before_start} before starting")
         api.wait(wait_before_start)
 

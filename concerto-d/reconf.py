@@ -41,6 +41,8 @@ def execute(api: Node):
         if nb_processes > 0:
             # No reconf period
             no_reconf_duration = start - api.read("clock")
+            if abs(no_reconf_duration) <= 0.0001:
+                no_reconf_duration = 0
             api.wait(no_reconf_duration)
             tot_no_reconf_time += no_reconf_duration
 
@@ -49,6 +51,8 @@ def execute(api: Node):
             reconf_duration_ponderee = reconf_duration
             # reconf_cons.set_power(stress_power * cpu_utilization_per_process * nb_processes)
             reconf_cons.set_power(stress_power)
+            if abs(reconf_duration) <= 0.0001:
+                reconf_duration = 0
             api.wait(reconf_duration)
             tot_reconf_time += reconf_duration_ponderee
             tot_flat_reconf_time += reconf_duration

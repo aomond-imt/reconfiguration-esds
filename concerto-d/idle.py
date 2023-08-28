@@ -42,14 +42,19 @@ def execute(api: Node):
     for start, end in node_uptimes:
         # Sleeping period
         sleeping_duration = start - api.read("clock")
+        if abs(sleeping_duration) <= 0.0001:
+            sleeping_duration = 0
         api.wait(sleeping_duration)
         tot_sleeping_time += sleeping_duration
 
         # Uptime period
         api.turn_on()
         idle_cons.set_power(idle_power)
-        api.wait(end - start)
-        tot_uptime += end - start
+        uptime_duration = end - start
+        if abs(uptime_duration) <= 0.0001:
+            uptime_duration = 0
+        api.wait(uptime_duration)
+        tot_uptime += uptime_duration
 
         # Sleeping period
         api.turn_off()
