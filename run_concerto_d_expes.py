@@ -154,7 +154,7 @@ def _group_by_version_concerto_d(parameter_files_list):
 
 def main(simu_to_launch_dir="expe_esds_parameter_files_dao"):
     parallel_execs = []
-    nb_cores = math.ceil(cpu_count() * 0.9)
+    nb_cores = math.ceil(cpu_count() * 0.3)
     pool = Pool(nb_cores)
     for _ in range(nb_cores):
         exec_esds = pool.apply_async(
