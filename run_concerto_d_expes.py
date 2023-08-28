@@ -231,13 +231,14 @@ def _execute_esds_simulation(simu_to_launch_dir):
         sweeps = []
         for parameter in all_params:
             for parameter_file in parameter_files_list:
-                parameter_tuple = (
-                    parameter["stressConso"],
-                    parameter["idleConso"],
-                    (parameter["techno"]["name"], parameter["techno"]["bandwidth"], parameter["techno"]["commsConso"]),
-                    parameter["typeSynchro"]
-                )
-                sweeps.append((parameter_tuple, parameter_file))
+                if "sync-update-T1-30-pull" not in parameter_file:
+                    parameter_tuple = (
+                        parameter["stressConso"],
+                        parameter["idleConso"],
+                        (parameter["techno"]["name"], parameter["techno"]["bandwidth"], parameter["techno"]["commsConso"]),
+                        parameter["typeSynchro"]
+                    )
+                    sweeps.append((parameter_tuple, parameter_file))
 
         sweeper = ParamSweeper(
             persistence_dir=os.path.join(root, "sweeper"), sweeps=sweeps, save_sweeps=True
