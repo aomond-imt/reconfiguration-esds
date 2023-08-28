@@ -86,11 +86,10 @@ def execute(api: Node):
                             api.wait(min(end - api.read("clock"), size/bandwidth))
                             # code, data = api.receivet(interface_name, timeout=min(end - api.read("clock"), (size/bandwidth)+0.0001))  # Put a little overhead for float operations precision
                             # api.log(f"Receive ack: {data}")
-                            # if data is not None:
-                            #     if data_to_send not in tot_ack_received.keys():
-                            #         tot_ack_received[data_to_send] = 1
-                            #     else:
-                            #         tot_ack_received[data_to_send] += 1
+                            if data_to_send not in tot_ack_received.keys():
+                                tot_ack_received[data_to_send] = 1
+                            else:
+                                tot_ack_received[data_to_send] += 1
 
                     if api.read("clock") < end:
                         wait_polling = min(FREQUENCE_POLLING, end - api.read("clock"))
