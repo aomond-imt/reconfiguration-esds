@@ -12,8 +12,4 @@ concerto-d-results/*
 !expe_esds_parameter_files_60_uptimes_3600_sleeping/
 !expe_esds_parameter_files_dao/
 !tests/
-!0/
-!1/
-!2/
-!3/
-!4/
+![0-99]*/

@@ -1,0 +1,42 @@
+max_execution_duration: 1822.92
+nb_nodes: 3
+receive_periods_per_node:
+  0: []
+  1: []
+  2: []
+reconf_periods_per_node:
+  0:
+  - - 1805.03
+    - 1806.06
+    - 1
+  - - 1806.06
+    - 1812.41
+    - 1
+  - - 1812.41
+    - 1822.92
+    - 1
+  1:
+  - - 1567.72
+    - 1572.71
+    - 1
+  - - 1572.71
+    - 1589.4
+    - 1
+  2: []
+sending_periods_per_node:
+  0: []
+  1: []
+  2: []
+title: esds_generated_data-uptimes-dao-60-sec-async-deploy-T1-1-pull
+uptimes_periods_per_node:
+  0:
+  - - 1805.029
+    - 1822.92
+  1:
+  - - 1567.725
+    - 1627.725
+  2:
+  - - 1567.725
+    - 1627.725
+  - - 1805.029
+    - 1822.92

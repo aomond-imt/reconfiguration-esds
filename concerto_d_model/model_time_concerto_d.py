@@ -572,7 +572,8 @@ def _compute_sending_periods_per_node(esds_data):
 
 
 if __name__ == "__main__":
-    for num_draw in range(5):
+    for num_draw in range(100):
+        print(f"{num_draw}...")
         all_expe_parameters = generate_mascots_schedules(num_draw)
         expe_esds_parameter_files = f"/home/aomond/reconfiguration-esds/concerto-d-results/{num_draw}/expe_esds_parameter_files_dao"
         os.makedirs(expe_esds_parameter_files, exist_ok=True)
