@@ -21,6 +21,7 @@ def execute(api: Node):
         # Check if nb_deps is crossed
         nb_nodes = expe_config["nb_nodes"]
         if node_id >= nb_nodes:
+            api.turn_off()
             print("dismmissing")
             return
 

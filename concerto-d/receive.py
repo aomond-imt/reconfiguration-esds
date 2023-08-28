@@ -23,6 +23,7 @@ def execute(api: Node):
         # Check if nb_deps is crossed
         nb_nodes = expe_config["nb_nodes"]
         if node_id >= nb_nodes:
+            api.turn_off()
             api.log(f"Removing: node_id: {node_id} nb_nodes: {nb_nodes}")
             return
         else:
