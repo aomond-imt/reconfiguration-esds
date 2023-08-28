@@ -195,7 +195,7 @@ def main(simu_to_launch_dir="expe_esds_parameter_files_dao"):
 
 
 def _execute_esds_simulation(simu_to_launch_dir):
-    for num_run in range(5):
+    for num_run in range(100):
         # Setup variables
         ## Configuration files dirs
         root = f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/{num_run}"
