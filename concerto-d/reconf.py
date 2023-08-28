@@ -57,6 +57,8 @@ def execute(api: Node):
             reconf_cons.set_power(0)
 
     remaining_no_reconf_duration = max_execution_duration - api.read("clock")
+    if abs(remaining_no_reconf_duration) <= 0.0001:
+        remaining_no_reconf_duration = 0
     api.wait(remaining_no_reconf_duration)
     tot_no_reconf_time += remaining_no_reconf_duration
 

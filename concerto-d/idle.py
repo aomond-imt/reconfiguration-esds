@@ -56,6 +56,8 @@ def execute(api: Node):
         idle_cons.set_power(0)
 
     remaining_sleeping_duration = max_execution_duration - api.read("clock")
+    if abs(remaining_sleeping_duration) <= 0.0001:
+        remaining_sleeping_duration = 0
     api.wait(remaining_sleeping_duration)
     tot_sleeping_time += remaining_sleeping_duration
 

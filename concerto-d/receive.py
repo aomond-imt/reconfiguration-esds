@@ -83,6 +83,8 @@ def execute(api: Node):
         # Sleeping period
         api.turn_off()
     remaining_no_sending_duration = max_execution_duration - api.read("clock")
+    if abs(remaining_no_sending_duration) <= 0.0001:
+        remaining_no_sending_duration = 0
     api.log(f"Waiting {remaining_no_sending_duration} before terminating")
     api.wait(remaining_no_sending_duration)
     sending_cons_energy = sending_cons.get_energy()

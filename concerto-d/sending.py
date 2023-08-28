@@ -83,7 +83,10 @@ def execute(api: Node):
                             else:
                                 tot_msg_sent[data_to_send] += 1
 
-                            api.wait(min(end - api.read("clock"), size/bandwidth))
+                            waiting_ack = min(end - api.read("clock"), size/bandwidth)
+                            if abs(waiting_ack) <= 0.0001:
+                                waiting_ack = 0
+                            api.wait(waiting_ack)
                             # code, data = api.receivet(interface_name, timeout=min(end - api.read("clock"), (size/bandwidth)+0.0001))  # Put a little overhead for float operations precision
                             # api.log(f"Receive ack: {data}")
                             if data_to_send not in tot_ack_received.keys():
@@ -102,6 +105,8 @@ def execute(api: Node):
                 tot_sending_time_flat += api.read("clock") - sending_start
 
         remaining_uptime = up_end - api.read("clock")
+        if abs(remaining_uptime) <= 0.0001:
+            remaining_uptime = 0
         api.log(f"Waiting remaining uptime {remaining_uptime}")
         api.wait(remaining_uptime)
         tot_no_sending_time_flat += remaining_uptime
@@ -109,6 +114,8 @@ def execute(api: Node):
         # Sleeping period
         api.turn_off()
     remaining_no_sending_duration = max_execution_duration - api.read("clock")
+    if abs(remaining_no_sending_duration) <= 0.0001:
+        remaining_no_sending_duration = 0
     api.log(f"Waiting {remaining_no_sending_duration} before terminating")
     api.wait(remaining_no_sending_duration)
     sending_cons_energy = sending_cons.get_energy()
