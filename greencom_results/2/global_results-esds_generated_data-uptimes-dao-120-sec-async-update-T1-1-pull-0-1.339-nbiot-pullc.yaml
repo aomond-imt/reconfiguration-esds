@@ -1,0 +1,66 @@
+esds_generated_data-uptimes-dao-120-sec-async-update-T1-1-pull:
+  energy:
+    idles:
+      0:
+        comms_cons: 0
+        node_conso: 174.76
+      1:
+        comms_cons: 0
+        node_conso: 321.36
+      2:
+        comms_cons: 0
+        node_conso: 496.12
+    receives:
+      0:
+        comms_cons: 0.0
+        node_conso: 0
+        tot_msg_received: {}
+        tot_msg_responded: {}
+      1:
+        comms_cons: 0.0
+        node_conso: 0
+        tot_msg_received: {}
+        tot_msg_responded: {}
+      2:
+        comms_cons: 3.06
+        node_conso: 0
+        tot_msg_received:
+          257: 229
+        tot_msg_responded:
+          257: 229
+    reconfs:
+      0:
+        comms_cons: 0
+        node_conso: 0.0
+      1:
+        comms_cons: 0
+        node_conso: 0.0
+      2:
+        comms_cons: 0
+        node_conso: 0.0
+    sendings:
+      0:
+        comms_cons: 1.49
+        node_conso: 0
+        tot_ack_received: {}
+        tot_msg_sent:
+          257: 112
+        tot_wait_polling:
+          0.675840000007156: 1
+          1: 110
+      1:
+        comms_cons: 1.58
+        node_conso: 0
+        tot_ack_received: {}
+        tot_msg_sent:
+          257: 118
+        tot_wait_polling:
+          0.5739200000080018: 1
+          1: 117
+      2:
+        comms_cons: 0.0
+        node_conso: 0
+        tot_ack_received: {}
+        tot_msg_sent: {}
+        tot_wait_polling: {}
+  time: 5694.56

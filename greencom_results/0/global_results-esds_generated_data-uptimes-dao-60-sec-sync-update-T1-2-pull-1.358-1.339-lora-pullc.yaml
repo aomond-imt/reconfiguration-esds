@@ -1,0 +1,105 @@
+esds_generated_data-uptimes-dao-60-sec-sync-update-T1-2-pull:
+  energy:
+    idles:
+      0:
+        comms_cons: 0
+        node_conso: 6006.72
+      1:
+        comms_cons: 0
+        node_conso: 5987.44
+      2:
+        comms_cons: 0
+        node_conso: 5945.16
+      3:
+        comms_cons: 0
+        node_conso: 0.0
+    receives:
+      0:
+        comms_cons: 0.08
+        node_conso: 0
+        tot_msg_received:
+          257: 6
+        tot_msg_responded:
+          257: 6
+      1:
+        comms_cons: 0.44
+        node_conso: 0
+        tot_msg_received:
+          257: 48
+        tot_msg_responded:
+          257: 19
+      2:
+        comms_cons: 1.17
+        node_conso: 0
+        tot_msg_received:
+          257: 155
+        tot_msg_responded:
+          257: 22
+      3:
+        comms_cons: 0.0
+        node_conso: 0
+        tot_msg_received: {}
+        tot_msg_responded: {}
+    reconfs:
+      0:
+        comms_cons: 0
+        node_conso: 28.83
+      1:
+        comms_cons: 0
+        node_conso: 24.73
+      2:
+        comms_cons: 0
+        node_conso: 30.76
+      3:
+        comms_cons: 0
+        node_conso: 0.0
+    sendings:
+      0:
+        comms_cons: 42.43
+        node_conso: 0
+        tot_ack_received: {}
+        tot_msg_sent:
+          257: 6409
+        tot_wait_polling:
+          0.2063599999842154: 1
+          0.3945599989965558: 27
+          0.4470399981364608: 12
+          0.44703999964985996: 13
+          0.44704000002820976: 3
+          0.44704000116325915: 17
+          0.7470799994189292: 1
+          1: 3906
+      1:
+        comms_cons: 27.3
+        node_conso: 0
+        tot_ack_received: {}
+        tot_msg_sent:
+          257: 4147
+        tot_wait_polling:
+          0.3945599989965558: 40
+          0.39455999981146306: 13
+          0.39456000001518987: 4
+          0.3945600006263703: 17
+          0.6082799999276176: 1
+          1: 4072
+      2:
+        comms_cons: 16.99
+        node_conso: 0
+        tot_ack_received: {}
+        tot_msg_sent:
+          257: 2579
+        tot_wait_polling:
+          0.39355999998974767: 1
+          0.3945599989965558: 12
+          0.39455999981146306: 13
+          0.39456000001518987: 3
+          0.3945600006263703: 17
+          0.6022799999336712: 1
+          1: 2532
+      3:
+        comms_cons: 0.0
+        node_conso: 0
+        tot_ack_received: {}
+        tot_msg_sent: {}
+        tot_wait_polling: {}
+  time: 289255.29

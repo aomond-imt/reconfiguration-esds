@@ -1,0 +1,89 @@
+esds_generated_data-uptimes-dao-120-sec-sync-deploy-T1-2-pull:
+  energy:
+    idles:
+      0:
+        comms_cons: 0
+        node_conso: 5999.61
+      1:
+        comms_cons: 0
+        node_conso: 5945.16
+      2:
+        comms_cons: 0
+        node_conso: 5948.98
+      3:
+        comms_cons: 0
+        node_conso: 0.0
+    receives:
+      0:
+        comms_cons: 0.0
+        node_conso: 0
+        tot_msg_received: {}
+        tot_msg_responded: {}
+      1:
+        comms_cons: 0.61
+        node_conso: 0
+        tot_msg_received:
+          257: 89
+        tot_msg_responded:
+          257: 3
+      2:
+        comms_cons: 1.47
+        node_conso: 0
+        tot_msg_received:
+          257: 218
+        tot_msg_responded:
+          257: 6
+      3:
+        comms_cons: 0.0
+        node_conso: 0
+        tot_msg_received: {}
+        tot_msg_responded: {}
+    reconfs:
+      0:
+        comms_cons: 0
+        node_conso: 27.77
+      1:
+        comms_cons: 0
+        node_conso: 29.44
+      2:
+        comms_cons: 0
+        node_conso: 3.76
+      3:
+        comms_cons: 0
+        node_conso: 0.0
+    sendings:
+      0:
+        comms_cons: 37.99
+        node_conso: 0
+        tot_ack_received: {}
+        tot_msg_sent:
+          257: 5765
+        tot_wait_polling:
+          0.027560000055927958: 1
+          0.1808400012232596: 1
+          0.36156000006303657: 1
+          0.5378799993195571: 1
+          0.5975999998045154: 1
+          0.6473599984601606: 1
+          0.8713599980110303: 2
+          0.8713600012415554: 16
+          1: 3971
+      1:
+        comms_cons: 0.0
+        node_conso: 0
+        tot_ack_received: {}
+        tot_msg_sent: {}
+        tot_wait_polling: {}
+      2:
+        comms_cons: 0.0
+        node_conso: 0
+        tot_ack_received: {}
+        tot_msg_sent: {}
+        tot_wait_polling: {}
+      3:
+        comms_cons: 0.0
+        node_conso: 0
+        tot_ack_received: {}
+        tot_msg_sent: {}
+        tot_wait_polling: {}
+  time: 145711.86
