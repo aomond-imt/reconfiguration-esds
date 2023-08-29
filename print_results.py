@@ -319,24 +319,28 @@ def plot_bar_results(energy_gain_by_nb_deps, param_names):
             title = f'{scenario_name}-{param_names}'.replace("esds_generated_data-uptimes-dao-", "").replace("-", "   ")
             ax.set_title(title)
             ax.set_xticks(x + width, gain_by_nb_deps[60].keys())
-            ax.legend(loc='upper left', ncols=3)
-            # if type_reconf == "async":
-            #     if "update" in scenario_name:
-            #         ax.set_ylim(0, 600)
-            #     else:
-            #         ax.set_ylim(0, 14000)
-            # else:
-            #     if "update" in scenario_name:
-            #         ax.set_ylim(0, 1500)
-            #     else:
-            #         ax.set_ylim(0, 650000)
-            ax.set_ylim(0, max_bound * 1.1)
+            ax.legend(loc='upper left', ncols=3, borderaxespad=0.)
+            if type_reconf == "async":
+                if "update" in scenario_name:
+                    ax.set_ylim(0, 700)      # Dynamic
+                    # ax.set_ylim(0, 36000)  # Static
+                else:
+                    ax.set_ylim(0, 550)      # Dynamic
+                    # ax.set_ylim(0, 30000)    # Static
+            else:
+                if "update" in scenario_name:
+                    ax.set_ylim(0, 1800)     # Dynamic
+                    # ax.set_ylim(0, 280000) # Static
+                else:
+                    ax.set_ylim(0, 2000)     # Dynamic
+                    # ax.set_ylim(0, 650000) # Static
+            # ax.set_ylim(0, max_bound * 1.1)
 
-            plt.show()
-            # dir_to_save = f"/home/aomond/reconfiguration-esds/greencom_results/0/graphs/time_update/{param_names}"
-            # # dir_to_save = f"/home/aomond/reconfiguration-esds/concerto-d-results/pycharm_plots/detail/{param_names}"
-            # os.makedirs(dir_to_save, exist_ok=True)
-            # plt.savefig(f"{dir_to_save}/{scenario_name}.png")
+            # plt.show()
+            dir_to_save = f"/home/aomond/reconfiguration-esds/greencom_results/0/graphs/deploy"
+            # dir_to_save = f"/home/aomond/reconfiguration-esds/concerto-d-results/pycharm_plots/detail/{param_names}"
+            os.makedirs(dir_to_save, exist_ok=True)
+            plt.savefig(f"{dir_to_save}/static-{type_reconf}-{scenario_name}-{param_names}.png")
 
 
 def _plot_tot(attribute, ax, bottom, max_bound, measurement, offset, width, x):
@@ -445,12 +449,12 @@ if __name__ == "__main__":
     # param = "0.181-1.5778-lora-pullc"
     # params_list = ["1.358-1.339-lora-pullc"]
     # params_list = ["0-1.339-lora-pullc"]
-    params_list = ["0-1.339-lora-pullc", "1.358-1.339-lora-pullc"]
+    params_list = ["0-1.339-lora-pullc", "1.358-1.339-lora-pullc", "0-1.339-nbiot-pullc", "1.358-1.339-nbiot-pullc"]
     # params_list = ["0-1.339-lora-pullc", "0-1.339-nbiot-pullc", "1.237-1.339-lora-pullc", "1.237-1.339-nbiot-pullc"]
     for param in params_list:
         global_results = {}
         for file in os.listdir(results_dir):
-            if param in file and "T1" in file and "update" in file:
+            if param in file and "T1" in file and "deploy" in file:
                 with open(os.path.join(results_dir,file)) as f:
                     global_results.update(yaml.safe_load(f))
 
