@@ -37,7 +37,7 @@ def get_params_joined(parameter):
         parameter["techno"]["name"],
         parameter["typeSynchro"]
     )
-    return f"{stressConso}-{idleConso}-{nameTechno}-{typeSynchro}"
+    return f"{stressConso}-{idleConso}-{typeSynchro}-{nameTechno}"
 
 
 def is_router(node_id, nb_nodes):
