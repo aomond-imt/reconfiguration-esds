@@ -187,77 +187,80 @@ def generate_mascots_schedules(num_draw):
                 for reconf_name in ["deploy", "update"]:
                     for trans_times in ["T1"]:
                         for type_synchro in ["pull"]:
-                            with open(f"/home/aomond/concerto-d-projects/experiment_files/parameters/transitions_times/transitions_times-1-30-deps12-{trans_times[1:]}.json") as f:
-                                tts = json.load(f)["transitions_times"]
+                            for techno in ["lora", "nbiot"]:
+                                bandwidth = 6250 if techno == "lora" else 25000
+                                with open(f"/home/aomond/concerto-d-projects/experiment_files/parameters/transitions_times/transitions_times-1-30-deps12-{trans_times[1:]}.json") as f:
+                                    tts = json.load(f)["transitions_times"]
 
-                            # print(name_uptime, version_concerto_d, reconf_name, trans_times)
-                            if reconf_name == "deploy":
-                                list_deps, name_deps = _get_deploy_parallel_use_case_model(tts, nb_deps)
-                            else:
-                                list_deps, name_deps = _get_update_parallel_use_case_model(tts, nb_deps)
+                                # print(name_uptime, version_concerto_d, reconf_name, trans_times)
+                                if reconf_name == "deploy":
+                                    list_deps, name_deps = _get_deploy_parallel_use_case_model(tts, nb_deps)
+                                else:
+                                    list_deps, name_deps = _get_update_parallel_use_case_model(tts, nb_deps)
 
-                            all_results_esds, m, m_time, uptime_schedule = compute_all_time_parameters_esds(
-                                list_deps,
-                                name_deps,
-                                nb_deps,
-                                type_synchro,
-                                uptime_schedule_nodes,
-                                version_concerto_d
-                            )
-                            # offset_start = min(uptime_schedule, key=lambda s: s[0][0] if s[0][0] != -1 else math.inf)[0][0]
-                            # m_time = m - offset_start
-                            # # print(f"removed {offset_start}")
-                            # exp_val = expected[name_uptime][version_concerto_d][reconf_name][trans_times]
-                            # delta_s = m_time - exp_val
-                            # delta_perc = delta_s*100/exp_val
-                            # if trans_times == "T0":
-                            #     if reconf_name == "deploy":
-                            #         expected_reconf_duration = 111.75
-                            #     else:
-                            #         expected_reconf_duration = 73.96 + IMPLEM_OVERHEAD  # Not gonna be correct bc IMPLEM_OVERHEAD is added more than 1 time
-                            # else:
-                            #     if reconf_name == "deploy":
-                            #         expected_reconf_duration = 91.23
-                            #     else:
-                            #         expected_reconf_duration = 100.24 + IMPLEM_OVERHEAD  # Not gonna be correct bc IMPLEM_OVERHEAD is added more 1 time
-                            #
-                            # result_str = f"max {trans_times} {reconf_name} {version_concerto_d} {name_uptime}: {m_time}s, delta: {round(delta_s, 2)}s - {round(delta_perc, 2)}% ({exp_val}s expe). Sum reconf: {round(sum_reconf_duration, 2)} ({round(expected_reconf_duration, 2)} expected)"
-                            # if abs(delta_perc) > 1:
-                            #     result_str = result_str + "#############################################"
-                            # if nb_deps == 5:
-                            #     results_dict[name_uptime][version_concerto_d][reconf_name][trans_times] = {nb_deps: result_str}
+                                all_results_esds, m, m_time, uptime_schedule = compute_all_time_parameters_esds(
+                                    list_deps,
+                                    name_deps,
+                                    nb_deps,
+                                    type_synchro,
+                                    uptime_schedule_nodes,
+                                    version_concerto_d,
+                                    bandwidth
+                                )
+                                # offset_start = min(uptime_schedule, key=lambda s: s[0][0] if s[0][0] != -1 else math.inf)[0][0]
+                                # m_time = m - offset_start
+                                # # print(f"removed {offset_start}")
+                                # exp_val = expected[name_uptime][version_concerto_d][reconf_name][trans_times]
+                                # delta_s = m_time - exp_val
+                                # delta_perc = delta_s*100/exp_val
+                                # if trans_times == "T0":
+                                #     if reconf_name == "deploy":
+                                #         expected_reconf_duration = 111.75
+                                #     else:
+                                #         expected_reconf_duration = 73.96 + IMPLEM_OVERHEAD  # Not gonna be correct bc IMPLEM_OVERHEAD is added more than 1 time
+                                # else:
+                                #     if reconf_name == "deploy":
+                                #         expected_reconf_duration = 91.23
+                                #     else:
+                                #         expected_reconf_duration = 100.24 + IMPLEM_OVERHEAD  # Not gonna be correct bc IMPLEM_OVERHEAD is added more 1 time
+                                #
+                                # result_str = f"max {trans_times} {reconf_name} {version_concerto_d} {name_uptime}: {m_time}s, delta: {round(delta_s, 2)}s - {round(delta_perc, 2)}% ({exp_val}s expe). Sum reconf: {round(sum_reconf_duration, 2)} ({round(expected_reconf_duration, 2)} expected)"
+                                # if abs(delta_perc) > 1:
+                                #     result_str = result_str + "#############################################"
+                                # if nb_deps == 5:
+                                #     results_dict[name_uptime][version_concerto_d][reconf_name][trans_times] = {nb_deps: result_str}
 
-                            expe_parameters, title = compute_esds_periods(all_results_esds, m, m_time, name_uptime,
-                                                                          nb_deps, reconf_name, trans_times,
-                                                                          type_synchro, uptime_schedule,
-                                                                          version_concerto_d)
+                                expe_parameters, title = compute_esds_periods(all_results_esds, m, m_time, name_uptime,
+                                                                              nb_deps, reconf_name, trans_times,
+                                                                              type_synchro, uptime_schedule,
+                                                                              version_concerto_d, techno)
 
-                            all_expe_parameters[title] = expe_parameters
+                                all_expe_parameters[title] = expe_parameters
 
-                            # # Verification file
-                            # verification = {"max_execution_duration": m, "reconf_periods": {}, "sending_periods": {}, "receive_periods": {}}
-                            # ## Reconf
-                            # for node_id, reconf_periods in merged_reconf_periods_per_node.items():
-                            #     verification["reconf_periods"][node_id] = sum((end - start) * nb_processes for start, end, nb_processes in reconf_periods)
-                            # ## Send
-                            # for node_id, sending_periods in merged_sending_periods_per_node.items():
-                            #     verification["sending_periods"][node_id] = _compute_sending_periods_per_connected_node(node_id, sending_periods, uptime_schedule)
-                            # ## Receive
-                            # for node_id, receive_periods in merged_receive_periods_per_node.items():
-                            #     verification["receive_periods"][node_id] = _compute_sending_periods_per_connected_node(node_id, receive_periods, uptime_schedule)
-                            #
-                            # ## Write file
-                            # expe_esds_verification_files = f"/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_verification_files"
-                            # os.makedirs(expe_esds_verification_files, exist_ok=True)
-                            # with open(os.path.join(expe_esds_verification_files, f"{title}.yaml"), "w") as f:
-                            #     yaml.safe_dump(verification, f)
+                                # # Verification file
+                                # verification = {"max_execution_duration": m, "reconf_periods": {}, "sending_periods": {}, "receive_periods": {}}
+                                # ## Reconf
+                                # for node_id, reconf_periods in merged_reconf_periods_per_node.items():
+                                #     verification["reconf_periods"][node_id] = sum((end - start) * nb_processes for start, end, nb_processes in reconf_periods)
+                                # ## Send
+                                # for node_id, sending_periods in merged_sending_periods_per_node.items():
+                                #     verification["sending_periods"][node_id] = _compute_sending_periods_per_connected_node(node_id, sending_periods, uptime_schedule)
+                                # ## Receive
+                                # for node_id, receive_periods in merged_receive_periods_per_node.items():
+                                #     verification["receive_periods"][node_id] = _compute_sending_periods_per_connected_node(node_id, receive_periods, uptime_schedule)
+                                #
+                                # ## Write file
+                                # expe_esds_verification_files = f"/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_verification_files"
+                                # os.makedirs(expe_esds_verification_files, exist_ok=True)
+                                # with open(os.path.join(expe_esds_verification_files, f"{title}.yaml"), "w") as f:
+                                #     yaml.safe_dump(verification, f)
             i += 1
     # print(json.dumps(results_dict, indent=4))
     return all_expe_parameters
 
 
 def compute_esds_periods(all_results_esds, m, m_time, name_uptime, nb_deps, reconf_name, trans_times, type_synchro,
-                         uptime_schedule, version_concerto_d):
+                         uptime_schedule, version_concerto_d, techno):
     # Generate ESDS configuration
     esds_data = _compute_esds_data_from_results(all_results_esds)
 
@@ -305,7 +308,7 @@ def compute_esds_periods(all_results_esds, m, m_time, name_uptime, nb_deps, reco
     merged_reconf_periods_per_node[router_key] = []
     sending_periods_during_uptime_per_node[router_key] = []
     # Expe parameters file
-    title = f"esds_generated_data-{name_uptime}-{version_concerto_d}-{reconf_name}-{trans_times}-{nb_deps}-{type_synchro}"
+    title = f"esds_generated_data-{name_uptime}-{version_concerto_d}-{reconf_name}-{trans_times}-{nb_deps}-{type_synchro}-{techno}"
     expe_parameters = {
         "title": title,
         "nb_nodes": nb_deps + 2,
@@ -318,7 +321,7 @@ def compute_esds_periods(all_results_esds, m, m_time, name_uptime, nb_deps, reco
     return expe_parameters, title
 
 
-def compute_all_time_parameters_esds(list_deps, name_deps, nb_deps, type_synchro, uptime_schedule_nodes, version_concerto_d):
+def compute_all_time_parameters_esds(list_deps, name_deps, nb_deps, type_synchro, uptime_schedule_nodes, version_concerto_d, bandwidth):
     uptime_schedule = uptime_schedule_nodes[:nb_deps + 1]
     for dep in list_deps:
         dep.nodes_schedules = uptime_schedule
@@ -328,12 +331,13 @@ def compute_all_time_parameters_esds(list_deps, name_deps, nb_deps, type_synchro
     all_results_esds = []
     sum_reconf_duration = 0
     for dep in list_deps:
-        dct, result_dep = dep.compute_time(version_concerto_d, type_synchro)
+        dct, result_dep = dep.compute_time(version_concerto_d, type_synchro, bandwidth)
         # print(dep.node_id, name_deps[j], dct, result_dep)
         connected_node_id = dep.connected_dep.node_id if dep.type_dep in ["provide", "use"] else None
         all_results_esds.append(
             {"node_id": dep.node_id, "connected_node_id": connected_node_id, "name_dep": name_deps[j],
-             "type_dep": dep.type_dep, "dct": dct, "trans_times": result_dep})
+             "type_dep": dep.type_dep, "dct": dct, "trans_times": result_dep}
+        )
         if dct > m:
             m = dct
 

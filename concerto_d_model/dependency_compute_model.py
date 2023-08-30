@@ -1,10 +1,9 @@
 from typing import List
 
 
-def get_next_overlap(time_start: float, num_node_a: int, num_node_b: int, nodes_schedule: List, version: str):
+def get_next_overlap(time_start: float, num_node_a: int, num_node_b: int, nodes_schedule: List, version: str, offset_polling):
     schedule_a = nodes_schedule[num_node_a]
     schedule_b = nodes_schedule[num_node_b]
-    offset_polling = 2.85  # Worst case for contact between nodes due to wait between 2 pings
 
     if version == "sync":
         for item_a, item_b in zip(schedule_a, schedule_b):
@@ -44,6 +43,13 @@ class DependencyComputeModel:
         self.lp_list = lp_list
         self.nodes_schedules = nodes_schedules
 
+    def _compute_offset_polling(self, bandwidth):
+        # Worst case for contact between nodes due to wait between 2 pings
+        if self.node_id != 0:
+            return 1 + (257/bandwidth) * 2  # Deps sync only with server
+        else:
+            return 1 + (len(self.nodes_schedules) - 1) * (257/bandwidth) * 2  # Server sync at worst with each dep
+
     def _compute_time_lp_end(self, all_trans: List[float], next_uptime, uptime_num):
         current_uptime, duration = self.nodes_schedules[self.node_id][uptime_num]
         time_until_sleep = current_uptime + duration
@@ -62,7 +68,7 @@ class DependencyComputeModel:
         result[uptime_num] = {"start": round(start, 2), "end": round(current_time, 2)}
         return current_time, result
 
-    def compute_time(self, version_concerto_d, type_synchro):
+    def compute_time(self, version_concerto_d, type_synchro, bandwidth):
         """
         Returns:
         The time where information is provided in case of use. The maximum end endpoints of all the actions durations
@@ -70,7 +76,7 @@ class DependencyComputeModel:
         """
         if len(self.previous_use_deps) > 0:
             last_previous_deps = self.previous_use_deps[-1]
-            last_previous_deps_times = [lpd.compute_time(version_concerto_d, type_synchro)[0] for lpd in last_previous_deps]
+            last_previous_deps_times = [lpd.compute_time(version_concerto_d, type_synchro, bandwidth)[0] for lpd in last_previous_deps]
         else:
             last_previous_deps_times = [0]
 
@@ -90,10 +96,11 @@ class DependencyComputeModel:
         if self.type_dep in [type_dep_to_sync, "intermediate"]:
             return round(m, 2), all_results
         else:
-            time_use, _ = self.connected_dep.compute_time(version_concerto_d, type_synchro)
+            time_use, _ = self.connected_dep.compute_time(version_concerto_d, type_synchro, bandwidth)
             total_lp_time = max(m, time_use)
             if version_concerto_d == "sync":
-                next_information_time = get_next_overlap(total_lp_time, self.node_id, self.connected_dep.node_id, self.nodes_schedules, "sync")
+                offset_polling = round(self._compute_offset_polling(bandwidth), 2)
+                next_information_time = get_next_overlap(total_lp_time, self.node_id, self.connected_dep.node_id, self.nodes_schedules, "sync", offset_polling)
             else:
                 next_information_time, _ = get_next_uptime(total_lp_time, self.node_id, self.nodes_schedules)
             return round(next_information_time, 2), all_results
