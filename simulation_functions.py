@@ -34,7 +34,7 @@ def get_params_joined(parameter):
     ) = (
         parameter["stressConso"],
         parameter["idleConso"],
-        parameter["techno"]["name"],
+        parameter["nameTechno"],
         parameter["typeSynchro"]
     )
     return f"{stressConso}-{idleConso}-{typeSynchro}-{nameTechno}"

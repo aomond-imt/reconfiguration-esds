@@ -235,7 +235,6 @@ def _execute_esds_simulation(simu_to_launch_dir):
                     parameter_tuple = (
                         parameter["stressConso"],
                         parameter["idleConso"],
-                        (parameter["techno"]["name"], parameter["techno"]["bandwidth"], parameter["techno"]["commsConso"]),
                         parameter["typeSynchro"]
                     )
                     sweeps.append((parameter_tuple, parameter_file))
@@ -250,8 +249,8 @@ def _execute_esds_simulation(simu_to_launch_dir):
                 parameter = {
                     "stressConso": parameter_tuple[0],
                     "idleConso": parameter_tuple[1],
-                    "techno": {"name": parameter_tuple[2][0], "bandwidth": parameter_tuple[2][1], "commsConso": parameter_tuple[2][2]},
-                    "typeSynchro": parameter_tuple[3]
+                    "nameTechno": "lora" if "lora" in parameter_file else "nbiot",
+                    "typeSynchro": parameter_tuple[2]
                 }
                 joined_params = simulation_functions.get_params_joined(parameter)
                 title = Path(parameter_file).stem
