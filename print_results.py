@@ -416,25 +416,75 @@ def _plot_detail(attribute, ax, bottom, max_bound, measurement, offset, width, x
     return max_bound
 
 
+def compute_stats_global_results(all_global_results):
+    scenarios = set()
+    for global_results in all_global_results.values():
+        if len(scenarios) == 0:
+            scenarios = set(global_results.keys())
+        else:
+            scenarios.intersection(global_results.keys())
+
+    global_results_accumulated = {}
+    for scenario_acc in scenarios:
+        # global_results_accumulated[scenario_acc] =
+        results_acc = {
+            "time": [],
+            "energy": {}
+        }
+
+        for global_results in all_global_results.values():
+            for scenario_res, vals in global_results.items():
+                if scenario_acc == scenario_res:
+                    results_acc["time"].append(vals["time"])
+                    for type_e in ["idles", "receives", "reconfs", "sendings"]:
+                        for node_num, vals_e in vals["energy"][type_e].items():
+                            if type_e not in results_acc["energy"].keys():
+                                results_acc["energy"][type_e] = {node_num: {"comms_cons": [vals_e["comms_cons"]], "node_conso": [vals_e["node_conso"]]}}
+                            else:
+                                if node_num not in results_acc["energy"][type_e].keys():
+                                    results_acc["energy"][type_e][node_num] = {"comms_cons": [vals_e["comms_cons"]], "node_conso": [vals_e["node_conso"]]}
+                                else:
+                                    results_acc["energy"][type_e][node_num]["comms_cons"].append(vals_e["comms_cons"])
+                                    results_acc["energy"][type_e][node_num]["node_conso"].append(vals_e["node_conso"])
+        global_results_accumulated[scenario_acc] = results_acc
+
+    global_results_stats = {}
+    for scenario, values in global_results_accumulated.items():
+        global_results_stats[scenario] = {
+            "time": {"mean": np.mean(values["time"]), "std": np.std(values["time"])},
+            "energy": {
+                type_conso: {
+                    node_id: {
+                            name_conso: {"mean": np.mean(vals[name_conso]), "std": np.std(vals[name_conso]), "min": np.min(vals[name_conso]), "max": np.max(vals[name_conso])
+                        } for name_conso in ["comms_cons", "node_conso"]
+                    } for node_id, vals in values["energy"][type_conso].items()
+                } for type_conso in ["idles", "receives", "reconfs", "sendings"]
+            }
+        }
+
+    return global_results_stats
+
+
 if __name__ == "__main__":
     # name_params = ["1.2-1.38-nbiot-pullc", "1.2-1.38-lora-pullc", "0-1.38-nbiot-pullc"]
     # name_params = ["1.2-1.38-lora-pullc"]
 
-    # params_list = ["1.358-1.339-lora-pullc", "1.358-1.339-nbiot-pullc"]
-    # for param in params_list:
-    #     all_global_results = {}
-    #
-    #     for num_run in range(5):
-    #         results_dir = f"/home/aomond/reconfiguration-esds/greencom_results/{num_run}"
-    #
-    #         global_results = {}
-    #         for file in os.listdir(results_dir):
-    #             if param in file and "T1" in file and "update" in file:
-    #                 with open(os.path.join(results_dir, file)) as f:
-    #                     global_results.update(yaml.safe_load(f))
-    #
-    #         all_global_results[num_run] = global_results
+    params_list = ["1.358-1.339-lora-pullc", "1.358-1.339-nbiot-pullc"]
+    for param in params_list:
+        all_global_results = {}
 
+        for num_run in range(2):
+            results_dir = f"/home/aomond/reconfiguration-esds/greencom_results/{num_run}"
+
+            global_results = {}
+            for file in os.listdir(results_dir):
+                if param in file and "T1" in file:
+                    with open(os.path.join(results_dir, file)) as f:
+                        global_results.update(yaml.safe_load(f))
+
+            all_global_results[num_run] = global_results
+
+        global_results_stats = compute_stats_global_results(all_global_results)
 
     # for param in name_params:
     # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-0-1.38-lora-pullc.yaml"
