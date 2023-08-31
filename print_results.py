@@ -1,4 +1,5 @@
 import collections
+import copy
 import itertools
 import os
 
@@ -7,36 +8,36 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def _gather_results(global_results):
-    gathered_results = {}
-    for key, nodes_results in global_results.items():
-        router_id = max(nodes_results["energy"]["idles"].keys())
-        energy_results = nodes_results["energy"]
-        gathered_results[key] = {"energy": {}, "time": nodes_results["time"]}
-        # print(f"{key}:")
-        # print(f"idles: {nodes_results['idles']}")
-        # print(f"reconfs: {nodes_results['reconfs']}")
-        # print(f"sendings: {nodes_results['sendings']}")
-        # print(f"receives: {nodes_results['receives']}")
-        filter_tot = ["idles", "reconfs", "sendings", "receives"]
-        for node_id in sorted(energy_results["idles"].keys()):
-            tot = 0
-            s = {"idles": 0, "reconfs": 0, "sendings": 0, "receives": 0}
-            for name in s.keys():
-                s[name] += energy_results[name][node_id]["node_conso"] + energy_results[name][node_id]["comms_cons"]
-                if name in filter_tot or node_id == router_id:
-                    tot += s[name]
-            s.update({
-                "tot_msg_sent": energy_results["sendings"][node_id]["tot_msg_sent"],
-                "tot_ack_received": energy_results["sendings"][node_id]["tot_ack_received"],
-                "tot_wait_polling": energy_results["sendings"][node_id]["tot_wait_polling"],
-                "tot_msg_received": energy_results["receives"][node_id]["tot_msg_received"],
-                "tot_msg_responded": energy_results["receives"][node_id]["tot_msg_responded"]
-            })
+def _gather_results(global_results_stats):
+    gathered_results_acc = {}
+    for key, nodes_results in global_results_stats.items():
+        for num_run in range(len(nodes_results["time"])):
+            router_id = max(nodes_results["energy"]["idles"].keys())
+            energy_results = nodes_results["energy"]
+            if key not in gathered_results_acc.keys():
+                gathered_results_acc[key] = {num_run: {"energy": {}, "time": nodes_results["time"][num_run]}}
+            else:
+                gathered_results_acc[key][num_run] = {"energy": {}, "time": nodes_results["time"][num_run]}
 
-            gathered_results[key]["energy"][node_id] = {"tot": round(tot, 2), "detail": s}
-            # print(f"{node_id}: {round(tot, 2)}J --- Detail: {s}")
-    return gathered_results
+            filter_tot = ["idles", "reconfs", "sendings", "receives"]
+            for node_id in sorted(energy_results["idles"].keys()):
+                tot = 0
+                s = {"idles": 0, "reconfs": 0, "sendings": 0, "receives": 0}
+                for name in s.keys():
+                    s[name] += energy_results[name][node_id]["node_conso"][num_run] + energy_results[name][node_id]["comms_cons"][num_run]
+                    if name in filter_tot or node_id == router_id:
+                        tot += s[name]
+                # s.update({
+                #     "tot_msg_sent": energy_results["sendings"][node_id]["tot_msg_sent"][num_run],
+                #     "tot_ack_received": energy_results["sendings"][node_id]["tot_ack_received"][num_run],
+                #     "tot_wait_polling": energy_results["sendings"][node_id]["tot_wait_polling"][num_run],
+                #     "tot_msg_received": energy_results["receives"][node_id]["tot_msg_received"][num_run],
+                #     "tot_msg_responded": energy_results["receives"][node_id]["tot_msg_responded"][num_run]
+                # })
+
+                gathered_results_acc[key][num_run]["energy"][node_id] = {"tot": round(tot, 2), "detail": s}
+                # print(f"{node_id}: {round(tot, 2)}J --- Detail: {s}")
+    return gathered_results_acc
 
 
 def print_energy_results(global_results):
@@ -90,61 +91,66 @@ def analyse_energy_results(global_results):
             print(f"Ratio reconf/sending: {sum_reconf_async:.2f}/{sum_sending_async:.2f} ({sum_reconf_async / sum_sending_async:.2f})")
 
 
-def compute_energy_gain(global_results):
-    gathered_results = _gather_results(global_results)
+def compute_energy_gain(global_results_accumulated):
+    gathered_results = _gather_results(global_results_accumulated)
     group_by_version_concerto_d = _group_by_version_concerto_d(gathered_results)
     all_results = {}
     for key, vals in group_by_version_concerto_d.items():
         if "async" not in vals.keys() or "sync" not in vals.keys():
             print(f"{key}: Async or sync missing, skip")
             continue
-        router_id = max(vals["async"]["energy"].keys())
-        assert router_id == max(vals["sync"]["energy"].keys())
-        all_results[key] = {}
-        tot_ons_sync = 0
-        tot_ons_async = 0
-        tot_router = 0
-        tot_detail = {}
-        for name in ["detail_ons_sync", "detail_ons_async", "detail_router"]:
-            tot_detail[name] = {"idles": 0, "reconfs": 0, "sendings": 0, "receives": 0}
 
-        for vals_sync, vals_async in zip(vals["sync"]["energy"].items(), vals["async"]["energy"].items()):
-            node_id, node_results_sync = vals_sync
-            _, node_results_async = vals_async
-            tot_gain = node_results_async["tot"] - node_results_sync["tot"]
-            if node_id == router_id:
-                tot_router = node_results_async["tot"]
+        for num_run in range(min(len(vals["sync"]), len(vals["async"]))):
+            router_id = max(vals["async"][num_run]["energy"].keys())
+            assert router_id == max(vals["sync"][num_run]["energy"].keys())
+            if key not in all_results.keys():
+                all_results[key] = {num_run: {}}
             else:
-                tot_ons_sync += node_results_sync["tot"]
-                tot_ons_async += node_results_async["tot"]
-            all_results[key][node_id] = {"gain": round(tot_gain, 2), "sync": node_results_sync['tot'], "async": node_results_async['tot']}
-            all_results[key][node_id]["details"] = {}
-            for detail_sync, detail_async in zip(node_results_sync["detail"].items(), node_results_async["detail"].items()):
-                name, val_sync = detail_sync
-                name_a, val_async = detail_async
-                assert name == name_a
-                if name not in ["idles", "reconfs", "sendings", "receives"]:
-                    continue
-                gain = val_async - val_sync
-                all_results[key][node_id]["details"][name] = {"gain": round(gain, 2), "sync": val_sync, "async": val_async}
+                all_results[key][num_run] = {}
+            tot_ons_sync = 0
+            tot_ons_async = 0
+            tot_router = 0
+            tot_detail = {}
+            for name in ["detail_ons_sync", "detail_ons_async", "detail_router"]:
+                tot_detail[name] = {"idles": 0, "reconfs": 0, "sendings": 0, "receives": 0}
 
-                if node_id < router_id:
-                    tot_detail["detail_ons_sync"][name] += val_sync
-                    tot_detail["detail_ons_async"][name] += val_async
+            for vals_sync, vals_async in zip(vals["sync"][num_run]["energy"].items(), vals["async"][num_run]["energy"].items()):
+                node_id, node_results_sync = vals_sync
+                _, node_results_async = vals_async
+                tot_gain = node_results_async["tot"] - node_results_sync["tot"]
+                if node_id == router_id:
+                    tot_router = node_results_async["tot"]
                 else:
-                    tot_detail["detail_router"][name] += val_async
+                    tot_ons_sync += node_results_sync["tot"]
+                    tot_ons_async += node_results_async["tot"]
+                all_results[key][num_run][node_id] = {"gain": round(tot_gain, 2), "sync": node_results_sync['tot'], "async": node_results_async['tot']}
+                all_results[key][num_run][node_id]["details"] = {}
+                for detail_sync, detail_async in zip(node_results_sync["detail"].items(), node_results_async["detail"].items()):
+                    name, val_sync = detail_sync
+                    name_a, val_async = detail_async
+                    assert name == name_a
+                    if name not in ["idles", "reconfs", "sendings", "receives"]:
+                        continue
+                    gain = val_async - val_sync
+                    all_results[key][num_run][node_id]["details"][name] = {"gain": round(gain, 2), "sync": val_sync, "async": val_async}
 
-        all_results[key]["total"] = {
-            "sync": round(tot_ons_sync, 2),
-            "async_no_router": round(tot_ons_async, 2),
-            "async_with_router": round(tot_ons_async + tot_router, 2),
-            "gain_no_router": round((tot_ons_sync - tot_ons_async) * 100 / tot_ons_sync, 2),
-            "gain_with_router": round((tot_ons_sync - (tot_ons_async+tot_router)) * 100 / tot_ons_sync, 2),
-            "time_sync": vals["sync"]["time"],
-            "time_async": vals["async"]["time"],
-            "gain_time": round((vals["sync"]["time"] - vals["async"]["time"]) * 100 / vals["sync"]["time"], 2)
-        }
-        all_results[key]["total"].update(tot_detail)
+                    if node_id < router_id:
+                        tot_detail["detail_ons_sync"][name] += val_sync
+                        tot_detail["detail_ons_async"][name] += val_async
+                    else:
+                        tot_detail["detail_router"][name] += val_async
+
+            all_results[key][num_run]["total"] = {
+                "sync": round(tot_ons_sync, 2),
+                "async_no_router": round(tot_ons_async, 2),
+                "async_with_router": round(tot_ons_async + tot_router, 2),
+                "gain_no_router": round((tot_ons_sync - tot_ons_async) * 100 / tot_ons_sync, 2),
+                "gain_with_router": round((tot_ons_sync - (tot_ons_async+tot_router)) * 100 / tot_ons_sync, 2),
+                "time_sync": vals["sync"][num_run]["time"],
+                "time_async": vals["async"][num_run]["time"],
+                "gain_time": round((vals["sync"][num_run]["time"] - vals["async"][num_run]["time"]) * 100 / vals["sync"][num_run]["time"], 2)
+            }
+            all_results[key][num_run]["total"].update(tot_detail)
 
     return all_results
 
@@ -257,25 +263,25 @@ def plot_surface_results(energy_gain_by_nb_deps, param_names):
 def _compute_elements_and_bottom(uptime_duration, gain_by_nb_deps):
     elements = {
         "sync": {
-            "ons": [el["total"]["sync"] for el in gain_by_nb_deps[uptime_duration].values()],
-            "detail_ons_idles": [el["total"]["detail_ons_sync"]["idles"] for el in gain_by_nb_deps[uptime_duration].values()],
-            "detail_ons_reconfs": [el["total"]["detail_ons_sync"]["reconfs"] for el in gain_by_nb_deps[uptime_duration].values()],
-            "detail_ons_sendings": [el["total"]["detail_ons_sync"]["sendings"] for el in gain_by_nb_deps[uptime_duration].values()],
-            "detail_ons_receives": [el["total"]["detail_ons_sync"]["receives"] for el in gain_by_nb_deps[uptime_duration].values()],
-            "time_sync": [el["total"]["time_sync"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "ons": [el["total_stats"]["sync"]["mean"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "detail_ons_idles": [el["total_stats"]["detail_ons_sync"]["idles"]["mean"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "detail_ons_reconfs": [el["total_stats"]["detail_ons_sync"]["reconfs"]["mean"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "detail_ons_sendings": [el["total_stats"]["detail_ons_sync"]["sendings"]["mean"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "detail_ons_receives": [el["total_stats"]["detail_ons_sync"]["receives"]["mean"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "time_sync": [el["total_stats"]["time_sync"]["mean"] for el in gain_by_nb_deps[uptime_duration].values()],
         },
         "async": {
-            "ons": [el["total"]["async_no_router"] for el in gain_by_nb_deps[uptime_duration].values()],
-            "detail_ons_idles": [el["total"]["detail_ons_async"]["idles"] for el in gain_by_nb_deps[uptime_duration].values()],
-            "detail_ons_reconfs": [el["total"]["detail_ons_async"]["reconfs"] for el in gain_by_nb_deps[uptime_duration].values()],
-            "detail_ons_sendings": [el["total"]["detail_ons_async"]["sendings"] for el in gain_by_nb_deps[uptime_duration].values()],
-            "detail_ons_receives": [el["total"]["detail_ons_async"]["receives"] for el in gain_by_nb_deps[uptime_duration].values()],
-            "router": [el["total"]["async_with_router"] - el["total"]["async_no_router"] for el in gain_by_nb_deps[uptime_duration].values()],
-            "detail_router_idles": [el["total"]["detail_router"]["idles"] for el in gain_by_nb_deps[uptime_duration].values()],
-            "detail_router_reconfs": [el["total"]["detail_router"]["reconfs"] for el in gain_by_nb_deps[uptime_duration].values()],
-            "detail_router_sendings": [el["total"]["detail_router"]["sendings"] for el in gain_by_nb_deps[uptime_duration].values()],
-            "detail_router_receives": [el["total"]["detail_router"]["receives"] for el in gain_by_nb_deps[uptime_duration].values()],
-            "time_async": [el["total"]["time_async"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "ons": [el["total_stats"]["async_with_router"]["mean"] for el in gain_by_nb_deps[uptime_duration].values()],  # TODO: check for the mean of the router entry
+            "detail_ons_idles": [el["total_stats"]["detail_ons_async"]["idles"]["mean"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "detail_ons_reconfs": [el["total_stats"]["detail_ons_async"]["reconfs"]["mean"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "detail_ons_sendings": [el["total_stats"]["detail_ons_async"]["sendings"]["mean"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "detail_ons_receives": [el["total_stats"]["detail_ons_async"]["receives"]["mean"] for el in gain_by_nb_deps[uptime_duration].values()],
+            # "router": [el["total_stats"]["async_with_router"] - el["total_stats"]["async_no_router"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "detail_router_idles": [el["total_stats"]["detail_router"]["idles"]["mean"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "detail_router_reconfs": [el["total_stats"]["detail_router"]["reconfs"]["mean"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "detail_router_sendings": [el["total_stats"]["detail_router"]["sendings"]["mean"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "detail_router_receives": [el["total_stats"]["detail_router"]["receives"]["mean"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "time_async": [el["total_stats"]["time_async"]["mean"] for el in gain_by_nb_deps[uptime_duration].values()],
         },
     }
     bottom = {
@@ -286,30 +292,30 @@ def _compute_elements_and_bottom(uptime_duration, gain_by_nb_deps):
     return elements, bottom
 
 
-def plot_bar_results(energy_gain_by_nb_deps, param_names):
+def plot_bar_results(energy_gain_by_uptime_durations, param_names):
     for type_reconf in ["sync", "async"]:
-        for scenario_name, gain_by_nb_deps in energy_gain_by_nb_deps.items():
+        for scenario_name, gain_by_uptime_durations in energy_gain_by_uptime_durations.items():
             # scenario_name = 'esds_generated_data-ud0_od0_30_25-deploy-T0'
-            # gain_by_nb_deps = energy_gain_by_nb_deps[scenario_name]
-            x = np.arange(len(gain_by_nb_deps[60].keys()))*2
+            # gain_by_uptime_durations = energy_gain_by_nb_deps[scenario_name]
+            x = np.arange(len(gain_by_uptime_durations[60].keys()))*2
             # print(json.dumps(elements, indent=2))
             elements_per_ud = {}
             bottom_per_ud = {}
-            for ud in gain_by_nb_deps.keys():
-                elements_per_ud[ud], bottom_per_ud[ud] = _compute_elements_and_bottom(ud, gain_by_nb_deps)
-            # elements, bottom = _compute_elements_and_bottom(uptime_duration, gain_by_nb_deps)
+            for ud in gain_by_uptime_durations.keys():
+                elements_per_ud[ud], bottom_per_ud[ud] = _compute_elements_and_bottom(ud, gain_by_uptime_durations)
+            # elements, bottom = _compute_elements_and_bottom(uptime_duration, gain_by_uptime_durations)
 
             # fig, ax = plt.subplots()
             fig, ax = plt.subplots(figsize=(10, 10))
             multiplier = 0
             width = 0.4
             max_bound = 0
-            for ud in gain_by_nb_deps.keys():
+            for ud in gain_by_uptime_durations.keys():
                 for attribute, measurement in elements_per_ud[ud].items():
                     if attribute == type_reconf:
                         offset = width * multiplier
-                        # max_bound = _plot_tot(attribute, ax, bottom, max_bound, measurement, offset, width, x)
-                        max_bound = _plot_detail(attribute, ax, bottom_per_ud[ud], max_bound, measurement, offset, width, x, ud)
+                        max_bound = _plot_tot(attribute, ax, bottom_per_ud[ud], max_bound, measurement, offset, width, x)
+                        # max_bound = _plot_detail(attribute, ax, bottom_per_ud[ud], max_bound, measurement, offset, width, x, ud)
                         # max_bound = _plot_tot_time(attribute, ax, bottom, max_bound, measurement, offset, width, x)
                         multiplier += 1
 
@@ -318,26 +324,26 @@ def plot_bar_results(energy_gain_by_nb_deps, param_names):
 
             title = f'{scenario_name}-{param_names}'.replace("esds_generated_data-uptimes-dao-", "").replace("-", "   ")
             ax.set_title(title)
-            ax.set_xticks(x + width, gain_by_nb_deps[60].keys())
+            ax.set_xticks(x + width, gain_by_uptime_durations[60].keys())
             ax.legend(loc='upper left', ncols=3, borderaxespad=0.)
-            if type_reconf == "async":
-                if "update" in scenario_name:
-                    ax.set_ylim(0, 700)      # Dynamic
-                    # ax.set_ylim(0, 36000)  # Static
-                else:
-                    ax.set_ylim(0, 550)      # Dynamic
-                    # ax.set_ylim(0, 30000)    # Static
-            else:
-                if "update" in scenario_name:
-                    ax.set_ylim(0, 1800)     # Dynamic
-                    # ax.set_ylim(0, 280000) # Static
-                else:
-                    ax.set_ylim(0, 2000)     # Dynamic
-                    # ax.set_ylim(0, 650000) # Static
-            # ax.set_ylim(0, max_bound * 1.1)
+            # if type_reconf == "async":
+            #     if "update" in scenario_name:
+            #         ax.set_ylim(0, 700)      # Dynamic
+            #         # ax.set_ylim(0, 36000)  # Static
+            #     else:
+            #         ax.set_ylim(0, 550)      # Dynamic
+            #         # ax.set_ylim(0, 30000)    # Static
+            # else:
+            #     if "update" in scenario_name:
+            #         ax.set_ylim(0, 1800)     # Dynamic
+            #         # ax.set_ylim(0, 280000) # Static
+            #     else:
+            #         ax.set_ylim(0, 2000)     # Dynamic
+            #         # ax.set_ylim(0, 650000) # Static
+            ax.set_ylim(0, max_bound * 1.1)
 
             # plt.show()
-            dir_to_save = f"/home/aomond/reconfiguration-esds/greencom_results/0/graphs/deploy"
+            dir_to_save = f"/home/aomond/reconfiguration-esds/greencom_results/graphs_means_std"
             # dir_to_save = f"/home/aomond/reconfiguration-esds/concerto-d-results/pycharm_plots/detail/{param_names}"
             os.makedirs(dir_to_save, exist_ok=True)
             plt.savefig(f"{dir_to_save}/static-{type_reconf}-{scenario_name}-{param_names}.png")
@@ -353,8 +359,8 @@ def _plot_tot(attribute, ax, bottom, max_bound, measurement, offset, width, x):
         rects = ax.bar(x + offset, measurement["ons"], width, bottom=bottom[attribute], label="async (ons)")
         bottom[attribute] = bottom[attribute] + measurement["ons"]
         # ax.bar_label(rects, padding=3)
-        rects = ax.bar(x + offset, measurement["router"], width, bottom=bottom[attribute], label="async (router)")
-        bottom[attribute] = bottom[attribute] + measurement["router"]
+        # rects = ax.bar(x + offset, measurement["router"], width, bottom=bottom[attribute], label="async (router)")
+        # bottom[attribute] = bottom[attribute] + measurement["router"]
         ax.bar_label(rects, padding=3)
         max_bound = max(max_bound, max(bottom[attribute]))
     return max_bound
@@ -448,76 +454,95 @@ def compute_stats_global_results(all_global_results):
                                     results_acc["energy"][type_e][node_num]["node_conso"].append(vals_e["node_conso"])
         global_results_accumulated[scenario_acc] = results_acc
 
-    global_results_stats = {}
-    for scenario, values in global_results_accumulated.items():
-        global_results_stats[scenario] = {
-            "time": {"mean": np.mean(values["time"]), "std": np.std(values["time"])},
-            "energy": {
-                type_conso: {
-                    node_id: {
-                            name_conso: {"mean": np.mean(vals[name_conso]), "std": np.std(vals[name_conso]), "min": np.min(vals[name_conso]), "max": np.max(vals[name_conso])
-                        } for name_conso in ["comms_cons", "node_conso"]
-                    } for node_id, vals in values["energy"][type_conso].items()
-                } for type_conso in ["idles", "receives", "reconfs", "sendings"]
-            }
-        }
+    # global_results_stats = {}
+    # for scenario, values in global_results_accumulated.items():
+    #     global_results_stats[scenario] = {
+    #         "time": {"mean": np.mean(values["time"]), "std": np.std(values["time"])},
+    #         "energy": {
+    #             type_conso: {
+    #                 node_id: {
+    #                         name_conso: {"mean": np.mean(vals[name_conso]), "std": np.std(vals[name_conso]), "min": np.min(vals[name_conso]), "max": np.max(vals[name_conso])
+    #                     } for name_conso in ["comms_cons", "node_conso"]
+    #                 } for node_id, vals in values["energy"][type_conso].items()
+    #             } for type_conso in ["idles", "receives", "reconfs", "sendings"]
+    #         }
+    #     }
 
-    return global_results_stats
+    return global_results_accumulated
+
+
+def _compute_stats_energy_gains(energy_gain_by_uptime_durations):
+    energy_gain_by_uptime_durations_mean_std = copy.deepcopy(energy_gain_by_uptime_durations)
+    type_consos = ["idles", "reconfs", "sendings", "receives"]
+    for scenario, ud_values in energy_gain_by_uptime_durations.items():
+        for ud, nb_deps_values in ud_values.items():
+            for nb_deps, run_values in nb_deps_values.items():
+                sync_vals = []
+                async_no_router_vals = []
+                async_with_router_vals = []
+                time_sync_vals = []
+                time_async_vals = []
+                detail_ons_sync = {"idles": [], "reconfs": [], "sendings": [], "receives": []}
+                detail_ons_async = {"idles": [], "reconfs": [], "sendings": [], "receives": []}
+                detail_router = {"idles": [], "reconfs": [], "sendings": [], "receives": []}
+
+                for num_run, node_values in run_values.items():
+                    sync_vals.append(node_values["total"]["sync"])
+                    async_no_router_vals.append(node_values["total"]["async_no_router"])
+                    async_with_router_vals.append(node_values["total"]["async_with_router"])
+                    time_sync_vals.append(node_values["total"]["time_sync"])
+                    time_async_vals.append(node_values["total"]["time_async"])
+                    for type_conso in type_consos:
+                        detail_ons_sync[type_conso].append(node_values["total"]["detail_ons_sync"][type_conso])
+                        detail_ons_async[type_conso].append(node_values["total"]["detail_ons_async"][type_conso])
+                        detail_router[type_conso].append(node_values["total"]["detail_router"][type_conso])
+
+                energy_gain_by_uptime_durations_mean_std[scenario][ud][nb_deps]["total_stats"] = {
+                    "sync": {"mean": np.mean(sync_vals), "std": np.std(sync_vals)},
+                    "async_no_router": {"mean": np.mean(async_no_router_vals), "std": np.std(async_no_router_vals)},
+                    "async_with_router": {"mean": np.mean(async_with_router_vals), "std": np.std(async_with_router_vals)},
+                    "time_sync": {"mean": np.mean(time_sync_vals), "std": np.std(time_sync_vals)},
+                    "time_async": {"mean": np.mean(time_async_vals), "std": np.std(time_async_vals)},
+                    "detail_ons_sync": {"idles": {"mean": 0, "std": 0}, "reconfs": {"mean": 0, "std": 0}, "sendings": {"mean": 0, "std": 0}, "receives": {"mean": 0, "std": 0}},
+                    "detail_ons_async": {"idles": {"mean": 0, "std": 0}, "reconfs": {"mean": 0, "std": 0}, "sendings": {"mean": 0, "std": 0}, "receives": {"mean": 0, "std": 0}},
+                    "detail_router": {"idles": {"mean": 0, "std": 0}, "reconfs": {"mean": 0, "std": 0}, "sendings": {"mean": 0, "std": 0}, "receives": {"mean": 0, "std": 0}},
+                }
+
+                for type_conso in type_consos:
+                    energy_gain_by_uptime_durations_mean_std[scenario][ud][nb_deps]["total_stats"]["detail_ons_sync"][type_conso] = {"mean": np.mean(detail_ons_sync[type_conso]), "std": np.std(detail_ons_sync[type_conso])}
+                    energy_gain_by_uptime_durations_mean_std[scenario][ud][nb_deps]["total_stats"]["detail_ons_async"][type_conso] = {"mean": np.mean(detail_ons_async[type_conso]), "std": np.std(detail_ons_async[type_conso])}
+                    energy_gain_by_uptime_durations_mean_std[scenario][ud][nb_deps]["total_stats"]["detail_router"][type_conso] = {"mean": np.mean(detail_router[type_conso]), "std": np.std(detail_router[type_conso])}
+
+    return energy_gain_by_uptime_durations_mean_std
 
 
 if __name__ == "__main__":
-    # name_params = ["1.2-1.38-nbiot-pullc", "1.2-1.38-lora-pullc", "0-1.38-nbiot-pullc"]
-    # name_params = ["1.2-1.38-lora-pullc"]
-
-    params_list = ["1.358-1.339-lora-pullc", "1.358-1.339-nbiot-pullc"]
+    params_list = ["0-1.339-lora-pullc", "1.358-1.339-lora-pullc", "0-1.339-nbiot-pullc", "1.358-1.339-nbiot-pullc"]
     for param in params_list:
         all_global_results = {}
 
-        for num_run in range(2):
+        for num_run in range(5):
             results_dir = f"/home/aomond/reconfiguration-esds/greencom_results/{num_run}"
 
             global_results = {}
             for file in os.listdir(results_dir):
-                if param in file and "T1" in file:
+                if param in file and "update" in file:
                     with open(os.path.join(results_dir, file)) as f:
                         global_results.update(yaml.safe_load(f))
 
             all_global_results[num_run] = global_results
 
-        global_results_stats = compute_stats_global_results(all_global_results)
-
-    # for param in name_params:
-    # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-0-1.38-lora-pullc.yaml"
-    # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-0-1.38-nbiot-pullc.yaml"
-    # results_dir = "/home/aomond/reconfiguration-esds/concerto-d-results/global_results-1.2-1.38-lora-pullc.yaml"
-    # results_dir = f"/home/aomond/reconfiguration-esds/concerto-d-results/to_analyse_test/"
-    # results_dir = "/home/aomond/reconfiguration-esds/to_analyse/"
-    results_dir = "/home/aomond/reconfiguration-esds/greencom_results/0"
-    # param = "0-1.339-lora-pullc"
-    # param = "1.237-1.339-lora-pullc"
-    # param = "1.358-1.339-lora-pullc"
-    # param = "0.181-1.5778-lora-pullc"
-    # params_list = ["1.358-1.339-lora-pullc"]
-    # params_list = ["0-1.339-lora-pullc"]
-    params_list = ["0-1.339-lora-pullc", "1.358-1.339-lora-pullc", "0-1.339-nbiot-pullc", "1.358-1.339-nbiot-pullc"]
-    # params_list = ["0-1.339-lora-pullc", "0-1.339-nbiot-pullc", "1.237-1.339-lora-pullc", "1.237-1.339-nbiot-pullc"]
-    for param in params_list:
-        global_results = {}
-        for file in os.listdir(results_dir):
-            if param in file and "T1" in file and "deploy" in file:
-                with open(os.path.join(results_dir,file)) as f:
-                    global_results.update(yaml.safe_load(f))
-
-        # results_dir = "/home/aomond/reconfiguration-esds/saved_results/global_results-1.2-1.38-lora-pullc-7-overlaps.yaml"
-        # results_dir = f"/home/aomond/reconfiguration-esds/saved_results/global_results-{param}-7-overlaps.yaml"
+        global_results_accumulated = compute_stats_global_results(all_global_results)
+        print()
 
         # print_energy_results(global_results)
         # analyse_energy_results(global_results)
-        energy_gains = compute_energy_gain(global_results)
+        energy_gains = compute_energy_gain(global_results_accumulated)
         energy_gain_by_nb_deps = compute_energy_gain_by_nb_deps(energy_gains)
         energy_gain_by_uptime_durations = compute_energy_gain_by_uptime_durations(energy_gain_by_nb_deps)
         # print(json.dumps(energy_gains, indent=4))
         # print_energy_gain(energy_gains)
-        plot_bar_results(energy_gain_by_uptime_durations, param)
+        energy_gain_by_uptime_durations_mean_std = _compute_stats_energy_gains(energy_gain_by_uptime_durations)
+        plot_bar_results(energy_gain_by_uptime_durations_mean_std, param)
         # plot_scatter_results(energy_gain_by_nb_deps, param)
         # plot_surface_results(None, None)
