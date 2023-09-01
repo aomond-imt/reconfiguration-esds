@@ -284,25 +284,52 @@ def _compute_elements_and_bottom(uptime_duration, gain_by_nb_deps):
             "time_async": [el["total_stats"]["time_async"]["mean"] for el in gain_by_nb_deps[uptime_duration].values()],
         },
     }
+    stds = {
+        "sync": {
+            "ons": [el["total_stats"]["sync"]["std"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "detail_ons_idles": [el["total_stats"]["detail_ons_sync"]["idles"]["std"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "detail_ons_reconfs": [el["total_stats"]["detail_ons_sync"]["reconfs"]["std"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "detail_ons_sendings": [el["total_stats"]["detail_ons_sync"]["sendings"]["std"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "detail_ons_receives": [el["total_stats"]["detail_ons_sync"]["receives"]["std"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "time_sync": [el["total_stats"]["time_sync"]["std"] for el in gain_by_nb_deps[uptime_duration].values()],
+        },
+        "async": {
+            "ons": [el["total_stats"]["async_with_router"]["std"] for el in gain_by_nb_deps[uptime_duration].values()],  # TODO: check for the mean of the router entry
+            "detail_ons_idles": [el["total_stats"]["detail_ons_async"]["idles"]["std"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "detail_ons_reconfs": [el["total_stats"]["detail_ons_async"]["reconfs"]["std"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "detail_ons_sendings": [el["total_stats"]["detail_ons_async"]["sendings"]["std"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "detail_ons_receives": [el["total_stats"]["detail_ons_async"]["receives"]["std"] for el in gain_by_nb_deps[uptime_duration].values()],
+            # "router": [el["total_stats"]["async_with_router"] - el["total_stats"]["async_no_router"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "detail_router_idles": [el["total_stats"]["detail_router"]["idles"]["std"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "detail_router_reconfs": [el["total_stats"]["detail_router"]["reconfs"]["std"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "detail_router_sendings": [el["total_stats"]["detail_router"]["sendings"]["std"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "detail_router_receives": [el["total_stats"]["detail_router"]["receives"]["std"] for el in gain_by_nb_deps[uptime_duration].values()],
+            "time_async": [el["total_stats"]["time_async"]["std"] for el in gain_by_nb_deps[uptime_duration].values()],
+        },
+    }
     bottom = {
         "sync": np.zeros(len(gain_by_nb_deps[uptime_duration].keys())),
         "async": np.zeros(len(gain_by_nb_deps[uptime_duration].keys())),
     }
 
-    return elements, bottom
+    return elements, bottom, stds
 
 
 def plot_bar_results(energy_gain_by_uptime_durations, param_names):
+    print("Starting plotting")
     for type_reconf in ["sync", "async"]:
+        print(f"Type reconf: {type_reconf}")
         for scenario_name, gain_by_uptime_durations in energy_gain_by_uptime_durations.items():
+            print(f"Creating plot for: {scenario_name}")
             # scenario_name = 'esds_generated_data-ud0_od0_30_25-deploy-T0'
             # gain_by_uptime_durations = energy_gain_by_nb_deps[scenario_name]
             x = np.arange(len(gain_by_uptime_durations[60].keys()))*2
             # print(json.dumps(elements, indent=2))
             elements_per_ud = {}
             bottom_per_ud = {}
+            stds = {}
             for ud in gain_by_uptime_durations.keys():
-                elements_per_ud[ud], bottom_per_ud[ud] = _compute_elements_and_bottom(ud, gain_by_uptime_durations)
+                elements_per_ud[ud], bottom_per_ud[ud], stds[ud] = _compute_elements_and_bottom(ud, gain_by_uptime_durations)
             # elements, bottom = _compute_elements_and_bottom(uptime_duration, gain_by_uptime_durations)
 
             # fig, ax = plt.subplots()
@@ -314,7 +341,7 @@ def plot_bar_results(energy_gain_by_uptime_durations, param_names):
                 for attribute, measurement in elements_per_ud[ud].items():
                     if attribute == type_reconf:
                         offset = width * multiplier
-                        max_bound = _plot_tot(attribute, ax, bottom_per_ud[ud], max_bound, measurement, offset, width, x)
+                        max_bound = _plot_tot(attribute, ax, bottom_per_ud[ud], max_bound, measurement, offset, width, x, stds[ud])
                         # max_bound = _plot_detail(attribute, ax, bottom_per_ud[ud], max_bound, measurement, offset, width, x, ud)
                         # max_bound = _plot_tot_time(attribute, ax, bottom, max_bound, measurement, offset, width, x)
                         multiplier += 1
@@ -349,14 +376,14 @@ def plot_bar_results(energy_gain_by_uptime_durations, param_names):
             plt.savefig(f"{dir_to_save}/static-{type_reconf}-{scenario_name}-{param_names}.png")
 
 
-def _plot_tot(attribute, ax, bottom, max_bound, measurement, offset, width, x):
+def _plot_tot(attribute, ax, bottom, max_bound, measurement, offset, width, x, stds):
     if attribute == "sync":
-        rects = ax.bar(x + offset, measurement["ons"], width, bottom=bottom[attribute], label=attribute)
+        rects = ax.bar(x + offset, measurement["ons"], width, bottom=bottom[attribute], label=attribute, yerr=stds[attribute]["ons"])
         bottom[attribute] = bottom[attribute] + measurement["ons"]
         ax.bar_label(rects, padding=3)
         max_bound = max(max_bound, max(bottom[attribute]))
     elif attribute == "async":
-        rects = ax.bar(x + offset, measurement["ons"], width, bottom=bottom[attribute], label="async (ons)")
+        rects = ax.bar(x + offset, measurement["ons"], width, bottom=bottom[attribute], label="async (ons)", yerr=stds[attribute]["ons"])
         bottom[attribute] = bottom[attribute] + measurement["ons"]
         # ax.bar_label(rects, padding=3)
         # rects = ax.bar(x + offset, measurement["router"], width, bottom=bottom[attribute], label="async (router)")
@@ -422,13 +449,13 @@ def _plot_detail(attribute, ax, bottom, max_bound, measurement, offset, width, x
     return max_bound
 
 
-def compute_stats_global_results(all_global_results):
+def accumulate_global_results(all_global_results):
     scenarios = set()
     for global_results in all_global_results.values():
         if len(scenarios) == 0:
             scenarios = set(global_results.keys())
         else:
-            scenarios.intersection(global_results.keys())
+            scenarios = scenarios.intersection(global_results.keys())
 
     global_results_accumulated = {}
     for scenario_acc in scenarios:
@@ -518,31 +545,35 @@ def _compute_stats_energy_gains(energy_gain_by_uptime_durations):
 
 if __name__ == "__main__":
     params_list = ["0-1.339-lora-pullc", "1.358-1.339-lora-pullc", "0-1.339-nbiot-pullc", "1.358-1.339-nbiot-pullc"]
+
+    print("Loading results")
     for param in params_list:
         all_global_results = {}
-
-        for num_run in range(5):
-            results_dir = f"/home/aomond/reconfiguration-esds/greencom_results/{num_run}"
-
+        print(f"Param {param}")
+        for num_run in range(100):
+            print(f"Run {num_run}")
+            results_dir = f"/home/aomond/reconfiguration-esds/results-greencom-2.85/{num_run}"
             global_results = {}
             for file in os.listdir(results_dir):
-                if param in file and "update" in file:
+                if param in file:
                     with open(os.path.join(results_dir, file)) as f:
                         global_results.update(yaml.safe_load(f))
 
             all_global_results[num_run] = global_results
-
-        global_results_accumulated = compute_stats_global_results(all_global_results)
-        print()
+        print("Results loaded")
+        global_results_accumulated = accumulate_global_results(all_global_results)
+        print("Results accumulated")
 
         # print_energy_results(global_results)
         # analyse_energy_results(global_results)
         energy_gains = compute_energy_gain(global_results_accumulated)
         energy_gain_by_nb_deps = compute_energy_gain_by_nb_deps(energy_gains)
         energy_gain_by_uptime_durations = compute_energy_gain_by_uptime_durations(energy_gain_by_nb_deps)
+        print("Energy gains computed")
         # print(json.dumps(energy_gains, indent=4))
         # print_energy_gain(energy_gains)
         energy_gain_by_uptime_durations_mean_std = _compute_stats_energy_gains(energy_gain_by_uptime_durations)
+        print("Energy gain prepared")
         plot_bar_results(energy_gain_by_uptime_durations_mean_std, param)
         # plot_scatter_results(energy_gain_by_nb_deps, param)
         # plot_surface_results(None, None)
