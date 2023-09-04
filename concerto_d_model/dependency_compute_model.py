@@ -1,6 +1,10 @@
 from typing import List
 
 
+FREQUENCE_POLLING = 1
+MSG_SIZE = 257
+
+
 def get_next_overlap(time_start: float, num_node_a: int, num_node_b: int, nodes_schedule: List, version: str, offset_polling):
     schedule_a = nodes_schedule[num_node_a]
     schedule_b = nodes_schedule[num_node_b]
@@ -46,9 +50,9 @@ class DependencyComputeModel:
     def _compute_offset_polling(self, bandwidth):
         # Worst case for contact between nodes due to wait between 2 pings
         if self.node_id != 0:
-            return 1 + (257/bandwidth) * 2  # Deps sync only with server
+            return FREQUENCE_POLLING + (MSG_SIZE/bandwidth) * 2  # Deps sync only with server
         else:
-            return 1 + (len(self.nodes_schedules) - 1) * (257/bandwidth) * 2  # Server sync at worst with each dep
+            return FREQUENCE_POLLING + (len(self.nodes_schedules) - 1) * (MSG_SIZE/bandwidth) * 2  # Server sync at worst with each dep
 
     def _compute_time_lp_end(self, all_trans: List[float], next_uptime, uptime_num):
         current_uptime, duration = self.nodes_schedules[self.node_id][uptime_num]
