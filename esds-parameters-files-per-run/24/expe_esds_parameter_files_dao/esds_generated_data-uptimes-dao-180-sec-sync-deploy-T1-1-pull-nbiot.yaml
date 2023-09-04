@@ -1,0 +1,38 @@
+max_execution_duration: 2513.73
+nb_nodes: 3
+receive_periods_per_node:
+  0: []
+  1: []
+  2: []
+reconf_periods_per_node:
+  0:
+  - - 2495.84
+    - 2496.87
+    - 1
+  - - 2496.87
+    - 2503.22
+    - 1
+  - - 2503.22
+    - 2513.73
+    - 1
+  1:
+  - - 2461.75
+    - 2466.74
+    - 1
+  - - 2466.74
+    - 2483.43
+    - 1
+  2: []
+sending_periods_per_node:
+  0: []
+  1: []
+  2: []
+title: esds_generated_data-uptimes-dao-180-sec-sync-deploy-T1-1-pull-nbiot
+uptimes_periods_per_node:
+  0:
+  - - 2495.837
+    - 2513.73
+  1:
+  - - 2461.748
+    - 2513.73
+  2: []
