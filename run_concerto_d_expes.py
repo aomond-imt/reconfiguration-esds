@@ -195,7 +195,7 @@ def main(esds_parameter_files="expe_esds_parameter_files_dao"):
 
 
 def _execute_esds_simulation(esds_parameter_files):
-    for num_run in range(1):
+    for num_run in range(100):
         # Setup variables
         ## Configuration files dirs
         root = f"{os.environ['HOME']}/reconfiguration-esds/esds-parameters-files-per-run/{num_run}"
