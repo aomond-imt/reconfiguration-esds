@@ -323,7 +323,12 @@ def plot_bar_results(energy_gain_by_uptime_durations, param_names):
             print(f"Creating plot for: {scenario_name}")
             # scenario_name = 'esds_generated_data-ud0_od0_30_25-deploy-T0'
             # gain_by_uptime_durations = energy_gain_by_nb_deps[scenario_name]
-            x = np.arange(len(gain_by_uptime_durations[60].keys()))*2
+            if 60 in gain_by_uptime_durations.keys():
+                x = np.arange(len(gain_by_uptime_durations[60].keys()))*2
+            elif 120 in gain_by_uptime_durations.keys():
+                x = np.arange(len(gain_by_uptime_durations[120].keys())) * 2
+            else:
+                x = np.arange(len(gain_by_uptime_durations[180].keys())) * 2
             # print(json.dumps(elements, indent=2))
             elements_per_ud = {}
             bottom_per_ud = {}
@@ -349,9 +354,20 @@ def plot_bar_results(energy_gain_by_uptime_durations, param_names):
             ax.set_ylabel('Energy (J)')
             ax.set_xlabel('Nb deps')
 
-            title = f'{scenario_name}-{param_names}'.replace("esds_generated_data-uptimes-dao-", "").replace("-", "   ")
+            scenario, _ = scenario_name.replace("esds_generated_data-uptimes-dao-", "").split("-")
+            action_conso, idle_conso, type_techno, _ = param_names.split("-")
+            # title = f'{scenario_name}-{param_names}'.replace("esds_generated_data-uptimes-dao-", "").replace("-", "   ")
+            rn_presence_text = "With RN" if type_reconf == "async" else "Without RN"
+            title = f'Dynamic+static energy\n{rn_presence_text}\nScenario: {scenario} - Dynamic action conso: {action_conso} - Static idle conso: {idle_conso} - Type techno: {type_techno}'
+
             ax.set_title(title)
-            ax.set_xticks(x + width, gain_by_uptime_durations[60].keys())
+            if 60 in gain_by_uptime_durations.keys():
+                ax.set_xticks(x + width, gain_by_uptime_durations[60].keys())
+            elif 120 in gain_by_uptime_durations.keys():
+                ax.set_xticks(x + width, gain_by_uptime_durations[120].keys())
+            else:
+                ax.set_xticks(x + width, gain_by_uptime_durations[180].keys())
+
             ax.legend(loc='upper left', ncols=3, borderaxespad=0.)
             # if type_reconf == "async":
             #     if "update" in scenario_name:
@@ -545,12 +561,13 @@ def _compute_stats_energy_gains(energy_gain_by_uptime_durations):
 
 if __name__ == "__main__":
     params_list = ["0-1.339-lora-pullc", "1.358-1.339-lora-pullc", "0-1.339-nbiot-pullc", "1.358-1.339-nbiot-pullc"]
+    # params_list = ["1.358-1.339-lora-pullc", "0-1.339-nbiot-pullc", "1.358-1.339-nbiot-pullc"]
 
     print("Loading results")
     for param in params_list:
         all_global_results = {}
         print(f"Param {param}")
-        for num_run in range(100):
+        for num_run in range(5):
             print(f"Run {num_run}")
             results_dir = f"/home/aomond/reconfiguration-esds/results-greencom-2.85/{num_run}"
             global_results = {}
