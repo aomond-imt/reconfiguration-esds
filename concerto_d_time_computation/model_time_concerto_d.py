@@ -5,7 +5,7 @@ from typing import List, Tuple
 
 import yaml
 
-from concerto_d_model.dependency_compute_model import DependencyComputeModel
+from concerto_d_time_computation.dependency_compute_model import DependencyComputeModel
 
 # version_concerto_d = "sync"
 # reconf_name = "update"
@@ -579,7 +579,7 @@ if __name__ == "__main__":
     for num_draw in range(100):
         print(f"{num_draw}...")
         all_expe_parameters = generate_mascots_schedules(num_draw)
-        expe_esds_parameter_files = f"/home/aomond/reconfiguration-esds/concerto-d-results/{num_draw}/expe_esds_parameter_files_dao"
+        expe_esds_parameter_files = f"/home/aomond/reconfiguration-esds/esds-parameters-files-per-run/{num_draw}/expe_esds_parameter_files_dao"
         os.makedirs(expe_esds_parameter_files, exist_ok=True)
 
         for title, vals in all_expe_parameters.items():

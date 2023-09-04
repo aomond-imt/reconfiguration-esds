@@ -136,8 +136,14 @@ def execute(api: Node):
         "tot_wait_polling": tot_wait_polling
     }
     simulation_functions.print_esds_node_results(results, api)
-    execution_dir = f"{title}-{api.args['stressConso']}-{api.args['idleConso']}-{api.args['nameTechno']}-{api.args['typeSynchro']}"
+    params_joined = simulation_functions.get_params_joined({
+        "stressConso": api.args['stressConso'],
+        "idleConso": api.args['idleConso'],
+        "nameTechno": api.args['nameTechno'],
+        "typeSynchro": api.args['typeSynchro'],
+    })
+    execution_dir = f"{title}-{params_joined}"
     num_run = api.args["num_run"]
-    with open(f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/{num_run}/results/sends/{execution_dir}/{node_id}.yaml",
+    with open(f"{os.environ['HOME']}/esds-executions-runs/{num_run}/esds-node-results/sends/{execution_dir}/{node_id}.yaml",
               "w") as f:
         yaml.safe_dump(results, f)

@@ -1,7 +1,7 @@
 import jinja2
 import simulation_functions
 
-templateLoader = jinja2.FileSystemLoader(searchpath="./concerto-d")
+templateLoader = jinja2.FileSystemLoader(searchpath="./concerto_d_esds_simulation")
 templateEnv = jinja2.Environment(loader=templateLoader)
 TEMPLATE_FILE = "platform.yaml.j2"
 template = templateEnv.get_template(TEMPLATE_FILE)
@@ -62,5 +62,5 @@ for parameter in sweeps:
     )
 
     joined_params = simulation_functions.get_params_joined(parameter)
-    with open(f"concerto-d/platform-{joined_params}.yaml", "w") as f:
+    with open(f"concerto_d_esds_simulation/platform-{joined_params}.yaml", "w") as f:
         f.write(outputText)

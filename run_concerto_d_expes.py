@@ -38,7 +38,7 @@ def _esds_results_verification(esds_parameters, expe_esds_verification_files, id
     #         with open(abs_verif_file) as f:
     #             verification = yaml.safe_load(f)
 
-    # Retrieve results files for reconfs, sends and receives
+    # Retrieve esds-node-results files for reconfs, sends and receives
     idle_results = os.path.join(idle_results_dir, execution_dir)
     reconfs_results = os.path.join(reconf_results_dir, execution_dir)
     sends_results = os.path.join(sends_results_dir, execution_dir)
@@ -105,7 +105,7 @@ def _esds_results_verification(esds_parameters, expe_esds_verification_files, id
 
 
 def _load_energetic_expe_results_from_title(execution_dir, idle_results_dir, reconf_results_dir, sends_results_dir, receive_results_dir):
-    # Retrieve results files for reconfs, sends and receives
+    # Retrieve esds-node-results files for reconfs, sends and receives
     idle_results = os.path.join(idle_results_dir, execution_dir)
     reconfs_results = os.path.join(reconf_results_dir, execution_dir)
     sends_results = os.path.join(sends_results_dir, execution_dir)
@@ -152,14 +152,14 @@ def _group_by_version_concerto_d(parameter_files_list):
     return ordered_parameter_list
 
 
-def main(simu_to_launch_dir="expe_esds_parameter_files_dao"):
+def main(esds_parameter_files="tests"):
     parallel_execs = []
     nb_cores = math.ceil(cpu_count() * 0.9)
     pool = Pool(nb_cores)
     for _ in range(nb_cores):
         exec_esds = pool.apply_async(
             _execute_esds_simulation,
-            args=(simu_to_launch_dir,)
+            args=(esds_parameter_files,)
         )
         parallel_execs.append(exec_esds)
 
@@ -194,19 +194,21 @@ def main(simu_to_launch_dir="expe_esds_parameter_files_dao"):
         # print_results.print_energy_results(global_results)
 
 
-def _execute_esds_simulation(simu_to_launch_dir):
-    for num_run in range(100):
+def _execute_esds_simulation(esds_parameter_files):
+    for num_run in range(1):
         # Setup variables
         ## Configuration files dirs
-        root = f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/{num_run}"
+        root = f"{os.environ['HOME']}/reconfiguration-esds/esds-parameters-files-per-run/{num_run}"
+        root_results = f"{os.environ['HOME']}/esds-executions-runs/{num_run}"
         os.makedirs(root, exist_ok=True)
+        os.makedirs(root_results, exist_ok=True)
         # expe_esds_parameter_files = os.path.join(root, "tests")
-        expe_esds_parameter_files = os.path.join(root, simu_to_launch_dir)
+        expe_esds_parameter_files = os.path.join(root, esds_parameter_files)
         esds_current_parameter_file = os.path.join(root, "current_esds_parameter_file.yaml")
         expe_esds_verification_files = os.path.join(root, "expe_esds_verification_files")
 
         ## Results dirs
-        results_dir = os.path.join(root, "results")
+        results_dir = os.path.join(root_results, "esds-node-results")
         idle_results_dir = os.path.join(results_dir, "idles")
         reconf_results_dir = os.path.join(results_dir, "reconfs")
         sends_results_dir = os.path.join(results_dir, "sends")
@@ -240,7 +242,7 @@ def _execute_esds_simulation(simu_to_launch_dir):
                 sweeps.append((parameter_tuple, parameter_file))
 
         sweeper = ParamSweeper(
-            persistence_dir=os.path.join(root, "sweeper"), sweeps=sweeps, save_sweeps=True
+            persistence_dir=os.path.join(root_results, "sweeper"), sweeps=sweeps, save_sweeps=True
         )
         next_sweep = sweeper.get_next()
         while next_sweep is not None:
@@ -263,8 +265,8 @@ def _execute_esds_simulation(simu_to_launch_dir):
                 os.makedirs(os.path.join(sends_results_dir, execution_dir), exist_ok=True)
                 os.makedirs(os.path.join(receive_results_dir, execution_dir), exist_ok=True)
 
-                platform_path = os.path.abspath(f"concerto-d/platform-{joined_params}.yaml")
-                platform_path_copy = os.path.abspath(f"concerto-d/platform-{joined_params}-{title}-{num_run}.yaml")
+                platform_path = os.path.abspath(f"concerto_d_esds_simulation/platform-{joined_params}.yaml")
+                platform_path_copy = os.path.abspath(f"concerto_d_esds_simulation/platform-{joined_params}-{title}-{num_run}.yaml")
                 shutil.copy(platform_path, platform_path_copy)
 
                 with open(platform_path_copy) as f:
@@ -305,7 +307,7 @@ def _execute_esds_simulation(simu_to_launch_dir):
                                                                                     sends_results_dir, receive_results_dir),
                                   "time": esds_parameters["max_execution_duration"]}}
                 global_results_path = f"global_results-{title}-{joined_params}.yaml"
-                with open(os.path.join(root, global_results_path), "w") as f:
+                with open(os.path.join(root_results, global_results_path), "w") as f:
                     yaml.safe_dump(result, f)
                 sweeper.done(next_sweep)
                 next_sweep = sweeper.get_next()
@@ -320,7 +322,7 @@ def _execute_esds_simulation(simu_to_launch_dir):
 
 if __name__ == '__main__':
     import sys
-    simu_to_launch_dir = ""
+    esds_parameter_files = ""
     print(sys.argv)
     if len(sys.argv) > 1:
         main(sys.argv[1])
