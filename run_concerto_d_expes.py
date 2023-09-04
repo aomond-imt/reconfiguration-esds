@@ -152,7 +152,7 @@ def _group_by_version_concerto_d(parameter_files_list):
     return ordered_parameter_list
 
 
-def main(esds_parameter_files="tests"):
+def main(esds_parameter_files="expe_esds_parameter_files_dao"):
     parallel_execs = []
     nb_cores = math.ceil(cpu_count() * 0.9)
     pool = Pool(nb_cores)
