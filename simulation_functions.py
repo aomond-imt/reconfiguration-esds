@@ -16,7 +16,7 @@ def get_simulation_swepped_parameters():
     #     "typeSynchro": ["pullc"]
     # }
     parameters = {
-        "stressConso": [1.358],  # 1.339-1.339, 2.576-1.339, 2.697-1.339
+        "stressConso": [0, 1.358],  # 1.339-1.339, 2.576-1.339, 2.697-1.339
         "idleConso": [1.339],
         "techno": [{"name": "lora", "bandwidth": "50kbps", "commsConso": 0.16}],
         "typeSynchro": ["pullc"]

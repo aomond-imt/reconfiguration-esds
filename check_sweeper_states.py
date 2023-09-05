@@ -9,7 +9,7 @@ else:
     detail = False
 
 
-for i in range(100):
+for i in range(200):
     sweeper_path = f"{os.environ['HOME']}/esds-executions-runs/{i}/sweeper"
     if os.path.exists(sweeper_path) and os.path.getsize(f"{sweeper_path}/sweeps") > 0:
         print(f"Sweeper {i}: ", end="")
