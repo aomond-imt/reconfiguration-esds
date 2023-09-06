@@ -5,7 +5,7 @@ from typing import List, Tuple
 
 import yaml
 
-from concerto_d_time_computation.dependency_compute_model import DependencyComputeModel
+from dependency_compute_model import DependencyComputeModel
 
 # version_concerto_d = "sync"
 # reconf_name = "update"
@@ -576,7 +576,7 @@ def _compute_sending_periods_per_node(esds_data):
 
 
 if __name__ == "__main__":
-    for num_draw in range(100):
+    for num_draw in range(100, 200):
         print(f"{num_draw}...")
         all_expe_parameters = generate_mascots_schedules(num_draw)
         expe_esds_parameter_files = f"/home/aomond/reconfiguration-esds/esds-parameters-files-per-run/{num_draw}/expe_esds_parameter_files_dao"

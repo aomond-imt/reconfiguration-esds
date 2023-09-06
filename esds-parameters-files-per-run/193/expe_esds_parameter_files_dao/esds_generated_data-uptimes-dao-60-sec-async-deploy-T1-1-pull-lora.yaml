@@ -1,0 +1,42 @@
+max_execution_duration: 2913.06
+nb_nodes: 3
+receive_periods_per_node:
+  0: []
+  1: []
+  2: []
+reconf_periods_per_node:
+  0:
+  - - 2895.17
+    - 2896.2
+    - 1
+  - - 2896.2
+    - 2902.55
+    - 1
+  - - 2902.55
+    - 2913.06
+    - 1
+  1:
+  - - 251.9
+    - 256.89
+    - 1
+  - - 256.89
+    - 273.58
+    - 1
+  2: []
+sending_periods_per_node:
+  0: []
+  1: []
+  2: []
+title: esds_generated_data-uptimes-dao-60-sec-async-deploy-T1-1-pull-lora
+uptimes_periods_per_node:
+  0:
+  - - 2895.166
+    - 2913.06
+  1:
+  - - 251.903
+    - 311.903
+  2:
+  - - 251.903
+    - 311.903
+  - - 2895.166
+    - 2913.06
