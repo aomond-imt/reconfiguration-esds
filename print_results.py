@@ -176,10 +176,10 @@ def print_energy_gain(energy_gain):
 def compute_energy_gain_by_nb_deps(energy_gains):
     energy_gain_by_nb_deps = {}
     for key, val in energy_gains.items():
-        scenario = "-".join(key.split("-")[:-2])
+        scenario = "-".join(key.split("-")[:-3])
         if scenario not in energy_gain_by_nb_deps.keys():
             energy_gain_by_nb_deps[scenario] = {}
-        nb_deps = int(key.split("-")[7:-1][0])
+        nb_deps = int(key.split("-")[7:][0])
         if nb_deps not in energy_gain_by_nb_deps[scenario]:
             energy_gain_by_nb_deps[scenario][nb_deps] = val
 
@@ -324,7 +324,7 @@ def plot_bar_results(energy_gain_by_uptime_durations, param_names):
             # scenario_name = 'esds_generated_data-ud0_od0_30_25-deploy-T0'
             # gain_by_uptime_durations = energy_gain_by_nb_deps[scenario_name]
             if 60 in gain_by_uptime_durations.keys():
-                x = np.arange(len(gain_by_uptime_durations[60].keys()))*2
+                x = np.arange(len(gain_by_uptime_durations[60].keys())) * 2
             elif 120 in gain_by_uptime_durations.keys():
                 x = np.arange(len(gain_by_uptime_durations[120].keys())) * 2
             else:
@@ -355,7 +355,7 @@ def plot_bar_results(energy_gain_by_uptime_durations, param_names):
             ax.set_xlabel('Nb deps')
 
             scenario, _ = scenario_name.replace("esds_generated_data-uptimes-dao-", "").split("-")
-            action_conso, idle_conso, type_techno, _ = param_names.split("-")
+            action_conso, idle_conso, _, type_techno = param_names.split("-")
             # title = f'{scenario_name}-{param_names}'.replace("esds_generated_data-uptimes-dao-", "").replace("-", "   ")
             rn_presence_text = "With RN" if type_reconf == "async" else "Without RN"
             title = f'Dynamic+static energy\n{rn_presence_text}\nScenario: {scenario} - Dynamic action conso: {action_conso} - Static idle conso: {idle_conso} - Type techno: {type_techno}'
@@ -386,7 +386,7 @@ def plot_bar_results(energy_gain_by_uptime_durations, param_names):
             ax.set_ylim(0, max_bound * 1.1)
 
             # plt.show()
-            dir_to_save = f"/home/aomond/reconfiguration-esds/greencom_results/graphs_means_std"
+            dir_to_save = f"/home/aomond/results-reconfiguration-esds/results-greencom/graphs"
             # dir_to_save = f"/home/aomond/reconfiguration-esds/concerto-d-results/pycharm_plots/detail/{param_names}"
             os.makedirs(dir_to_save, exist_ok=True)
             plt.savefig(f"{dir_to_save}/static-{type_reconf}-{scenario_name}-{param_names}.png")
@@ -567,9 +567,9 @@ if __name__ == "__main__":
     for param in params_list:
         all_global_results = {}
         print(f"Param {param}")
-        for num_run in range(5):
+        for num_run in range(100):
             print(f"Run {num_run}")
-            results_dir = f"/home/aomond/reconfiguration-esds/results-greencom-2.85/{num_run}"
+            results_dir = f"/home/aomond/results-reconfiguration-esds/results-greencom/esds-executions-runs/{num_run}"
             global_results = {}
             for file in os.listdir(results_dir):
                 if param in file:
