@@ -560,7 +560,7 @@ def _compute_stats_energy_gains(energy_gain_by_uptime_durations):
 
 
 if __name__ == "__main__":
-    params_list = ["0-1.339-lora-pullc", "1.358-1.339-lora-pullc", "0-1.339-nbiot-pullc", "1.358-1.339-nbiot-pullc"]
+    params_list = ["0-1.339-pullc-lora", "1.358-1.339-pullc-lora", "0-1.339-pullc-nbiot", "1.358-1.339-pullc-nbiot"]
     # params_list = ["1.358-1.339-lora-pullc", "0-1.339-nbiot-pullc", "1.358-1.339-nbiot-pullc"]
 
     print("Loading results")
