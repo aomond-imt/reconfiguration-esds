@@ -4,11 +4,12 @@ import itertools
 import os
 
 import yaml
+import ujson
 import numpy as np
 import matplotlib.pyplot as plt
 
 
-def _gather_results(global_results_stats):
+def _gather_results(global_results_stats, conso_name):
     gathered_results_acc = {}
     for key, nodes_results in global_results_stats.items():
         for num_run in range(len(nodes_results["time"])):
@@ -19,13 +20,18 @@ def _gather_results(global_results_stats):
             else:
                 gathered_results_acc[key][num_run] = {"energy": {}, "time": nodes_results["time"][num_run]}
 
-            filter_tot = ["idles", "reconfs", "sendings", "receives"]
+            # filter_tot = ["idles", "reconfs", "sendings", "receives"]
+            if conso_name == "static":
+                filter_tot = ["idles", "reconfs", "sendings", "receives"]
+            else:
+                filter_tot = ["reconfs", "sendings", "receives"]
             for node_id in sorted(energy_results["idles"].keys()):
                 tot = 0
                 s = {"idles": 0, "reconfs": 0, "sendings": 0, "receives": 0}
                 for name in s.keys():
                     s[name] += energy_results[name][node_id]["node_conso"][num_run] + energy_results[name][node_id]["comms_cons"][num_run]
-                    if name in filter_tot or node_id == router_id:
+                    # if name in filter_tot or node_id == router_id:
+                    if name in filter_tot:
                         tot += s[name]
                 # s.update({
                 #     "tot_msg_sent": energy_results["sendings"][node_id]["tot_msg_sent"][num_run],
@@ -40,9 +46,9 @@ def _gather_results(global_results_stats):
     return gathered_results_acc
 
 
-def print_energy_results(global_results):
+def print_energy_results(global_results, conso_name):
     print(" ------------ Results --------------")
-    gathered_results = _gather_results(global_results)
+    gathered_results = _gather_results(global_results, conso_name)
 
     for key, vals in gathered_results.items():
         print(key)
@@ -65,9 +71,9 @@ def _group_by_version_concerto_d(gathered_results):
     return grouped_results
 
 
-def analyse_energy_results(global_results):
+def analyse_energy_results(global_results, conso_name):
     print(" ------------ Results --------------")
-    gathered_results = _gather_results(global_results)
+    gathered_results = _gather_results(global_results, conso_name)
     group_by_version_concerto_d = _group_by_version_concerto_d(gathered_results)
     for key, vals in group_by_version_concerto_d.items():
         sum_reconf_sync = 0
@@ -91,8 +97,8 @@ def analyse_energy_results(global_results):
             print(f"Ratio reconf/sending: {sum_reconf_async:.2f}/{sum_sending_async:.2f} ({sum_reconf_async / sum_sending_async:.2f})")
 
 
-def compute_energy_gain(global_results_accumulated):
-    gathered_results = _gather_results(global_results_accumulated)
+def compute_energy_gain(global_results_accumulated, conso_name):
+    gathered_results = _gather_results(global_results_accumulated, conso_name)
     group_by_version_concerto_d = _group_by_version_concerto_d(gathered_results)
     all_results = {}
     for key, vals in group_by_version_concerto_d.items():
@@ -144,8 +150,8 @@ def compute_energy_gain(global_results_accumulated):
                 "sync": round(tot_ons_sync, 2),
                 "async_no_router": round(tot_ons_async, 2),
                 "async_with_router": round(tot_ons_async + tot_router, 2),
-                "gain_no_router": round((tot_ons_sync - tot_ons_async) * 100 / tot_ons_sync, 2),
-                "gain_with_router": round((tot_ons_sync - (tot_ons_async+tot_router)) * 100 / tot_ons_sync, 2),
+                "gain_no_router": round((tot_ons_sync - tot_ons_async) * 100 / tot_ons_sync, 2) if tot_ons_sync != 0 else "NA",
+                "gain_with_router": round((tot_ons_sync - (tot_ons_async+tot_router)) * 100 / tot_ons_sync, 2) if tot_ons_sync != 0 else "NA",
                 "time_sync": vals["sync"][num_run]["time"],
                 "time_async": vals["async"][num_run]["time"],
                 "gain_time": round((vals["sync"][num_run]["time"] - vals["async"][num_run]["time"]) * 100 / vals["sync"][num_run]["time"], 2)
@@ -348,7 +354,7 @@ def plot_bar_results(energy_gain_by_uptime_durations, param_names):
                         offset = width * multiplier
                         max_bound = _plot_tot(attribute, ax, bottom_per_ud[ud], max_bound, measurement, offset, width, x, stds[ud])
                         # max_bound = _plot_detail(attribute, ax, bottom_per_ud[ud], max_bound, measurement, offset, width, x, ud)
-                        # max_bound = _plot_tot_time(attribute, ax, bottom, max_bound, measurement, offset, width, x)
+                        # max_bound = _plot_tot_time(attribute, ax, bottom_per_ud[ud], max_bound, measurement, offset, width, x)
                         multiplier += 1
 
             ax.set_ylabel('Energy (J)')
@@ -358,7 +364,7 @@ def plot_bar_results(energy_gain_by_uptime_durations, param_names):
             action_conso, idle_conso, _, type_techno = param_names.split("-")
             # title = f'{scenario_name}-{param_names}'.replace("esds_generated_data-uptimes-dao-", "").replace("-", "   ")
             rn_presence_text = "With RN" if type_reconf == "async" else "Without RN"
-            title = f'Dynamic+static energy\n{rn_presence_text}\nScenario: {scenario} - Dynamic action conso: {action_conso} - Static idle conso: {idle_conso} - Type techno: {type_techno}'
+            title = f'Dynamic energy\n{rn_presence_text}\nScenario: {scenario} - Dynamic action conso: {action_conso} - Static idle conso: {idle_conso} - Type techno: {type_techno}'
 
             ax.set_title(title)
             if 60 in gain_by_uptime_durations.keys():
@@ -383,13 +389,13 @@ def plot_bar_results(energy_gain_by_uptime_durations, param_names):
             #     else:
             #         ax.set_ylim(0, 2000)     # Dynamic
             #         # ax.set_ylim(0, 650000) # Static
-            ax.set_ylim(0, max_bound * 1.1)
+            ax.set_ylim(0, max_bound * 1.4)
 
             # plt.show()
             dir_to_save = f"/home/aomond/results-reconfiguration-esds/results-greencom/graphs"
             # dir_to_save = f"/home/aomond/reconfiguration-esds/concerto-d-results/pycharm_plots/detail/{param_names}"
             os.makedirs(dir_to_save, exist_ok=True)
-            plt.savefig(f"{dir_to_save}/static-{type_reconf}-{scenario_name}-{param_names}.png")
+            plt.savefig(f"{dir_to_save}/dynamic-{type_reconf}-{scenario_name}-{param_names}.png")
 
 
 def _plot_tot(attribute, ax, bottom, max_bound, measurement, offset, width, x, stds):
@@ -427,8 +433,8 @@ def _plot_tot_time(attribute, ax, bottom, max_bound, measurement, offset, width,
 
 def _plot_detail(attribute, ax, bottom, max_bound, measurement, offset, width, x, ud):
     if attribute == "sync":
-        rects = ax.bar(x + offset, measurement["detail_ons_idles"], width, bottom=bottom[attribute], label="sync ons (idles)")
-        bottom[attribute] = bottom[attribute] + measurement["detail_ons_idles"]
+        # rects = ax.bar(x + offset, measurement["detail_ons_idles"], width, bottom=bottom[attribute], label="sync ons (idles)")
+        # bottom[attribute] = bottom[attribute] + measurement["detail_ons_idles"]
         rects = ax.bar(x + offset, measurement["detail_ons_reconfs"], width, bottom=bottom[attribute], label=f"sync ons (reconfs) ({ud})")
         bottom[attribute] = bottom[attribute] + measurement["detail_ons_reconfs"]
         # ax.bar_label(rects, padding=3)
@@ -440,8 +446,8 @@ def _plot_detail(attribute, ax, bottom, max_bound, measurement, offset, width, x
         ax.bar_label(rects, padding=3)
         max_bound = max(max_bound, max(bottom[attribute]))
     elif attribute == "async":
-        rects = ax.bar(x + offset, measurement["detail_ons_idles"], width, bottom=bottom[attribute], label="async ons (idles)")
-        bottom[attribute] = bottom[attribute] + measurement["detail_ons_idles"]
+        # rects = ax.bar(x + offset, measurement["detail_ons_idles"], width, bottom=bottom[attribute], label="async ons (idles)")
+        # bottom[attribute] = bottom[attribute] + measurement["detail_ons_idles"]
         # ax.bar_label(rects, padding=3)
         rects = ax.bar(x + offset, measurement["detail_ons_reconfs"], width, bottom=bottom[attribute], label=f"async ons (reconfs) ({ud})")
         bottom[attribute] = bottom[attribute] + measurement["detail_ons_reconfs"]
@@ -452,8 +458,8 @@ def _plot_detail(attribute, ax, bottom, max_bound, measurement, offset, width, x
         rects = ax.bar(x + offset, measurement["detail_ons_receives"], width, bottom=bottom[attribute], label="async ons (responses)")
         bottom[attribute] = bottom[attribute] + measurement["detail_ons_receives"]
         # ax.bar_label(rects, padding=3)
-        rects = ax.bar(x + offset, measurement["detail_router_idles"], width, bottom=bottom[attribute], label="async router (idles)")
-        bottom[attribute] = bottom[attribute] + measurement["detail_router_idles"]
+        # rects = ax.bar(x + offset, measurement["detail_router_idles"], width, bottom=bottom[attribute], label="async router (idles)")
+        # bottom[attribute] = bottom[attribute] + measurement["detail_router_idles"]
         # ax.bar_label(rects, padding=3)
         rects = ax.bar(x + offset, measurement["detail_router_sendings"], width, bottom=bottom[attribute], label="async router (requests)")
         bottom[attribute] = bottom[attribute] + measurement["detail_router_sendings"]
@@ -486,7 +492,8 @@ def accumulate_global_results(all_global_results):
                 if scenario_acc == scenario_res:
                     results_acc["time"].append(vals["time"])
                     for type_e in ["idles", "receives", "reconfs", "sendings"]:
-                        for node_num, vals_e in vals["energy"][type_e].items():
+                        for str_node_num, vals_e in vals["energy"][type_e].items():
+                            node_num = int(str_node_num)
                             if type_e not in results_acc["energy"].keys():
                                 results_acc["energy"][type_e] = {node_num: {"comms_cons": [vals_e["comms_cons"]], "node_conso": [vals_e["node_conso"]]}}
                             else:
@@ -514,7 +521,7 @@ def accumulate_global_results(all_global_results):
     return global_results_accumulated
 
 
-def _compute_stats_energy_gains(energy_gain_by_uptime_durations):
+def _compute_stats_energy_gains(energy_gain_by_uptime_durations, conso_name):
     energy_gain_by_uptime_durations_mean_std = copy.deepcopy(energy_gain_by_uptime_durations)
     type_consos = ["idles", "reconfs", "sendings", "receives"]
     for scenario, ud_values in energy_gain_by_uptime_durations.items():
@@ -523,6 +530,7 @@ def _compute_stats_energy_gains(energy_gain_by_uptime_durations):
                 sync_vals = []
                 async_no_router_vals = []
                 async_with_router_vals = []
+                gains = []
                 time_sync_vals = []
                 time_async_vals = []
                 detail_ons_sync = {"idles": [], "reconfs": [], "sendings": [], "receives": []}
@@ -533,6 +541,7 @@ def _compute_stats_energy_gains(energy_gain_by_uptime_durations):
                     sync_vals.append(node_values["total"]["sync"])
                     async_no_router_vals.append(node_values["total"]["async_no_router"])
                     async_with_router_vals.append(node_values["total"]["async_with_router"])
+                    gains.append((node_values["total"]["sync"] - node_values["total"]["async_with_router"])*100/node_values["total"]["sync"])
                     time_sync_vals.append(node_values["total"]["time_sync"])
                     time_async_vals.append(node_values["total"]["time_async"])
                     for type_conso in type_consos:
@@ -540,57 +549,95 @@ def _compute_stats_energy_gains(energy_gain_by_uptime_durations):
                         detail_ons_async[type_conso].append(node_values["total"]["detail_ons_async"][type_conso])
                         detail_router[type_conso].append(node_values["total"]["detail_router"][type_conso])
 
+                unit = 1000 if conso_name == "static" else 1
+                unit_str = "kJ" if conso_name == "static" else "J"
                 energy_gain_by_uptime_durations_mean_std[scenario][ud][nb_deps]["total_stats"] = {
-                    "sync": {"mean": np.mean(sync_vals), "std": np.std(sync_vals)},
-                    "async_no_router": {"mean": np.mean(async_no_router_vals), "std": np.std(async_no_router_vals)},
-                    "async_with_router": {"mean": np.mean(async_with_router_vals), "std": np.std(async_with_router_vals)},
-                    "time_sync": {"mean": np.mean(time_sync_vals), "std": np.std(time_sync_vals)},
-                    "time_async": {"mean": np.mean(time_async_vals), "std": np.std(time_async_vals)},
-                    "detail_ons_sync": {"idles": {"mean": 0, "std": 0}, "reconfs": {"mean": 0, "std": 0}, "sendings": {"mean": 0, "std": 0}, "receives": {"mean": 0, "std": 0}},
-                    "detail_ons_async": {"idles": {"mean": 0, "std": 0}, "reconfs": {"mean": 0, "std": 0}, "sendings": {"mean": 0, "std": 0}, "receives": {"mean": 0, "std": 0}},
-                    "detail_router": {"idles": {"mean": 0, "std": 0}, "reconfs": {"mean": 0, "std": 0}, "sendings": {"mean": 0, "std": 0}, "receives": {"mean": 0, "std": 0}},
+                    "sync": {"mean": f"{round(np.mean(sync_vals)/unit, 2)}{unit_str}", "std": f"{round(np.std(sync_vals)/unit, 2)}{unit_str}", "min": f"{round(np.min(sync_vals)/unit, 2)}{unit_str}", "max": f"{round(np.max(sync_vals)/unit, 2)}{unit_str}"},
+                    "async_no_router": {"mean": f"{round(np.mean(async_no_router_vals)/unit, 2)}{unit_str}", "std": f"{round(np.std(async_no_router_vals)/unit, 2)}{unit_str}", "min": f"{round(np.min(async_no_router_vals)/unit, 2)}{unit_str}", "max": f"{round(np.max(async_no_router_vals)/unit, 2)}{unit_str}"},
+                    "async_with_router": {"mean": f"{round(np.mean(async_with_router_vals)/unit, 2)}{unit_str}", "std": f"{round(np.std(async_with_router_vals)/unit, 2)}{unit_str}", "min": f"{round(np.min(async_with_router_vals)/unit, 2)}{unit_str}", "max": f"{round(np.max(async_with_router_vals)/unit, 2)}{unit_str}"},
+                    "gains": {"mean": f"{round(np.mean(gains), 2)}%", "std": f"{round(np.std(gains), 2)}%", "min": f"{round(np.min(gains), 2)}%", "max": f"{round(np.max(gains), 2)}%"},
+                    "time_sync": {"mean": f"{round(np.mean(time_sync_vals)/unit, 2)}{unit_str}", "std": f"{round(np.std(time_sync_vals)/unit, 2)}{unit_str}", "min": f"{round(np.min(time_sync_vals)/unit, 2)}{unit_str}", "max": f"{round(np.max(time_sync_vals)/unit, 2)}{unit_str}"},
+                    "time_async": {"mean": f"{round(np.mean(time_async_vals)/unit, 2)}{unit_str}", "std": f"{round(np.std(time_async_vals)/unit, 2)}{unit_str}", "min": f"{round(np.min(time_async_vals)/unit, 2)}{unit_str}", "max": f"{round(np.max(time_async_vals)/unit, 2)}{unit_str}"},
+                    "detail_ons_sync": {"idles": {}, "reconfs": {}, "sendings": {}, "receives": {}},
+                    "detail_ons_async": {"idles": {}, "reconfs": {}, "sendings": {}, "receives": {}},
+                    "detail_router": {"idles": {}, "reconfs": {}, "sendings": {}, "receives": {}},
                 }
 
                 for type_conso in type_consos:
-                    energy_gain_by_uptime_durations_mean_std[scenario][ud][nb_deps]["total_stats"]["detail_ons_sync"][type_conso] = {"mean": np.mean(detail_ons_sync[type_conso]), "std": np.std(detail_ons_sync[type_conso])}
-                    energy_gain_by_uptime_durations_mean_std[scenario][ud][nb_deps]["total_stats"]["detail_ons_async"][type_conso] = {"mean": np.mean(detail_ons_async[type_conso]), "std": np.std(detail_ons_async[type_conso])}
-                    energy_gain_by_uptime_durations_mean_std[scenario][ud][nb_deps]["total_stats"]["detail_router"][type_conso] = {"mean": np.mean(detail_router[type_conso]), "std": np.std(detail_router[type_conso])}
+                    energy_gain_by_uptime_durations_mean_std[scenario][ud][nb_deps]["total_stats"]["detail_ons_sync"][type_conso] = {
+                        "mean": round(np.mean(detail_ons_sync[type_conso])/unit, 2),
+                        "std": round(np.std(detail_ons_sync[type_conso])/unit, 2),
+                        "min": round(np.min(detail_ons_sync[type_conso])/unit, 2),
+                        "max": round(np.max(detail_ons_sync[type_conso])/unit, 2)
+                    }
+                    energy_gain_by_uptime_durations_mean_std[scenario][ud][nb_deps]["total_stats"]["detail_ons_async"][type_conso] = {
+                        "mean": round(np.mean(detail_ons_async[type_conso])/unit, 2),
+                        "std": round(np.std(detail_ons_async[type_conso])/unit, 2),
+                        "min": round(np.min(detail_ons_async[type_conso])/unit, 2),
+                        "max": round(np.max(detail_ons_async[type_conso])/unit, 2)
+                    }
+                    energy_gain_by_uptime_durations_mean_std[scenario][ud][nb_deps]["total_stats"]["detail_router"][type_conso] = {
+                        "mean": round(np.mean(detail_router[type_conso])/unit, 2),
+                        "std": round(np.std(detail_router[type_conso])/unit, 2),
+                        "min": round(np.min(detail_router[type_conso])/unit, 2),
+                        "max": round(np.max(detail_router[type_conso])/unit, 2)
+                    }
 
     return energy_gain_by_uptime_durations_mean_std
 
 
 if __name__ == "__main__":
-    params_list = ["0-1.339-pullc-lora", "1.358-1.339-pullc-lora", "0-1.339-pullc-nbiot", "1.358-1.339-pullc-nbiot"]
-    # params_list = ["1.358-1.339-lora-pullc", "0-1.339-nbiot-pullc", "1.358-1.339-nbiot-pullc"]
-
+    # params_list = ["0-1.339-pullc-lora", "1.358-1.339-pullc-lora", "0-1.339-pullc-nbiot", "1.358-1.339-pullc-nbiot"]
+    params_list = ["1.358-1.339-pullc-lora"]
+    path_executions_runs = "/home/aomond/results-reconfiguration-esds/results-greencom/esds-executions-runs"
     print("Loading results")
     for param in params_list:
-        all_global_results = {}
-        print(f"Param {param}")
-        for num_run in range(100):
-            print(f"Run {num_run}")
-            results_dir = f"/home/aomond/results-reconfiguration-esds/results-greencom/esds-executions-runs/{num_run}"
-            global_results = {}
-            for file in os.listdir(results_dir):
-                if param in file:
-                    with open(os.path.join(results_dir, file)) as f:
-                        global_results.update(yaml.safe_load(f))
+        for conso_name in ["static", "dynamic"]:
+            # all_global_results = {}
+            print(f"Param {param}")
+            # for num_run in range(200):
+            #     print(f"Run {num_run}")
+            #     results_dir = f"{path_executions_runs}/{num_run}"
+            #     global_results = {}
+            #     for file in os.listdir(results_dir):
+            #         if param in file:
+            #             with open(os.path.join(results_dir, file)) as f:
+            #                 global_results.update(yaml.safe_load(f))
+            #
+            #     all_global_results[num_run] = global_results
 
-            all_global_results[num_run] = global_results
-        print("Results loaded")
-        global_results_accumulated = accumulate_global_results(all_global_results)
-        print("Results accumulated")
+            # with open(f"{path_executions_runs}/aggregated_{param}2.json", "w") as f:
+            #     ujson.dump(all_global_results, f)
+            with open(f"{path_executions_runs}/aggregated_{param}.json") as f:
+                all_global_results = ujson.load(f)
 
-        # print_energy_results(global_results)
-        # analyse_energy_results(global_results)
-        energy_gains = compute_energy_gain(global_results_accumulated)
-        energy_gain_by_nb_deps = compute_energy_gain_by_nb_deps(energy_gains)
-        energy_gain_by_uptime_durations = compute_energy_gain_by_uptime_durations(energy_gain_by_nb_deps)
-        print("Energy gains computed")
-        # print(json.dumps(energy_gains, indent=4))
-        # print_energy_gain(energy_gains)
-        energy_gain_by_uptime_durations_mean_std = _compute_stats_energy_gains(energy_gain_by_uptime_durations)
-        print("Energy gain prepared")
-        plot_bar_results(energy_gain_by_uptime_durations_mean_std, param)
-        # plot_scatter_results(energy_gain_by_nb_deps, param)
-        # plot_surface_results(None, None)
+            print("Results loaded")
+            global_results_accumulated = accumulate_global_results(all_global_results)
+            print("Results accumulated")
+
+            # print_energy_results(global_results)
+            # analyse_energy_results(global_results)
+            energy_gains = compute_energy_gain(global_results_accumulated, conso_name)
+            energy_gain_by_nb_deps = compute_energy_gain_by_nb_deps(energy_gains)
+            energy_gain_by_uptime_durations = compute_energy_gain_by_uptime_durations(energy_gain_by_nb_deps)
+            print("Energy gains computed")
+            # print(json.dumps(energy_gains, indent=4))
+            # print_energy_gain(energy_gains)
+            energy_gain_by_uptime_durations_mean_std = _compute_stats_energy_gains(energy_gain_by_uptime_durations, conso_name)
+            print("Energy gain prepared")
+
+            for scenario_name, ud_values in energy_gain_by_uptime_durations_mean_std.items():
+                for ud, nb_deps_values in ud_values.items():
+                    for nb_dep in nb_deps_values.keys():
+                        if nb_dep >= 5:
+                            stats = nb_deps_values[nb_dep]["total_stats"]
+                            print(scenario_name, ud, nb_dep)
+                            print(f"direct: {stats['sync']}")
+                            print(f"with rn: {stats['async_with_router']}")
+                            print(f"gain: {stats['gains']}")
+                            print()
+                        # print(f"gain: {stats['async']}")
+
+            # plot_bar_results(energy_gain_by_uptime_durations_mean_std, param)
+            # plot_scatter_results(energy_gain_by_nb_deps, param)
+            # plot_surface_results(None, None)
