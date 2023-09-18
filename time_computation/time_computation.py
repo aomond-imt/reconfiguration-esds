@@ -155,25 +155,25 @@ def generate_mascots_schedules(num_draw):
     #     results_dict = json.load(f)
 
     uptimes_schedules = {
-        # "ud1_od0_15_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud1_od0_15_25_perc.json")),
-        # "ud2_od0_15_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud2_od0_15_25_perc.json")),
-        # "ud0_od1_15_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od1_15_25_perc.json")),
-        # "ud0_od2_15_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od2_15_25_perc.json")),
-        # "ud0_od0_15_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_15_25_perc-dao.json")),
-        # "ud0_od0_7_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_7_25_perc-dao.json")),
-        # "ud0_od0_30_25": json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_30_25_perc-dao.json")),
-        "uptimes-dao-60-sec": json.load(open(f"/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/{num_draw}/uptimes-dao-60-sec.json")),
-        "uptimes-dao-120-sec": json.load(open(f"/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/{num_draw}/uptimes-dao-120-sec.json")),
-        "uptimes-dao-180-sec": json.load(open(f"/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/{num_draw}/uptimes-dao-180-sec.json")),
+        # "ud1_od0_15_25": json.load(open(f"{os.environ['HOME']}/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud1_od0_15_25_perc.json")),
+        # "ud2_od0_15_25": json.load(open(f"{os.environ['HOME']}/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud2_od0_15_25_perc.json")),
+        # "ud0_od1_15_25": json.load(open(f"{os.environ['HOME']}/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od1_15_25_perc.json")),
+        # "ud0_od2_15_25": json.load(open(f"{os.environ['HOME']}/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od2_15_25_perc.json")),
+        # "ud0_od0_15_25": json.load(open(f"{os.environ['HOME']}/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_15_25_perc-dao.json")),
+        # "ud0_od0_7_25": json.load(open(f"{os.environ['HOME']}/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_7_25_perc-dao.json")),
+        # "ud0_od0_30_25": json.load(open(f"{os.environ['HOME']}/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_30_25_perc-dao.json")),
+        "uptimes-dao-60-sec": json.load(open(f"{os.environ['HOME']}/reconfiguration-esds/time_computation/uptimes/{num_draw}/uptimes-dao-60-sec.json")),
+        "uptimes-dao-120-sec": json.load(open(f"{os.environ['HOME']}/reconfiguration-esds/time_computation/uptimes/{num_draw}/uptimes-dao-120-sec.json")),
+        "uptimes-dao-180-sec": json.load(open(f"{os.environ['HOME']}/reconfiguration-esds/time_computation/uptimes/{num_draw}/uptimes-dao-180-sec.json")),
     }
-    # ud1_od0_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud1_od0_15_25_perc.json"))
-    # ud2_od0_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud2_od0_15_25_perc.json"))
-    # ud0_od1_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od1_15_25_perc.json"))
-    # ud0_od2_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od2_15_25_perc.json"))
+    # ud1_od0_15_25 = json.load(open(f"{os.environ['HOME']}/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud1_od0_15_25_perc.json"))
+    # ud2_od0_15_25 = json.load(open(f"{os.environ['HOME']}/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud2_od0_15_25_perc.json"))
+    # ud0_od1_15_25 = json.load(open(f"{os.environ['HOME']}/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od1_15_25_perc.json"))
+    # ud0_od2_15_25 = json.load(open(f"{os.environ['HOME']}/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od2_15_25_perc.json"))
     #
-    # ud0_od0_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_15_25_perc-31_nodes.json"))
-    # ud0_od0_7_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_7_25_perc-31_nodes.json"))
-    # ud0_od0_30_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_30_25_perc-31_nodes.json"))
+    # ud0_od0_15_25 = json.load(open(f"{os.environ['HOME']}/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_15_25_perc-31_nodes.json"))
+    # ud0_od0_7_25 = json.load(open(f"{os.environ['HOME']}/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_7_25_perc-31_nodes.json"))
+    # ud0_od0_30_25 = json.load(open(f"{os.environ['HOME']}/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_30_25_perc-31_nodes.json"))
 
     all_expe_parameters = {}
     # for nb_deps in [1, 2, 3, 4, 5]:
@@ -189,7 +189,7 @@ def generate_mascots_schedules(num_draw):
                         for type_synchro in ["pull"]:
                             for techno in ["lora", "nbiot"]:
                                 bandwidth = 6250 if techno == "lora" else 25000
-                                with open(f"/home/aomond/concerto-d-projects/experiment_files/parameters/transitions_times/transitions_times-1-30-deps12-{trans_times[1:]}.json") as f:
+                                with open(f"{os.environ['HOME']}/reconfiguration-esds/time_computation/transitions_times/transitions_times-1-30-deps12-{trans_times[1:]}.json") as f:
                                     tts = json.load(f)["transitions_times"]
 
                                 # print(name_uptime, version_concerto_d, reconf_name, trans_times)
@@ -250,7 +250,7 @@ def generate_mascots_schedules(num_draw):
                                 #     verification["receive_periods"][node_id] = _compute_sending_periods_per_connected_node(node_id, receive_periods, uptime_schedule)
                                 #
                                 # ## Write file
-                                # expe_esds_verification_files = f"/home/aomond/reconfiguration-esds/concerto-d-results/expe_esds_verification_files"
+                                # expe_esds_verification_files = f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/expe_esds_verification_files"
                                 # os.makedirs(expe_esds_verification_files, exist_ok=True)
                                 # with open(os.path.join(expe_esds_verification_files, f"{title}.yaml"), "w") as f:
                                 #     yaml.safe_dump(verification, f)
@@ -579,7 +579,7 @@ if __name__ == "__main__":
     for num_draw in range(100, 200):
         print(f"{num_draw}...")
         all_expe_parameters = generate_mascots_schedules(num_draw)
-        expe_esds_parameter_files = f"/home/aomond/reconfiguration-esds/esds-parameters-files-per-run/{num_draw}/expe_esds_parameter_files_dao"
+        expe_esds_parameter_files = f"{os.environ['HOME']}/reconfiguration-esds/esds-parameters-files-per-run/{num_draw}/expe_esds_parameter_files_dao"
         os.makedirs(expe_esds_parameter_files, exist_ok=True)
 
         for title, vals in all_expe_parameters.items():

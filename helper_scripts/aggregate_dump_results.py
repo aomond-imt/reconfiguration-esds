@@ -6,7 +6,7 @@ import yaml
 if __name__ == "__main__":
     params_list = ["0-1.339-pullc-lora", "1.358-1.339-pullc-lora", "0-1.339-pullc-nbiot", "1.358-1.339-pullc-nbiot"]
     # params_list = ["1.358-1.339-lora-pullc", "0-1.339-nbiot-pullc", "1.358-1.339-nbiot-pullc"]
-    path_executions_runs = "/home/aomond/results-reconfiguration-esds/results-greencom/esds-executions-runs"
+    path_executions_runs = f"{os.environ['HOME']}/results-reconfiguration-esds/results-greencom/esds-executions-runs"
     print("Loading results")
     for param in params_list:
         all_global_results = {}

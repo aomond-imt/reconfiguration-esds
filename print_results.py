@@ -393,8 +393,8 @@ def plot_bar_results(energy_gain_by_uptime_durations, param_names):
             ax.set_ylim(0, max_bound * 1.4)
 
             # plt.show()
-            dir_to_save = f"/home/aomond/results-reconfiguration-esds/results-greencom/graphs"
-            # dir_to_save = f"/home/aomond/reconfiguration-esds/concerto-d-results/pycharm_plots/detail/{param_names}"
+            dir_to_save = f"{os.environ['HOME']}/results-reconfiguration-esds/results-greencom/graphs"
+            # dir_to_save = f"{os.environ['HOME']}/reconfiguration-esds/concerto-d-results/pycharm_plots/detail/{param_names}"
             os.makedirs(dir_to_save, exist_ok=True)
             plt.savefig(f"{dir_to_save}/dynamic-{type_reconf}-{scenario_name}-{param_names}.png")
 
@@ -650,7 +650,7 @@ def compute_tot(type_tot):
     # params_list = ["0-1.339-pullc-lora", "1.358-1.339-pullc-lora", "0-1.339-pullc-nbiot", "1.358-1.339-pullc-nbiot"]
     # params_list = ["1.358-1.339-pullc-lora", "1.358-1.339-pullc-nbiot"]
     params_list = ["1.358-1.339-pullc-lora"]
-    path_executions_runs = "/home/aomond/results-reconfiguration-esds/results-greencom/esds-executions-runs"
+    path_executions_runs = f"{os.environ['HOME']}/results-reconfiguration-esds/results-greencom/esds-executions-runs"
     print("Loading results")
 
     for param in params_list:
@@ -696,7 +696,7 @@ def compute_tot(type_tot):
 
 def compute_comms():
     # params_list = ["1.358-1.339-pullc-lora", "1.358-1.339-pullc-nbiot"]
-    path_executions_runs = "/home/aomond/results-reconfiguration-esds/results-greencom/esds-executions-runs"
+    path_executions_runs = f"{os.environ['HOME']}/results-reconfiguration-esds/results-greencom/esds-executions-runs"
     conso_name = "dynamic"
     energy_gain_by_uptime_durations_lora = compute_energy_gain_from_param("1.358-1.339-pullc-lora", path_executions_runs, conso_name)
     energy_gain_by_uptime_durations_nbiot = compute_energy_gain_from_param("1.358-1.339-pullc-nbiot", path_executions_runs, conso_name)

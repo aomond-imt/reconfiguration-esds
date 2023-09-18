@@ -1,8 +1,9 @@
 import json
+import os
 
-from time_computation import model_time_concerto_d
+from time_computation import time_computation
 from time_computation.dependency_compute_model import DependencyComputeModel
-from time_computation.model_time_concerto_d import _compute_receive_periods_from_sending_periods, \
+from time_computation.time_computation import _compute_receive_periods_from_sending_periods, \
     count_active_intervals, count_active_intervals_sending, _compute_reconf_periods_per_node, \
     _compute_sending_periods_per_node, _get_deploy_parallel_use_case_model, compute_all_time_parameters_esds, \
     _get_update_parallel_use_case_model, _compute_uptimes_periods_per_node, compute_esds_periods
@@ -145,16 +146,16 @@ class TestSyntheticUseCase:
         [[0, 1]],
         [[0, 1]],
     ]
-    ud0_od0_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_15_25_perc.json"))
-    ud1_od0_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud1_od0_15_25_perc.json"))
-    ud2_od0_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud2_od0_15_25_perc.json"))
-    ud0_od1_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od1_15_25_perc.json"))
-    ud0_od2_15_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od2_15_25_perc.json"))
-    ud0_od0_7_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_7_25_perc.json"))
-    ud0_od0_30_25 = json.load(open("/home/aomond/concerto-d-projects/experiment_files/parameters/uptimes/mascots_uptimes-60-50-5-ud0_od0_30_25_perc.json"))
+    ud0_od0_15_25 = json.load(open(f"{os.environ['HOME']}/reconfiguration-esds/time_computation/tests/mascots_2023/mascots_uptimes-60-50-5-ud0_od0_15_25_perc.json"))
+    ud1_od0_15_25 = json.load(open(f"{os.environ['HOME']}/reconfiguration-esds/time_computation/tests/mascots_2023/mascots_uptimes-60-50-5-ud1_od0_15_25_perc.json"))
+    ud2_od0_15_25 = json.load(open(f"{os.environ['HOME']}/reconfiguration-esds/time_computation/tests/mascots_2023/mascots_uptimes-60-50-5-ud2_od0_15_25_perc.json"))
+    ud0_od1_15_25 = json.load(open(f"{os.environ['HOME']}/reconfiguration-esds/time_computation/tests/mascots_2023/mascots_uptimes-60-50-5-ud0_od1_15_25_perc.json"))
+    ud0_od2_15_25 = json.load(open(f"{os.environ['HOME']}/reconfiguration-esds/time_computation/tests/mascots_2023/mascots_uptimes-60-50-5-ud0_od2_15_25_perc.json"))
+    ud0_od0_7_25 = json.load(open(f"{os.environ['HOME']}/reconfiguration-esds/time_computation/tests/mascots_2023/mascots_uptimes-60-50-5-ud0_od0_7_25_perc.json"))
+    ud0_od0_30_25 = json.load(open(f"{os.environ['HOME']}/reconfiguration-esds/time_computation/tests/mascots_2023/mascots_uptimes-60-50-5-ud0_od0_30_25_perc.json"))
 
     def test_synthetic_use_case_100_overlaps(self):
-        with open("/home/aomond/concerto-d-projects/experiment_files/parameters/transitions_times/transitions_times-1-30-deps12-0.json") as f:
+        with open(f"{os.environ['HOME']}/reconfiguration-esds/time_computation/transitions_times/transitions_times-1-30-deps12-0.json") as f:
             tts = json.load(f)["transitions_times"]
 
         t_scs = tts["server"]["t_sc"]
