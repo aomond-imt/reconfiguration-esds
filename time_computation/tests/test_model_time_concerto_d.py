@@ -1,8 +1,8 @@
 import json
 
-from concerto_d_time_computation import model_time_concerto_d
-from concerto_d_time_computation.dependency_compute_model import DependencyComputeModel
-from concerto_d_time_computation.model_time_concerto_d import _compute_receive_periods_from_sending_periods, \
+from time_computation import model_time_concerto_d
+from time_computation.dependency_compute_model import DependencyComputeModel
+from time_computation.model_time_concerto_d import _compute_receive_periods_from_sending_periods, \
     count_active_intervals, count_active_intervals_sending, _compute_reconf_periods_per_node, \
     _compute_sending_periods_per_node, _get_deploy_parallel_use_case_model, compute_all_time_parameters_esds, \
     _get_update_parallel_use_case_model, _compute_uptimes_periods_per_node, compute_esds_periods

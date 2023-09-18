@@ -265,8 +265,8 @@ def _execute_esds_simulation(esds_parameter_files):
                 os.makedirs(os.path.join(sends_results_dir, execution_dir), exist_ok=True)
                 os.makedirs(os.path.join(receive_results_dir, execution_dir), exist_ok=True)
 
-                platform_path = os.path.abspath(f"concerto_d_esds_simulation/platform-{joined_params}.yaml")
-                platform_path_copy = os.path.abspath(f"concerto_d_esds_simulation/platform-{joined_params}-{title}-{num_run}.yaml")
+                platform_path = os.path.abspath(f"esds_simulation/platform-{joined_params}.yaml")
+                platform_path_copy = os.path.abspath(f"esds_simulation/platform-{joined_params}-{title}-{num_run}.yaml")
                 shutil.copy(platform_path, platform_path_copy)
 
                 with open(platform_path_copy) as f:

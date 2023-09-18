@@ -1,4 +1,4 @@
-from concerto_d_time_computation.dependency_compute_model import get_next_overlap, DependencyComputeModel
+from time_computation.dependency_compute_model import get_next_overlap, DependencyComputeModel
 
 
 class TestGetNextOverlap:
