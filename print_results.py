@@ -1,6 +1,7 @@
 import collections
 import copy
 import itertools
+import json
 import os
 
 import yaml
@@ -530,18 +531,33 @@ def _compute_stats_energy_gains(energy_gain_by_uptime_durations, conso_name):
                 sync_vals = []
                 async_no_router_vals = []
                 async_with_router_vals = []
-                gains = []
+                gains_energy = []
+                gains_time = []
+                gains_sync_energy_60_ud = []
+                gains_async_energy_60_ud = []
+                gains_sync_time_60_ud = []
+                gains_async_time_60_ud = []
                 time_sync_vals = []
                 time_async_vals = []
-                detail_ons_sync = {"idles": [], "reconfs": [], "sendings": [], "receives": []}
-                detail_ons_async = {"idles": [], "reconfs": [], "sendings": [], "receives": []}
-                detail_router = {"idles": [], "reconfs": [], "sendings": [], "receives": []}
+                detail_ons_sync = {"idles": [], "reconfs": [], "sendings": [], "receives": [], "comms": []}
+                detail_ons_async = {"idles": [], "reconfs": [], "sendings": [], "receives": [], "comms": []}
+                detail_router = {"idles": [], "reconfs": [], "sendings": [], "receives": [], "comms": []}
 
                 for num_run, node_values in run_values.items():
                     sync_vals.append(node_values["total"]["sync"])
                     async_no_router_vals.append(node_values["total"]["async_no_router"])
                     async_with_router_vals.append(node_values["total"]["async_with_router"])
-                    gains.append((node_values["total"]["sync"] - node_values["total"]["async_with_router"])*100/node_values["total"]["sync"])
+                    gains_energy.append((node_values["total"]["sync"] - node_values["total"]["async_with_router"])*100/node_values["total"]["sync"])
+                    gains_time.append((node_values["total"]["time_sync"] - node_values["total"]["time_async"])*100/node_values["total"]["time_sync"])
+                    ud_60_stats = ud_values[60][nb_deps][num_run]
+                    g_s_e_60_ud = (ud_60_stats["total"]["sync"]-node_values["total"]["sync"])*100/ud_60_stats["total"]["sync"]
+                    g_as_e_60_ud = (ud_60_stats["total"]["async_with_router"]-node_values["total"]["async_with_router"])*100/ud_60_stats["total"]["async_with_router"]
+                    g_s_t_60_ud = (ud_60_stats["total"]["time_sync"]-node_values["total"]["time_sync"])*100/ud_60_stats["total"]["time_sync"]
+                    g_as_t_60_ud = (ud_60_stats["total"]["time_async"]-node_values["total"]["time_async"])*100/ud_60_stats["total"]["time_async"]
+                    gains_sync_energy_60_ud.append(g_s_e_60_ud)
+                    gains_async_energy_60_ud.append(g_as_e_60_ud)
+                    gains_sync_time_60_ud.append(g_s_t_60_ud)
+                    gains_async_time_60_ud.append(g_as_t_60_ud)
                     time_sync_vals.append(node_values["total"]["time_sync"])
                     time_async_vals.append(node_values["total"]["time_async"])
                     for type_conso in type_consos:
@@ -549,18 +565,27 @@ def _compute_stats_energy_gains(energy_gain_by_uptime_durations, conso_name):
                         detail_ons_async[type_conso].append(node_values["total"]["detail_ons_async"][type_conso])
                         detail_router[type_conso].append(node_values["total"]["detail_router"][type_conso])
 
+                    detail_ons_sync["comms"].append(node_values["total"]["detail_ons_sync"]["sendings"] + node_values["total"]["detail_ons_sync"]["receives"])
+                    detail_ons_async["comms"].append(node_values["total"]["detail_ons_async"]["sendings"] + node_values["total"]["detail_ons_async"]["receives"])
+                    detail_router["comms"].append(node_values["total"]["detail_router"]["sendings"] + node_values["total"]["detail_router"]["receives"])
+
                 unit = 1000 if conso_name == "static" else 1
                 unit_str = "kJ" if conso_name == "static" else "J"
                 energy_gain_by_uptime_durations_mean_std[scenario][ud][nb_deps]["total_stats"] = {
                     "sync": {"mean": f"{round(np.mean(sync_vals)/unit, 2)}{unit_str}", "std": f"{round(np.std(sync_vals)/unit, 2)}{unit_str}", "min": f"{round(np.min(sync_vals)/unit, 2)}{unit_str}", "max": f"{round(np.max(sync_vals)/unit, 2)}{unit_str}"},
                     "async_no_router": {"mean": f"{round(np.mean(async_no_router_vals)/unit, 2)}{unit_str}", "std": f"{round(np.std(async_no_router_vals)/unit, 2)}{unit_str}", "min": f"{round(np.min(async_no_router_vals)/unit, 2)}{unit_str}", "max": f"{round(np.max(async_no_router_vals)/unit, 2)}{unit_str}"},
                     "async_with_router": {"mean": f"{round(np.mean(async_with_router_vals)/unit, 2)}{unit_str}", "std": f"{round(np.std(async_with_router_vals)/unit, 2)}{unit_str}", "min": f"{round(np.min(async_with_router_vals)/unit, 2)}{unit_str}", "max": f"{round(np.max(async_with_router_vals)/unit, 2)}{unit_str}"},
-                    "gains": {"mean": f"{round(np.mean(gains), 2)}%", "std": f"{round(np.std(gains), 2)}%", "min": f"{round(np.min(gains), 2)}%", "max": f"{round(np.max(gains), 2)}%"},
-                    "time_sync": {"mean": f"{round(np.mean(time_sync_vals)/unit, 2)}{unit_str}", "std": f"{round(np.std(time_sync_vals)/unit, 2)}{unit_str}", "min": f"{round(np.min(time_sync_vals)/unit, 2)}{unit_str}", "max": f"{round(np.max(time_sync_vals)/unit, 2)}{unit_str}"},
-                    "time_async": {"mean": f"{round(np.mean(time_async_vals)/unit, 2)}{unit_str}", "std": f"{round(np.std(time_async_vals)/unit, 2)}{unit_str}", "min": f"{round(np.min(time_async_vals)/unit, 2)}{unit_str}", "max": f"{round(np.max(time_async_vals)/unit, 2)}{unit_str}"},
-                    "detail_ons_sync": {"idles": {}, "reconfs": {}, "sendings": {}, "receives": {}},
-                    "detail_ons_async": {"idles": {}, "reconfs": {}, "sendings": {}, "receives": {}},
-                    "detail_router": {"idles": {}, "reconfs": {}, "sendings": {}, "receives": {}},
+                    "gains_energy": {"mean": f"{round(np.mean(gains_energy), 2)}%", "std": f"{round(np.std(gains_energy), 2)}%", "min": f"{round(np.min(gains_energy), 2)}%", "max": f"{round(np.max(gains_energy), 2)}%"},
+                    "gains_time": {"mean": f"{round(np.mean(gains_time), 2)}%", "std": f"{round(np.std(gains_time), 2)}%", "min": f"{round(np.min(gains_time), 2)}%", "max": f"{round(np.max(gains_time), 2)}%"},
+                    "time_sync": {"mean": f"{round(np.mean(time_sync_vals)/3600, 2)} hours", "std": f"{round(np.std(time_sync_vals)/3600, 2)} hours", "min": f"{round(np.min(time_sync_vals)/3600, 2)} hours", "max": f"{round(np.max(time_sync_vals)/3600, 2)} hours"},
+                    "time_async": {"mean": f"{round(np.mean(time_async_vals)/3600, 2)} hours", "std": f"{round(np.std(time_async_vals)/3600, 2)} hours", "min": f"{round(np.min(time_async_vals)/3600, 2)} hours", "max": f"{round(np.max(time_async_vals)/3600, 2)} hours"},
+                    "gains_sync_energy_60_ud": {"mean": f"{round(np.mean(gains_sync_energy_60_ud), 2)}%", "std": f"{round(np.std(gains_sync_energy_60_ud), 2)}%", "min": f"{round(np.min(gains_sync_energy_60_ud), 2)}%", "max": f"{round(np.max(gains_sync_energy_60_ud), 2)}%"},
+                    "gains_sync_time_60_ud": {"mean": f"{round(np.mean(gains_sync_time_60_ud), 2)}%", "std": f"{round(np.std(gains_sync_time_60_ud), 2)}%", "min": f"{round(np.min(gains_sync_time_60_ud), 2)}%", "max": f"{round(np.max(gains_sync_time_60_ud), 2)}%"},
+                    "gains_async_energy_60_ud": {"mean": f"{round(np.mean(gains_async_energy_60_ud), 2)}%", "std": f"{round(np.std(gains_async_energy_60_ud), 2)}%", "min": f"{round(np.min(gains_async_energy_60_ud), 2)}%", "max": f"{round(np.max(gains_async_energy_60_ud), 2)}%"},
+                    "gains_async_time_60_ud": {"mean": f"{round(np.mean(gains_async_time_60_ud), 2)}%", "std": f"{round(np.std(gains_async_time_60_ud), 2)}%", "min": f"{round(np.min(gains_async_time_60_ud), 2)}%", "max": f"{round(np.max(gains_async_time_60_ud), 2)}%"},
+                    "detail_ons_sync": {"idles": {}, "reconfs": {}, "sendings": {}, "receives": {}, "comms": {}},
+                    "detail_ons_async": {"idles": {}, "reconfs": {}, "sendings": {}, "receives": {}, "comms": {}},
+                    "detail_router": {"idles": {}, "reconfs": {}, "sendings": {}, "receives": {}, "comms": {}},
                 }
 
                 for type_conso in type_consos:
@@ -583,61 +608,171 @@ def _compute_stats_energy_gains(energy_gain_by_uptime_durations, conso_name):
                         "max": round(np.max(detail_router[type_conso])/unit, 2)
                     }
 
+                energy_gain_by_uptime_durations_mean_std[scenario][ud][nb_deps]["total_stats"]["detail_ons_sync"]["comms"] = {
+                    "mean": round(np.mean(detail_ons_sync["comms"]) / unit, 2),
+                    "std": round(np.std(detail_ons_sync["comms"]) / unit, 2),
+                    "min": round(np.min(detail_ons_sync["comms"]) / unit, 2),
+                    "max": round(np.max(detail_ons_sync["comms"]) / unit, 2)
+                }
+                energy_gain_by_uptime_durations_mean_std[scenario][ud][nb_deps]["total_stats"]["detail_ons_async"]["comms"] = {
+                    "mean": round(np.mean(detail_ons_async["comms"]) / unit, 2),
+                    "std": round(np.std(detail_ons_async["comms"]) / unit, 2),
+                    "min": round(np.min(detail_ons_async["comms"]) / unit, 2),
+                    "max": round(np.max(detail_ons_async["comms"]) / unit, 2)
+                }
+                energy_gain_by_uptime_durations_mean_std[scenario][ud][nb_deps]["total_stats"]["detail_router"]["comms"] = {
+                    "mean": round(np.mean(detail_router["comms"]) / unit, 2),
+                    "std": round(np.std(detail_router["comms"]) / unit, 2),
+                    "min": round(np.min(detail_router["comms"]) / unit, 2),
+                    "max": round(np.max(detail_router["comms"]) / unit, 2)
+                }
+
     return energy_gain_by_uptime_durations_mean_std
 
 
-if __name__ == "__main__":
+def compute_energy_gain_from_param(param, path_executions_runs, conso_name):
+    print(f"Param {param}")
+    with open(f"{path_executions_runs}/aggregated_{param}.json") as f:
+        all_global_results = ujson.load(f)
+
+    print("Results loaded")
+    global_results_accumulated = accumulate_global_results(all_global_results)
+    print("Results accumulated")
+
+    energy_gains = compute_energy_gain(global_results_accumulated, conso_name)
+    energy_gain_by_nb_deps = compute_energy_gain_by_nb_deps(energy_gains)
+    energy_gain_by_uptime_durations = compute_energy_gain_by_uptime_durations(energy_gain_by_nb_deps)
+    print("Energy gains computed")
+    return energy_gain_by_uptime_durations
+
+
+def compute_tot(type_tot):
     # params_list = ["0-1.339-pullc-lora", "1.358-1.339-pullc-lora", "0-1.339-pullc-nbiot", "1.358-1.339-pullc-nbiot"]
+    # params_list = ["1.358-1.339-pullc-lora", "1.358-1.339-pullc-nbiot"]
     params_list = ["1.358-1.339-pullc-lora"]
     path_executions_runs = "/home/aomond/results-reconfiguration-esds/results-greencom/esds-executions-runs"
     print("Loading results")
+
     for param in params_list:
         for conso_name in ["static", "dynamic"]:
-            # all_global_results = {}
-            print(f"Param {param}")
-            # for num_run in range(200):
-            #     print(f"Run {num_run}")
-            #     results_dir = f"{path_executions_runs}/{num_run}"
-            #     global_results = {}
-            #     for file in os.listdir(results_dir):
-            #         if param in file:
-            #             with open(os.path.join(results_dir, file)) as f:
-            #                 global_results.update(yaml.safe_load(f))
-            #
-            #     all_global_results[num_run] = global_results
-
-            # with open(f"{path_executions_runs}/aggregated_{param}2.json", "w") as f:
-            #     ujson.dump(all_global_results, f)
-            with open(f"{path_executions_runs}/aggregated_{param}.json") as f:
-                all_global_results = ujson.load(f)
-
-            print("Results loaded")
-            global_results_accumulated = accumulate_global_results(all_global_results)
-            print("Results accumulated")
-
-            # print_energy_results(global_results)
-            # analyse_energy_results(global_results)
-            energy_gains = compute_energy_gain(global_results_accumulated, conso_name)
-            energy_gain_by_nb_deps = compute_energy_gain_by_nb_deps(energy_gains)
-            energy_gain_by_uptime_durations = compute_energy_gain_by_uptime_durations(energy_gain_by_nb_deps)
-            print("Energy gains computed")
-            # print(json.dumps(energy_gains, indent=4))
-            # print_energy_gain(energy_gains)
+        # for conso_name in ["dynamic"]:
+            energy_gain_by_uptime_durations = compute_energy_gain_from_param(param, path_executions_runs, conso_name)
             energy_gain_by_uptime_durations_mean_std = _compute_stats_energy_gains(energy_gain_by_uptime_durations, conso_name)
             print("Energy gain prepared")
 
+            print("--- Tot ---")
             for scenario_name, ud_values in energy_gain_by_uptime_durations_mean_std.items():
                 for ud, nb_deps_values in ud_values.items():
                     for nb_dep in nb_deps_values.keys():
                         if nb_dep >= 5:
                             stats = nb_deps_values[nb_dep]["total_stats"]
-                            print(scenario_name, ud, nb_dep)
-                            print(f"direct: {stats['sync']}")
-                            print(f"with rn: {stats['async_with_router']}")
-                            print(f"gain: {stats['gains']}")
-                            print()
-                        # print(f"gain: {stats['async']}")
+                            print(param, conso_name, scenario_name, ud, nb_dep)
+                            if type_tot == "energy":
+                                # print(f"direct: {stats['sync']}")
+                                # print(f"with rn: {stats['async_with_router']}")
+                                # print(f"gain: {stats['gains_energy']}")
+                                print(f"energy gain direct compared to 60 uptime: {stats['gains_sync_energy_60_ud']}")
+                                # print(f"energy gain rn compared to 60 uptime: {stats['gains_async_energy_60_ud']}")
+                                # if uds.index(ud) > 0:
+                                #     ud_60_stats = ud_values[uds[uds.index(ud)-1]][nb_dep]["total_stats"]
+                                #     sync_gain_60_ud = round((ud_60_stats["sync"]-stats["sync"])*100/ud_60_stats["sync"],2)
+                                #     async_gain_60_ud = round((ud_60_stats["async_with_router"]-stats["async_with_router"])*100/ud_60_stats["async_with_router"],2)
+                                #     print(f"energy gain direct compared to 60 uptime: {sync_gain_60_ud}%")
+                                #     print(f"energy gain direct compared to 60 uptime: {async_gain_60_ud}%")
+                            else:
+                                # print(f"direct: {stats['time_sync']}")
+                                # print(f"with rn: {stats['time_async']}")
+                                # print(f"gain: {stats['gains_time']}")
+                                print(f"time gain direct compared to 60 uptime: {stats['gains_sync_time_60_ud']}")
+                                # print(f"time gain rn compared to 60 uptime: {stats['gains_async_time_60_ud']}")
+                                # if uds.index(ud) > 0:
+                                #     ud_60_stats = ud_values[uds[uds.index(ud)-1]][nb_dep]["total_stats"]
+                                #     sync_gain_60_ud = round((ud_60_stats["time_sync"]-stats["time_sync"])*100/ud_60_stats["time_sync"],2)
+                                #     async_gain_60_ud = round((ud_60_stats["time_async"]-stats["time_async"])*100/ud_60_stats["time_async"],2)
+                                #     print(f"time gain direct compared to 60 uptime: {sync_gain_60_ud}%")
+                                #     print(f"time gain direct compared to 60 uptime: {async_gain_60_ud}%")
+                            # print()
 
-            # plot_bar_results(energy_gain_by_uptime_durations_mean_std, param)
-            # plot_scatter_results(energy_gain_by_nb_deps, param)
-            # plot_surface_results(None, None)
+
+def compute_comms():
+    # params_list = ["1.358-1.339-pullc-lora", "1.358-1.339-pullc-nbiot"]
+    path_executions_runs = "/home/aomond/results-reconfiguration-esds/results-greencom/esds-executions-runs"
+    conso_name = "dynamic"
+    energy_gain_by_uptime_durations_lora = compute_energy_gain_from_param("1.358-1.339-pullc-lora", path_executions_runs, conso_name)
+    energy_gain_by_uptime_durations_nbiot = compute_energy_gain_from_param("1.358-1.339-pullc-nbiot", path_executions_runs, conso_name)
+    results_comms_stats = {}
+    for scenario in energy_gain_by_uptime_durations_lora.keys():
+        for ud in energy_gain_by_uptime_durations_lora[scenario].keys():
+            for nb_dep in energy_gain_by_uptime_durations_lora[scenario][ud].keys():
+                if nb_dep < 5: continue
+                lora_runs_list = []
+                nbiot_runs_list = []
+                gains_runs_list = []
+                for num_run in energy_gain_by_uptime_durations_lora[scenario][ud][nb_dep].keys():
+                    total_lora = energy_gain_by_uptime_durations_lora[scenario][ud][nb_dep][num_run]["total"]
+                    total_nbiot = energy_gain_by_uptime_durations_nbiot[scenario][ud][nb_dep][num_run]["total"]
+                    # results_comms_run.setdefault(scenario,{}).setdefault(ud,{}).setdefault(nb_dep,{}).setdefault("lora",[]).append(total_lora["detail_ons_sync"]["sendings"] + total_lora["detail_ons_sync"]["receives"])
+                    # results_comms_run[scenario][ud][nb_dep].setdefault("nbiot",[]).append(total_nbiot["detail_ons_sync"]["sendings"] + total_nbiot["detail_ons_sync"]["receives"])
+                    total_lora_comms = total_lora["detail_ons_sync"]["sendings"] + total_lora["detail_ons_sync"]["receives"]
+                    total_nbiot_comms = total_nbiot["detail_ons_sync"]["sendings"] + total_nbiot["detail_ons_sync"]["receives"]
+                    lora_runs_list.append(total_lora_comms)
+                    nbiot_runs_list.append(total_nbiot_comms)
+                    gains_runs_list.append((total_nbiot_comms-total_lora_comms)*100/total_lora_comms)
+
+                lora_stats = {
+                    "mean": f"{round(np.mean(lora_runs_list), 2)}J",
+                    "std": f"{round(np.std(lora_runs_list), 2)}J",
+                    "min": f"{round(np.min(lora_runs_list), 2)}J",
+                    "max": f"{round(np.max(lora_runs_list), 2)}J",
+                }
+                nbiot_stats = {
+                    "mean": f"{round(np.mean(nbiot_runs_list), 2)}J",
+                    "std": f"{round(np.std(nbiot_runs_list), 2)}J",
+                    "min": f"{round(np.min(nbiot_runs_list), 2)}J",
+                    "max": f"{round(np.max(nbiot_runs_list), 2)}J",
+                }
+                gains_stats = {
+                    "mean": f"{round(np.mean(gains_runs_list), 2)}%",
+                    "std": f"{round(np.std(gains_runs_list), 2)}%",
+                    "min": f"{round(np.min(gains_runs_list), 2)}%",
+                    "max": f"{round(np.max(gains_runs_list), 2)}%",
+                }
+
+                results_comms_stats.setdefault(scenario, {}).setdefault(ud, {}).setdefault(nb_dep, {})["lora"] = lora_stats
+                results_comms_stats.setdefault(scenario, {}).setdefault(ud, {}).setdefault(nb_dep, {})["nbiot"] = nbiot_stats
+                results_comms_stats.setdefault(scenario, {}).setdefault(ud, {}).setdefault(nb_dep, {})["gains"] = gains_stats
+
+                print(scenario, ud, nb_dep)
+                print("lora", lora_stats)
+                print("nbiot", nbiot_stats)
+                print("gains", gains_stats)
+
+
+
+    # energy_gain_by_uptime_durations_mean_std = _compute_stats_energy_gains(energy_gain_by_uptime_durations, conso_name)
+
+
+if __name__ == "__main__":
+    # compute_comms()
+    compute_tot("energy")
+    # print("--- Comms ---")
+    # techno_name = param.split("-")[-1]
+    # for scenario_name, ud_values in energy_gain_by_uptime_durations_mean_std.items():
+    #     for ud, nb_deps_values in ud_values.items():
+    #         for nb_dep in nb_deps_values.keys():
+    #             if nb_dep >= 5:
+    #                 stats = nb_deps_values[nb_dep]["total_stats"]
+    #                 results_comms.setdefault(scenario_name, {}).setdefault(ud, {}).setdefault(nb_dep, {})[techno_name] = stats['detail_ons_sync']['comms']
+                    # print(scenario_name, ud, nb_dep)
+                    # print(f"conso: {stats['detail_ons_sync']['comms']}")
+                    # print()
+    # plot_bar_results(energy_gain_by_uptime_durations_mean_std, param)
+    # plot_scatter_results(energy_gain_by_nb_deps, param)
+    # plot_surface_results(None, None)
+    # for s, ud_vals in results_comms.items():
+    #     for ud, nb_deps_vals in ud_vals.items():
+    #         for nb_dep, comms_vals in nb_deps_vals.items():
+    #             lora = comms_vals["lora"]
+    #             nbiot = comms_vals["nbiot"]
+    #             gain = comms_vals["gain"]
+    # print(json.dumps(results_comms, indent=4))
