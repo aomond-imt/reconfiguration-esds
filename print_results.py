@@ -8,6 +8,11 @@ import yaml
 import ujson
 import numpy as np
 import matplotlib.pyplot as plt
+from joblib import Memory
+from matplotlib.patches import Patch
+
+
+memory = Memory("/tmp", verbose=0)
 
 
 def _gather_results(global_results_stats, conso_name):
@@ -522,6 +527,7 @@ def accumulate_global_results(all_global_results):
     return global_results_accumulated
 
 
+@memory.cache
 def _compute_stats_energy_gains(energy_gain_by_uptime_durations, conso_name):
     energy_gain_by_uptime_durations_mean_std = copy.deepcopy(energy_gain_by_uptime_durations)
     type_consos = ["idles", "reconfs", "sendings", "receives"]
@@ -630,6 +636,7 @@ def _compute_stats_energy_gains(energy_gain_by_uptime_durations, conso_name):
     return energy_gain_by_uptime_durations_mean_std
 
 
+@memory.cache
 def compute_energy_gain_from_param(param, path_executions_runs, conso_name):
     print(f"Param {param}")
     with open(f"{path_executions_runs}/aggregated_{param}.json") as f:
