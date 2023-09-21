@@ -759,9 +759,83 @@ def compute_comms():
     # energy_gain_by_uptime_durations_mean_std = _compute_stats_energy_gains(energy_gain_by_uptime_durations, conso_name)
 
 
+@memory.cache
+def compute_lora_nbiot_stats():
+    path_executions_runs = f"{os.environ['HOME']}/results-reconfiguration-esds/results-greencom/esds-executions-runs"
+    # energy_gain_by_uptime_durations_lora = compute_energy_gain_from_param("1.358-1.339-pullc-lora", path_executions_runs, conso_name)
+    # energy_gain_by_uptime_durations_nbiot = compute_energy_gain_from_param("1.358-1.339-pullc-nbiot", path_executions_runs, conso_name)
+    all_stats = {
+        "static": {
+            "lora": _compute_stats_energy_gains(compute_energy_gain_from_param("1.358-1.339-pullc-lora", path_executions_runs, "static"), "static"),
+            "nbiot": _compute_stats_energy_gains(compute_energy_gain_from_param("1.358-1.339-pullc-nbiot", path_executions_runs, "static"), "static")
+        },
+        "dynamic": {
+            "lora": _compute_stats_energy_gains(compute_energy_gain_from_param("1.358-1.339-pullc-lora", path_executions_runs, "dynamic"), "dynamic"),
+            "nbiot": _compute_stats_energy_gains(compute_energy_gain_from_param("1.358-1.339-pullc-nbiot", path_executions_runs, "dynamic"), "dynamic")
+        },
+    }
+    return format_stats_for_plot_bar_conso_leverages(all_stats)
+
+
+def format_stats_for_plot_bar_conso_leverages(all_stats):
+    stats_to_plot = {}
+    for coordination_name in ["deploy", "update"]:
+        values = []
+        for upt_duration in [60, 120, 180]:
+            for comms_type in ["sync", "async_with_router"]:
+                vals = []
+                for nb_msrmt in [5, 15, 30]:
+                    static_lora = all_stats["static"]["lora"][f"esds_generated_data-uptimes-dao-{coordination_name}-T1"][upt_duration]
+                    vals.append(static_lora[nb_msrmt]["total_stats"][comms_type])
+                values.append(vals)
+        # stats_to_plot[coordination_name] = values
+
+        means_values = [
+            [s["mean"] for s in st]
+            for st in values
+        ]
+        std_values = [
+            [s["std"] for s in st]
+            for st in values
+        ]
+        stats_to_plot[coordination_name] = {
+            "means": means_values,
+            "stds": std_values
+        }
+
+    return stats_to_plot
+
+
+def plot_bar_conso_leverages(means_list, stds_list):
+    nb_deps_list = [5, 15, 30]
+    x = np.arange(len(nb_deps_list)) * 3
+    fig, ax = plt.subplots()
+    # fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+    ax.set_ylabel('Energy (J)')
+    ax.set_xlabel('Nb deps')
+    colors = ["#6495ed", "#EDC88B", "#6495ed", "#EDC88B", "#6495ed", "#EDC88B"]
+    labels = ["1\nmin", "", "2\nmin", "", "3\nmin", ""]
+    width = 0.4
+    # Remove 'kJ' from means
+    for i in range(6):
+        means_to_plot = [*map(lambda m: float(m[:-2]), means_list[i])]
+        stds_to_plot = [*map(lambda s: float(s[:-2]), stds_list[i])]
+        b = ax.bar(x + width * i, means_to_plot, width, bottom=[0, 0, 0], color=colors[i], label=labels[i], yerr=stds_to_plot, edgecolor="black", capsize=5)
+        # ax.bar_label(b, labels=[labels[i]] * 3, padding=-8, label_type="center", weight="bold")
+
+    legend_els = [Patch(facecolor="#6495ed", label="direct"), Patch(facecolor="#EDC88B", label="rn")]
+    ax.legend(handles=legend_els, loc="upper left")
+    ax.set_xticks(x, [5, 15, 30])
+    # ax.plot()
+    plt.show()
+
+
 if __name__ == "__main__":
     # compute_comms()
-    compute_tot("energy")
+    # compute_tot("energy")
+    stats_to_plot = compute_lora_nbiot_stats()
+    means, stds = stats_to_plot["deploy"].values()
+    plot_bar_conso_leverages(means, stds)
     # print("--- Comms ---")
     # techno_name = param.split("-")[-1]
     # for scenario_name, ud_values in energy_gain_by_uptime_durations_mean_std.items():

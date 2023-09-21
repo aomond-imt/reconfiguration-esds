@@ -8,13 +8,15 @@ fig, ax = plt.subplots(figsize=(10, 10))
 ax.set_ylabel('Energy (J)')
 ax.set_xlabel('Nb deps')
 width = 0.4
+# Deploy
+# Lora, static
 nbs = [
-    [7, 5, 8],
-    [1, 2, 4],
-    [7, 5, 8],
-    [1, 2, 4],
-    [7, 5, 8],
-    [1, 2, 4],
+    [7, 5, 8],  # 5, 15, 30  # direct  # 60
+    [1, 2, 4],  # 5, 15, 30  # rn      # 60
+    [7, 5, 8],  # 5, 15, 30  # direct  # 120
+    [1, 2, 4],  # 5, 15, 30  # rn      # 120
+    [7, 5, 8],  # 5, 15, 30  # direct  # 180
+    [1, 2, 4],  # 5, 15, 30  # rn      # 180
 ]
 patterns = ["/", "/" , "o", "o", "\\", "\\"]
 colors = ["#6495ed", "#EDC88B", "#6495ed", "#EDC88B", "#6495ed", "#EDC88B"]
